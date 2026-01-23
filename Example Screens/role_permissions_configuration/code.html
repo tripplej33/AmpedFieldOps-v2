@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Role Permissions Configuration | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Electric Blue
+                        "navy-deep": "#0b0e14",
+                        "navy-sidebar": "#111827",
+                        "navy-inner": "#1f2937",
+                        "border-dark": "#374151",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body { font-family: 'Inter', sans-serif; @apply bg-navy-deep text-gray-100; }
+        }
+        .permission-grid {
+            display: grid;
+            grid-template-columns: 1fr repeat(4, 80px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="antialiased overflow-hidden">
+<div class="flex h-screen">
+<aside class="w-64 bg-navy-sidebar border-r border-border-dark flex flex-col z-30">
+<div class="p-6 flex items-center gap-3">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined !text-xl">bolt</span>
+</div>
+<h1 class="text-lg font-extrabold tracking-tight text-white">AmpedFieldOps</h1>
+</div>
+<div class="px-4 py-2">
+<button class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined !text-xl">add_task</span>
+<span>Dispatch Job</span>
+</button>
+</div>
+<nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[22px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[22px]">work</span>
+<span class="text-sm font-medium">Jobs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[22px]">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-white bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[22px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-border-dark">
+<div class="flex items-center gap-3 px-2 py-2">
+<div class="size-10 rounded-full bg-gray-700 bg-cover border border-border-dark" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDs82dCdpjUaCtCQkh38NaV9jb1qPPCZUAH6MTaUeNYEmcOe5u3B5O2EaLLk3AD4MeZkeizZShtwU1M_rKcicLUyddUtrwJQT8etTEtbG5Gcef6i54bVE_Uuat-Np2jCO8hm0ZzNYvAVndxcHgwCOxyN10z6rtnd3Q9b4GMy9gxMyliaoeK-x8pdmJvHZDBG1KFHx6uDBUHZKtCBPea6rPpCE5gTABNnG4j8rBFW7w5DIPpYsIdXAKrmw5nOxNcrv19jccOXTA9rF4')"></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold text-white truncate">Alex Morgan</p>
+<p class="text-xs text-gray-500 truncate">System Admin</p>
+</div>
+<button class="text-gray-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined !text-lg">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<aside class="w-64 bg-navy-deep border-r border-border-dark flex flex-col z-20">
+<div class="p-6">
+<h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Roles &amp; Access</h3>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-white font-semibold" href="#">
+<span class="material-symbols-outlined !text-[20px]">admin_panel_settings</span>
+<span class="text-sm">Administrator</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[20px]">engineering</span>
+<span class="text-sm">Field Technician</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[20px]">support_agent</span>
+<span class="text-sm">Office Staff</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[20px]">event_seat</span>
+<span class="text-sm">Dispatcher</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined !text-[20px]">inventory_2</span>
+<span class="text-sm">Inventory Controller</span>
+</a>
+</div>
+<button class="w-full mt-6 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-all">
+<span class="material-symbols-outlined !text-sm">add</span>
+                New Custom Role
+            </button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col relative overflow-hidden bg-navy-deep">
+<header class="h-20 border-b border-border-dark flex items-center justify-between px-8 bg-navy-deep/80 backdrop-blur-md sticky top-0 z-10">
+<div>
+<nav class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+<span>Settings</span>
+<span class="material-symbols-outlined !text-[12px]">chevron_right</span>
+<span>Roles</span>
+<span class="material-symbols-outlined !text-[12px]">chevron_right</span>
+<span class="text-primary font-bold">Administrator</span>
+</nav>
+<h2 class="text-xl font-black text-white">Admin Permissions Matrix</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 !text-lg">search</span>
+<input class="pl-10 pr-4 py-2 bg-navy-inner border border-border-dark rounded-lg text-sm w-72 focus:ring-2 focus:ring-primary/50 text-white placeholder-gray-500 focus:outline-none" placeholder="Filter permissions..." type="text"/>
+</div>
+<button class="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors">
+                    Discard changes
+                </button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 pb-32 custom-scrollbar">
+<div class="max-w-6xl mx-auto space-y-10">
+<div class="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-4">
+<span class="material-symbols-outlined text-primary !text-2xl">shield</span>
+<div>
+<p class="text-sm text-primary font-extrabold uppercase tracking-tight">Full Administrative Control</p>
+<p class="text-sm text-blue-200/70">Assigning this role grants bypass privileges for all security restrictions. Currently assigned to 12 active staff members.</p>
+</div>
+</div>
+<div class="permission-grid px-8 py-3 border-b border-border-dark text-[11px] font-black text-gray-500 uppercase tracking-widest">
+<div>MODULE &amp; CAPABILITIES</div>
+<div class="text-center">VIEW</div>
+<div class="text-center">CREATE</div>
+<div class="text-center">EDIT</div>
+<div class="text-center">DELETE</div>
+</div>
+<div class="space-y-12">
+<section class="space-y-4">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-white">
+<span class="material-symbols-outlined !text-xl text-primary">engineering</span>
+                                Jobs Management
+                            </h3>
+<button class="text-xs text-primary font-bold hover:underline">Toggle Category</button>
+</div>
+<div class="bg-navy-inner border border-border-dark rounded-xl overflow-hidden divide-y divide-border-dark shadow-2xl">
+<div class="permission-grid items-center px-8 py-5 hover:bg-white/[0.03] transition-colors">
+<div>
+<p class="text-sm font-bold text-white">Work Order Pipeline</p>
+<p class="text-xs text-gray-400">Creation, assignment and scheduling of all field jobs</p>
+</div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+</div>
+<div class="permission-grid items-center px-8 py-5 hover:bg-white/[0.03] transition-colors">
+<div>
+<p class="text-sm font-bold text-white">Customer Sign-offs</p>
+<p class="text-xs text-gray-400">Digital signature capture and PDF report generation</p>
+</div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-white">
+<span class="material-symbols-outlined !text-xl text-primary">payments</span>
+                                Financials &amp; Billing
+                            </h3>
+<button class="text-xs text-primary font-bold hover:underline">Toggle Category</button>
+</div>
+<div class="bg-navy-inner border border-border-dark rounded-xl overflow-hidden divide-y divide-border-dark shadow-2xl">
+<div class="permission-grid items-center px-8 py-5 hover:bg-white/[0.03] transition-colors">
+<div>
+<p class="text-sm font-bold text-white">Invoicing &amp; Estimates</p>
+<p class="text-xs text-gray-400">Financial record keeping and quote management</p>
+</div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+</div>
+<div class="permission-grid items-center px-8 py-5 hover:bg-white/[0.03] transition-colors">
+<div>
+<p class="text-sm font-bold text-white">Revenue Dashboards</p>
+<p class="text-xs text-gray-400">Executive level profitability and margin reports</p>
+</div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><span class="text-[10px] font-black text-gray-600 bg-navy-deep px-2 py-0.5 rounded border border-border-dark">BLOCKED</span></div>
+<div class="flex justify-center"><span class="text-[10px] font-black text-gray-600 bg-navy-deep px-2 py-0.5 rounded border border-border-dark">BLOCKED</span></div>
+<div class="flex justify-center"><span class="text-[10px] font-black text-gray-600 bg-navy-deep px-2 py-0.5 rounded border border-border-dark">BLOCKED</span></div>
+</div>
+</div>
+</section>
+<section class="space-y-4">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-white">
+<span class="material-symbols-outlined !text-xl text-primary">inventory_2</span>
+                                Warehouse &amp; Stock
+                            </h3>
+<button class="text-xs text-primary font-bold hover:underline">Toggle Category</button>
+</div>
+<div class="bg-navy-inner border border-border-dark rounded-xl overflow-hidden divide-y divide-border-dark shadow-2xl">
+<div class="permission-grid items-center px-8 py-5 hover:bg-white/[0.03] transition-colors">
+<div>
+<p class="text-sm font-bold text-white">Part Catalog</p>
+<p class="text-xs text-gray-400">Master inventory list and price adjustment</p>
+</div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+<div class="flex justify-center"><input checked="" class="rounded-md border-border-dark bg-navy-deep text-primary focus:ring-primary size-5 cursor-pointer" type="checkbox"/></div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 p-6 bg-navy-deep/90 border-t border-border-dark flex items-center justify-between z-20 backdrop-blur-xl">
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2.5">
+<div class="size-8 rounded-full ring-2 ring-navy-deep bg-gray-700 bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDH1uL8EriouIo0EfYpV6uBa3455ueJa4F56MHFDv8A1mgEXdipK3jK3Em1hr-7AvkAeOrPmWU7VFg6tYUUM1arZNeJeVtQH8v-7OQnBbWZpY82xoVBDCcEN9UMnknUzW0sRhmZRs_c1JTBEj-_ApQjzIeCP1WHA49VjuQ9A2RXLX6zzNR3Xagq7d4M4ny73q01PyRM9Uw1J0c5rIqAP758hABWJpjOU3fbLV01LNuDCl22M0o-tRZ7C9dn-SJOP2rpFeytMZiyi8c')"></div>
+<div class="size-8 rounded-full ring-2 ring-navy-deep bg-gray-600 bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDXPl8mafkgLJ11ZFLLu1htyB66qCwt_caD9BCjaL2A5dkqYjKWgVLKPPdUI9jJQaEVgsSfiSqqczpGCODs209gEDLgr0SVVWqNa7fq69xVUzcX3vErAUZ4T3qB4EZsLewuKOiBpXPcilF3Ilw8DSqYMCIhQ6wHJurOjmsmtiM9PJLeWTJ2ap0rHOg3caQXLYUhGJclKATY9meDDxc8cCLkDmdwCcDKWzazgzC2n7cyjLouIXTus1gYoUwl4vExwHktUi4r-VDUkrs')"></div>
+<div class="size-8 rounded-full ring-2 ring-navy-deep bg-navy-inner flex items-center justify-center text-[10px] font-bold text-gray-400 border border-border-dark">+10</div>
+</div>
+<div>
+<p class="text-xs font-bold text-white">Apply to 12 members</p>
+<p class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Global Administrative Group</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<p class="text-xs text-gray-500 italic hidden lg:block">Draft auto-saved 2 mins ago</p>
+<button class="px-10 py-3 bg-primary text-white font-black rounded-lg shadow-xl shadow-primary/30 hover:bg-blue-600 active:scale-95 transition-all uppercase tracking-widest text-xs">
+                    Save Changes
+                </button>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

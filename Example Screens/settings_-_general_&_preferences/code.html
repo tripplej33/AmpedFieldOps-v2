@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - General &amp; Preferences | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00a3ff", // Electric Blue
+                        "navy-dark": "#0a0e1a", // Deep Navy Sidebar
+                        "navy-content": "#0f172a", // Dark Dashboard Background
+                        "card-bg": "#1e293b", // Container Background
+                        "input-bg": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body { 
+                @apply font-display bg-navy-content text-slate-200 antialiased; 
+            }
+        }
+        .material-symbols-outlined { 
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+        }
+        .active-nav-item { 
+            @apply bg-primary/10 text-primary border-r-2 border-primary; 
+        }
+        .active-tab {
+            @apply border-primary text-primary;
+        }
+        input:focus, select:focus, textarea:focus {
+            @apply ring-2 ring-primary/20 border-primary outline-none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex flex-col justify-between py-6 bg-navy-dark border-r border-slate-800 shrink-0">
+<div class="flex flex-col gap-8">
+<div class="flex items-center gap-3 px-6">
+<div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-2xl font-bold">bolt</span>
+</div>
+<div>
+<h1 class="text-sm font-bold tracking-tight text-white uppercase leading-none">AmpedFieldOps</h1>
+<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Operations</p>
+</div>
+</div>
+<nav class="flex flex-col">
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span class="text-sm font-semibold tracking-wide">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">pending_actions</span>
+<span class="text-sm font-semibold tracking-wide">Live Field Activity</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">map</span>
+<span class="text-sm font-semibold tracking-wide">Fleet Map</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">inventory_2</span>
+<span class="text-sm font-semibold tracking-wide">Inventory</span>
+</a>
+<div class="mt-4 px-6 mb-2">
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administration</p>
+</div>
+<a class="flex items-center gap-3 px-6 py-3 active-nav-item transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-semibold tracking-wide">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all" href="#">
+<span class="material-symbols-outlined text-[22px]">analytics</span>
+<span class="text-sm font-semibold tracking-wide">Reports</span>
+</a>
+</nav>
+</div>
+<div class="px-6 space-y-4">
+<div class="flex items-center gap-3 py-4 border-t border-slate-800">
+<div class="size-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700">
+<span class="material-symbols-outlined text-lg">account_circle</span>
+</div>
+<div class="flex flex-col">
+<p class="text-xs font-bold text-slate-200">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">Owner</p>
+</div>
+</div>
+<button class="w-full bg-primary text-navy-dark text-xs font-extrabold py-3 rounded-lg shadow-lg shadow-primary/10 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm font-bold">save</span>
+                Save Changes
+            </button>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-navy-content">
+<div class="sticky top-0 z-10 bg-navy-content/80 backdrop-blur-md border-b border-slate-800 px-10">
+<div class="max-w-5xl mx-auto flex items-center gap-8">
+<a class="py-4 text-xs font-bold uppercase tracking-widest border-b-2 active-tab transition-all" href="#">General</a>
+<a class="py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all" href="#">Integrations</a>
+<a class="py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all" href="#">Team Management</a>
+<a class="py-4 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent text-slate-500 hover:text-slate-300 transition-all" href="#">Billing &amp; Subscription</a>
+</div>
+</div>
+<div class="max-w-5xl mx-auto px-10 py-12">
+<header class="mb-10">
+<div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-[0.2em]">
+<span>Administration</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span>Settings</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-primary">General</span>
+</div>
+<h2 class="text-3xl font-extrabold tracking-tight text-white">General Settings</h2>
+<p class="mt-2 text-slate-400 max-w-lg text-sm leading-relaxed">
+                    Configure core business logic, regional formats, and operational notification rules for your field teams.
+                </p>
+</header>
+<div class="space-y-6">
+<section class="bg-card-bg rounded-xl border border-slate-700/50 shadow-2xl shadow-black/20 overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center justify-between">
+<h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Company Information</h3>
+<span class="material-symbols-outlined text-slate-500 text-sm">info</span>
+</div>
+<div class="p-8 flex flex-col lg:flex-row gap-12">
+<div class="flex flex-col gap-4">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Company Logo</label>
+<div class="relative group cursor-pointer">
+<div class="w-36 h-36 rounded-xl bg-navy-content border-2 border-dashed border-slate-700 flex flex-col items-center justify-center gap-2 group-hover:border-primary transition-colors bg-center bg-cover bg-no-repeat" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuABrnH99m_sUR9fAL1m-t64mvZk9iQ5korhHq7JpCcG0kPnShTeeV9409NC3qTQc1q9xVoGj8Aw5JfKMnEKgfVJvacsKtY36rVrcCTjY9yJUeabcGp1y3T85yq4bvWsxhnau8CBJBCiJx3U6urIyWgcNbljpEtWEBOacZ55Avk4m_5jMmc9G9BE9mPDnFnPbl0Pm_MYFgz8nI8x0WtZPfdXOcDzvKxh8Nx4qf7W_oN0uZYLp_HsPvz5zPmJvcw_OUpaR4LyiPu60M0');">
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary p-2 rounded-lg shadow-xl text-navy-dark">
+<span class="material-symbols-outlined text-sm font-bold leading-none">edit</span>
+</div>
+</div>
+<p class="text-[10px] text-slate-500 font-medium text-center uppercase">SVG / PNG (Max 1MB)</p>
+</div>
+<div class="flex-1 space-y-6">
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Legal Company Name</label>
+<input class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm" type="text" value="Amped Field Solutions LLC"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Business Address</label>
+<textarea class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm" rows="3">1248 Innovation Drive, Suite 400
+Austin, TX 78701</textarea>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-card-bg rounded-xl border border-slate-700/50 shadow-2xl shadow-black/20 overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center justify-between">
+<h3 class="text-sm font-extrabold text-white uppercase tracking-wider">System Preferences</h3>
+<span class="material-symbols-outlined text-slate-500 text-sm">language</span>
+</div>
+<div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Default Timezone</label>
+<select class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm appearance-none">
+<option>(GMT-06:00) Central Time (US &amp; Canada)</option>
+<option>(GMT-05:00) Eastern Time (US &amp; Canada)</option>
+<option>(GMT-08:00) Pacific Time (US &amp; Canada)</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Date Format</label>
+<select class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm">
+<option>MM/DD/YYYY (12/25/2023)</option>
+<option>DD/MM/YYYY (25/12/2023)</option>
+<option>YYYY-MM-DD (2023-12-25)</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Default Currency</label>
+<select class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm">
+<option>USD - US Dollar ($)</option>
+<option>EUR - Euro (€)</option>
+<option>GBP - British Pound (£)</option>
+<option>CAD - Canadian Dollar (C$)</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Language</label>
+<select class="w-full px-4 py-3 rounded-lg border border-slate-700 bg-navy-content text-slate-200 text-sm">
+<option>English (US)</option>
+<option>Spanish</option>
+<option>French</option>
+</select>
+</div>
+</div>
+</section>
+<section class="bg-card-bg rounded-xl border border-slate-700/50 shadow-2xl shadow-black/20 overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center justify-between">
+<h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Notification Preferences</h3>
+<span class="material-symbols-outlined text-slate-500 text-sm">notifications_active</span>
+</div>
+<div class="p-8 space-y-6">
+<div class="flex items-center justify-between p-4 bg-navy-content/40 rounded-lg border border-slate-700/30">
+<div class="flex flex-col gap-1">
+<span class="text-sm font-bold text-white tracking-wide">Job Assignment Alerts</span>
+<span class="text-xs text-slate-500 font-medium">Instant technician notifications on dispatch.</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Email</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-navy-dark after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">SMS</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-navy-dark after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-navy-content/40 rounded-lg border border-slate-700/30">
+<div class="flex flex-col gap-1">
+<span class="text-sm font-bold text-white tracking-wide">System Performance Updates</span>
+<span class="text-xs text-slate-500 font-medium">Weekly management digests and KPIs.</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Email</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-navy-dark after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-navy-content/40 rounded-lg border border-slate-700/30">
+<div class="flex flex-col gap-1">
+<span class="text-sm font-bold text-white tracking-wide">Low Stock Warnings</span>
+<span class="text-xs text-slate-500 font-medium">Critical inventory thresholds alerts.</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Push</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-navy-dark after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<footer class="mt-12 py-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Last modified by Admin on Oct 24, 2023</p>
+<div class="flex items-center gap-8">
+<a class="text-xs font-bold text-primary hover:text-white transition-colors uppercase tracking-widest" href="#">Support Center</a>
+<a class="text-xs font-bold text-primary hover:text-white transition-colors uppercase tracking-widest" href="#">API Documentation</a>
+</div>
+</footer>
+</div>
+</main>
+</div>
+
+</body></html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Job Details - Integrated View | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#26a3d9",
+                        "background-light": "#fafafa",
+                        "background-dark": "#0C0C0D",
+                        "surface": "#1d2326",
+                        "border-subtle": "#2a3337",
+                        "text-muted": "#9fb0b7"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #121617;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2a3337;
+            border-radius: 10px;
+        }
+        .tab-active {
+            border-bottom: 2px solid #26a3d9;
+            color: #26a3d9;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-white font-display overflow-hidden h-screen flex">
+<!-- Global Side Navigation -->
+<aside class="w-64 border-r border-border-subtle flex flex-col justify-between bg-background-light dark:bg-background-dark">
+<div class="flex flex-col gap-6 p-6">
+<div class="flex items-center gap-3">
+<div class="bg-primary rounded-lg p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-background-dark font-bold">bolt</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-tight">AmpedFieldOps</h1>
+<p class="text-text-muted text-xs font-medium uppercase tracking-wider">Admin Console</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:bg-surface hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<p class="text-sm font-semibold">Operations Hub</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary cursor-pointer">
+<span class="material-symbols-outlined text-[22px] fill-1">list_alt</span>
+<p class="text-sm font-semibold">Job Queue</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:bg-surface hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[22px]">local_shipping</span>
+<p class="text-sm font-semibold">Fleet</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:bg-surface hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[22px]">inventory_2</span>
+<p class="text-sm font-semibold">Inventory</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:bg-surface hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[22px]">analytics</span>
+<p class="text-sm font-semibold">Reports</p>
+</div>
+</nav>
+</div>
+<div class="p-6 border-t border-border-subtle flex flex-col gap-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-background-dark text-sm font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+<span>New Job</span>
+</button>
+<div class="flex items-center gap-3 pt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-border-subtle" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC90SGv_ATF8ir9GfMgvTnrcGRptWA-WUI83BFRp3eKAokIk6ycQ7uo7vkQfKS96y_uKYNNc2UC1pUbmHgXIpHkzfAyVRWVWQ-X-4LET23DhAL111M1hxVPcn5d2VhqTQlsIB68aAF4Wa53t9dNYANkFqj5TmF9kWnJwl0j2fsZNPy8nR-Vyj2r3BCiA36a69wB4BbpH7_7WT93W8_-0ZS5zKer4ILrMvfwhnWK9SXSRiyFtevM7MeM-8dLv6Wp8eFyQG61Uu6GkwU");'></div>
+<div class="flex flex-col">
+<p class="text-white text-xs font-bold leading-tight">Alex Dispatcher</p>
+<p class="text-text-muted text-[10px] font-medium">Head of Ops</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Top Sticky Header -->
+<header class="flex items-center justify-between px-8 py-4 border-b border-border-subtle bg-background-light dark:bg-background-dark shrink-0">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-text-muted">
+<span class="material-symbols-outlined cursor-pointer hover:text-white">arrow_back</span>
+<span class="text-sm font-bold tracking-tight">JO-8821</span>
+</div>
+<div class="h-4 w-px bg-border-subtle"></div>
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-primary text-xs font-bold uppercase tracking-widest">En Route</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative mr-4">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">search</span>
+<input class="bg-surface border-none rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-text-muted w-64 focus:ring-1 focus:ring-primary" placeholder="Search orders..." type="text"/>
+</div>
+<button class="bg-surface hover:bg-surface/80 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">Cancel</button>
+<button class="bg-surface hover:bg-surface/80 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all">Reassign</button>
+<button class="bg-primary hover:bg-primary/90 text-background-dark px-6 py-2 rounded-lg text-sm font-extrabold shadow-lg shadow-primary/20 transition-all">Complete</button>
+</div>
+</header>
+<!-- Dynamic Content Grid -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-8 grid grid-cols-12 gap-8">
+<!-- Left & Center Column: Overview -->
+<div class="col-span-8 flex flex-col gap-8">
+<!-- Page Heading Section -->
+<div class="flex flex-col gap-1">
+<h2 class="text-4xl font-black text-white tracking-tighter">Emergency Transformer Repair</h2>
+<p class="text-text-muted text-lg">North Tech Park • Phase 4 Expansion</p>
+</div>
+<!-- Main Overview Card -->
+<div class="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-2xl">
+<div class="grid grid-cols-5 h-[320px]">
+<div class="col-span-2 p-6 flex flex-col justify-between border-r border-border-subtle">
+<div class="flex flex-col gap-6">
+<div>
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Client</p>
+<p class="text-white text-lg font-bold">VIP Manufacturing Corp.</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-primary text-sm">verified</span>
+<span class="text-primary text-xs font-bold">Premium Account</span>
+</div>
+</div>
+<div>
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Contact</p>
+<p class="text-white text-base font-medium">John Doe</p>
+<p class="text-text-muted text-sm">+1 (555) 0199-2241</p>
+</div>
+<div>
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Address</p>
+<p class="text-white text-sm leading-relaxed">123 Industrial Way, Bldg 4C<br/>North Tech Park, TX 75001</p>
+</div>
+</div>
+<button class="mt-4 flex items-center justify-center gap-2 bg-primary/10 text-primary py-2.5 rounded-lg text-sm font-bold hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">directions</span>
+<span>Get Directions</span>
+</button>
+</div>
+<div class="col-span-3 relative">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="Satellite map view of industrial complex" data-location="North Tech Park, Texas" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD98Ioq7gYivEsQKZJ83l3ohcteHq0jISDHVMAVRJVxsfZJ1WCRBZN9xzo-wZG4nOmPf_ZCynhDqSskdbO8prjjVp6r4YXGhctSzdeJq9H1ye7u_lt3UWDOAKjUXKK1Gc-4Ilyh39VelLbkELZOtZyEGbyg7_wCZJpVlb3clcNSZJq2S6RA0-zfg2jjWEtmGBRgYDgs9nBgpil4x3OMmM9yw2Vsnl1LUzH_wh0AzAxB7K5i4LJNz6i5psjYEqW1avOLBu8azkqrW-4");'></div>
+<div class="absolute inset-0 bg-gradient-to-r from-surface via-transparent to-transparent"></div>
+<div class="absolute bottom-4 right-4 bg-background-dark/80 backdrop-blur-md p-3 rounded-lg border border-border-subtle">
+<p class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Current Tech Location</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">location_on</span>
+<span class="text-white text-xs font-bold">2.4 miles from site</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Description & Details Section -->
+<div class="bg-surface rounded-xl border border-border-subtle p-6">
+<h3 class="text-white text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">description</span>
+                        Work Order Description
+                    </h3>
+<p class="text-text-muted leading-relaxed">
+                        Reported power fluctuation in the main server room. Suspected secondary transformer failure at the Phase 4 junction. 
+                        Technician must verify load balances before initiating hardware swap. Required safety gear: Class 2 Arc Flash protection.
+                    </p>
+<div class="grid grid-cols-3 gap-4 mt-8">
+<div class="p-4 rounded-lg bg-background-dark border border-border-subtle">
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mb-1">Priority</p>
+<p class="text-red-400 text-sm font-bold">Critical (P1)</p>
+</div>
+<div class="p-4 rounded-lg bg-background-dark border border-border-subtle">
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mb-1">Est. Duration</p>
+<p class="text-white text-sm font-bold">4.5 Hours</p>
+</div>
+<div class="p-4 rounded-lg bg-background-dark border border-border-subtle">
+<p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mb-1">Assigned Tech</p>
+<p class="text-white text-sm font-bold">Justin Doe (Lead)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Timeline -->
+<div class="col-span-4 flex flex-col gap-6">
+<div class="bg-surface rounded-xl border border-border-subtle p-6 flex flex-col h-full">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-white text-sm font-bold uppercase tracking-widest">Activity Feed</h3>
+<span class="text-primary text-[10px] font-bold bg-primary/10 px-2 py-0.5 rounded">LIVE</span>
+</div>
+<div class="relative flex-1">
+<!-- Vertical line -->
+<div class="absolute left-3 top-2 bottom-2 w-px bg-border-subtle"></div>
+<div class="space-y-8 relative">
+<!-- Timeline Item 1 -->
+<div class="flex items-start gap-4">
+<div class="relative z-10 size-6 rounded-full bg-primary flex items-center justify-center border-4 border-surface shadow-xl shadow-primary/30">
+<span class="material-symbols-outlined text-[14px] text-background-dark font-bold">local_shipping</span>
+</div>
+<div class="flex-1 -mt-1">
+<p class="text-white text-sm font-bold">Technician En Route</p>
+<p class="text-text-muted text-xs mt-0.5">10:15 AM • Justin Doe</p>
+<div class="mt-2 text-[11px] bg-background-dark p-2 rounded text-text-muted border border-border-subtle italic">
+                                        "Departing warehouse with replacement parts."
+                                    </div>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="flex items-start gap-4">
+<div class="relative z-10 size-6 rounded-full bg-surface border-4 border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">person_check</span>
+</div>
+<div class="flex-1 -mt-1">
+<p class="text-white text-sm font-bold opacity-70">Job Assigned</p>
+<p class="text-text-muted text-xs mt-0.5">09:30 AM • Dispatch</p>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="flex items-start gap-4">
+<div class="relative z-10 size-6 rounded-full bg-surface border-4 border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">add_circle</span>
+</div>
+<div class="flex-1 -mt-1">
+<p class="text-white text-sm font-bold opacity-70">Job Created</p>
+<p class="text-text-muted text-xs mt-0.5">08:00 AM • System</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Tabbed Console -->
+<footer class="h-64 border-t border-border-subtle bg-surface/50 backdrop-blur-xl shrink-0 flex flex-col overflow-hidden">
+<div class="flex items-center px-8 border-b border-border-subtle bg-background-dark/40">
+<button class="px-6 py-4 text-sm font-bold tab-active transition-all">Photos &amp; Files (12)</button>
+<button class="px-6 py-4 text-sm font-bold text-text-muted hover:text-white transition-all">Parts &amp; Inventory</button>
+<button class="px-6 py-4 text-sm font-bold text-text-muted hover:text-white transition-all">Notes</button>
+<div class="ml-auto flex items-center gap-4">
+<div class="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+<div class="size-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></div>
+<span class="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Xero Synced</span>
+</div>
+</div>
+</div>
+<div class="flex-1 p-6 overflow-x-auto custom-scrollbar">
+<div class="flex gap-4">
+<div class="min-w-[140px] aspect-square rounded-lg bg-background-dark border border-border-subtle relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform group-hover:scale-110" data-alt="Technical site photo 1" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXUEU1GPffyiVYaLewsvktRX09e0Wg8NiYarLFyIAe3b4l1PQ5erM_aDoKmzowV-iqfBuaY1r_yCKQX6qKoCnugYMAXPYLpxLyguFMKQ1467TsMf_qEGjuDOtXf8zTeO3izhXEsWnpdl2-7Sxw8NaaG73538gJwFpf8WSL60_X-ksWF6dObwbGG_qj7CaPykglAVyWW5qyHF8iwu7JPPwpxefJLpU9cZGmtimbDoXv06Cdsja267puArMzF7SX6Ah6miPlpv7FBt8");'></div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div class="min-w-[140px] aspect-square rounded-lg bg-background-dark border border-border-subtle relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform group-hover:scale-110" data-alt="Technical site photo 2" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAu-uGXLvZ5-lgROdaFp-unBDMctR7bmVR6Ga0kF6FwCtkWAtgMbSmxtE2IEIwm8tcmxdmTHiC7hnqYwRf2vxb6RIExyM2cB-dosYN6MyQy1zFufjWzuY747EA4L4gYGA7BMTu63-M0IRaUm3lBAb3rxwY7K1yHnuv4PFlvjmmrmfYnNG90mcHJFQxRnCDMO1gd-fr7uiJw4foHO3XLQqArsFxGccFiHiAOxHu8p3huAw9X2ccR7D99zA7otGGMxMayIB5PFoSpfBs");'></div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div class="min-w-[140px] aspect-square rounded-lg bg-background-dark border border-border-subtle relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform group-hover:scale-110" data-alt="Technical site photo 3" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAlzzHiz9RxZ6LWs9Amsz0y-iT5WbFh3q2B63dVt5oKRm_dsrjLLkBs8T8Wp1wKrWYGXVtGe_4gK_79mVT-EkBzenZhYfIDwi0F7fhqqRXt3yI6naQDRLtSfRvfYfNUuy7GPmsKkiUvwIIGl-q5HWwTrczwDoOKGs4RFveNoFKZh_d6DDMOeiMeahGMgGcoQfL8OnbPuf87c5j3tQiJA_3qTTOmySEjwr9JeTicafWcFeQpQPpnAiSkGVRNxbGhlLH6_V6-_MVw4Pw");'></div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div class="min-w-[140px] aspect-square rounded-lg border-2 border-dashed border-border-subtle flex flex-col items-center justify-center gap-2 text-text-muted hover:text-white hover:border-primary/40 cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl">add_a_photo</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Upload File</span>
+</div>
+</div>
+</div>
+</footer>
+</main>
+</body></html>

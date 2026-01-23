@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AmpedFieldOps Operations Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#127da1",
+                        "background-light": "#fafafa",
+                        "background-dark": "#121417",
+                        "card-dark": "#1c2426",
+                        "accent-amber": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #293438;
+            border-left: 4px solid #127da1;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background-color: rgba(28, 36, 38, 0.8);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121417;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3c4d53;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex flex-col border-r border-[#293438] bg-background-dark shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary size-10 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(18,125,161,0.4)]">
+<span class="material-symbols-outlined text-white">bolt</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-none tracking-tight">AmpedFieldOps</h1>
+<p class="text-[#9db2b8] text-[10px] uppercase tracking-widest font-bold">Command Center</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg active-nav text-white">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Operations Hub</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">assignment</span>
+<p class="text-sm font-medium">Job Queue</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">badge</span>
+<p class="text-sm font-medium">Technicians</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">local_shipping</span>
+<p class="text-sm font-medium">Fleet Analytics</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">query_stats</span>
+<p class="text-sm font-medium">Insights</p>
+</div>
+</nav>
+<div class="p-4 border-t border-[#293438] flex flex-col gap-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+<span class="text-sm">Dispatch Job</span>
+</button>
+<div class="flex items-center gap-3 p-2">
+<div class="relative size-10 rounded-full bg-center bg-cover border-2 border-primary/30" data-alt="Operations manager profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPxszquPqkhulJB-DFR4wuTjAIl_vYQbCkvaii1rzlV7DmRpj_7pUQTpvA046CCuEgC3dHAwlzeZH5cZC46KvtWgF6lbWgXzROh9J58Ph5CGnuCfMmuVE_29e95IbeRvxNITdTxK3JIvXYAOpNT3tRReoIuaQCuoNclyB8OvlJo3LpsuPQ9MYyjPpDddsDok5NfXVJtNKtaLjATCbLCMe2PUpCtJb3YQghJatPP0Z-9uPMM8R-XE7-oVENJ4tx2bKw_FdX3BLJndE")'>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background-dark"></div>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Marcus Vane</p>
+<p class="text-xs text-[#9db2b8] truncate">Lead Dispatcher</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden bg-background-dark">
+<!-- Top Navbar -->
+<header class="h-16 border-b border-[#293438] flex items-center justify-between px-8 bg-background-dark/50 glass-panel sticky top-0 z-10">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#9db2b8] group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-[#1c2426] border-none rounded-lg pl-11 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary placeholder:text-[#9db2b8]" placeholder="Search technicians, jobs, or serial numbers..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-[#1c2426] px-3 py-1.5 rounded-lg border border-[#3c4d53]">
+<span class="size-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[10px] font-bold uppercase tracking-wider text-[#9db2b8]">Live Feed Active</span>
+</div>
+<button class="p-2 text-[#9db2b8] hover:text-white hover:bg-[#293438] rounded-lg transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-accent-amber rounded-full"></span>
+</button>
+<button class="p-2 text-[#9db2b8] hover:text-white hover:bg-[#293438] rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-card-dark p-6 rounded-xl border border-[#3c4d53] relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-[#9db2b8] text-sm font-medium">Active Jobs</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-bold tracking-tight">42</h3>
+<span class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">trending_up</span> 5%
+                            </span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-8xl">handyman</span>
+</div>
+</div>
+<div class="bg-card-dark p-6 rounded-xl border border-[#3c4d53] relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-[#9db2b8] text-sm font-medium">Available Techs</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-bold tracking-tight">18 <span class="text-lg text-[#3c4d53]">/ 25</span></h3>
+<span class="text-[#9db2b8] text-xs font-medium">72% Capacity</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-8xl">group</span>
+</div>
+</div>
+<div class="bg-card-dark p-6 rounded-xl border border-[#3c4d53] relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-[#9db2b8] text-sm font-medium">Pending Quotes</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-bold tracking-tight">$12.4k</h3>
+<span class="text-accent-amber text-sm font-bold bg-amber-500/10 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">pending</span> 12
+                            </span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-8xl">payments</span>
+</div>
+</div>
+<div class="bg-card-dark p-6 rounded-xl border border-[#3c4d53] relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-[#9db2b8] text-sm font-medium">Daily Revenue</p>
+<div class="flex items-end justify-between mt-2">
+<h3 class="text-3xl font-bold tracking-tight text-primary">$84.2k</h3>
+<span class="text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">trending_up</span> 12%
+                            </span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-8xl">account_balance_wallet</span>
+</div>
+</div>
+</div>
+<!-- Main Grid Sections -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Live Field Activity -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] overflow-hidden">
+<div class="p-6 border-b border-[#3c4d53] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">sensors</span>
+<h2 class="text-xl font-bold tracking-tight">Live Field Activity</h2>
+</div>
+<button class="text-xs text-[#9db2b8] hover:text-white flex items-center gap-1 font-bold tracking-widest uppercase">
+                                View Archive <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-background-dark/40">
+<tr>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#9db2b8]">Timestamp</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#9db2b8]">Technician</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#9db2b8]">Job Detail</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#9db2b8]">Status</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#9db2b8]">Priority</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#3c4d53]">
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#9db2b8]">09:42 AM</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">JM</div>
+<span class="text-sm font-medium">J. Miller</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">#4021 - Site Maintenance</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">Arrived</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[#293438] text-[#9db2b8]">Normal</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#9db2b8]">09:35 AM</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold text-xs">AC</div>
+<span class="text-sm font-medium">A. Chen</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">#3910 - HVAC Install</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30 animate-pulse">In Progress</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-accent-amber/20 text-accent-amber border border-accent-amber/30">Urgent</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#9db2b8]">09:20 AM</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xs">SG</div>
+<span class="text-sm font-medium">S. Gupta</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">#3892 - Emergency Repair</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-400 border border-green-500/30">Completed</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[#293438] text-[#9db2b8]">Normal</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#9db2b8]">08:55 AM</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs">RK</div>
+<span class="text-sm font-medium">R. Kim</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm">#4105 - Diagnostic</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-500/20 text-gray-400 border border-gray-500/30">En Route</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[#293438] text-[#9db2b8]">Normal</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Tech Availability Heat Map -->
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] p-6">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+<h2 class="text-xl font-bold tracking-tight">Staffing Heat Map</h2>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-1.5">
+<div class="size-2 rounded bg-primary/20"></div>
+<span class="text-[10px] text-[#9db2b8] uppercase">Low</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="size-2 rounded bg-primary/60"></div>
+<span class="text-[10px] text-[#9db2b8] uppercase">Mid</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="size-2 rounded bg-primary"></div>
+<span class="text-[10px] text-[#9db2b8] uppercase">Full</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-8 gap-2">
+<div class="h-6"></div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Mon</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Tue</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Wed</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Thu</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Fri</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Sat</div>
+<div class="text-[10px] text-[#9db2b8] uppercase text-center font-bold">Sun</div>
+<!-- Hour Rows -->
+<div class="text-[10px] text-[#9db2b8] uppercase flex items-center justify-end font-bold pr-2">08:00</div>
+<div class="aspect-square bg-primary rounded-sm opacity-80"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-90"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-80"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-20"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-10"></div>
+<div class="text-[10px] text-[#9db2b8] uppercase flex items-center justify-end font-bold pr-2">12:00</div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-40"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-30"></div>
+<div class="text-[10px] text-[#9db2b8] uppercase flex items-center justify-end font-bold pr-2">16:00</div>
+<div class="aspect-square bg-primary rounded-sm opacity-90"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-80"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-90"></div>
+<div class="aspect-square bg-primary rounded-sm"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-20"></div>
+<div class="aspect-square bg-primary rounded-sm opacity-10"></div>
+</div>
+</div>
+</div>
+<!-- Critical Alerts Panel -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="bg-card-dark rounded-xl border border-accent-amber/30 p-6 flex-1 shadow-[0_4px_20px_-10px_rgba(245,158,11,0.2)]">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-accent-amber animate-pulse">warning</span>
+<h2 class="text-xl font-bold tracking-tight">Critical Alerts</h2>
+</div>
+<div class="space-y-4">
+<!-- Alert Item -->
+<div class="p-4 rounded-lg bg-accent-amber/5 border border-accent-amber/10 flex flex-col gap-2 group hover:border-accent-amber/30 transition-all cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-bold uppercase tracking-wider text-accent-amber">Hardware Failure</span>
+<span class="text-[10px] text-[#9db2b8]">2m ago</span>
+</div>
+<p class="text-sm font-medium">2 Techs Offline: Connection lost in Northwest Sector (Area 4B)</p>
+<div class="mt-2 flex gap-2">
+<button class="text-[10px] bg-accent-amber text-black font-bold px-3 py-1 rounded">Retry Ping</button>
+<button class="text-[10px] border border-accent-amber/20 text-accent-amber font-bold px-3 py-1 rounded">View Map</button>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="p-4 rounded-lg bg-background-dark/50 border border-[#3c4d53] flex flex-col gap-2 hover:border-primary/50 transition-all cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-bold uppercase tracking-wider text-blue-400">Quote Expiring</span>
+<span class="text-[10px] text-[#9db2b8]">1h ago</span>
+</div>
+<p class="text-sm font-medium">Premium Quote #772 for 'Horizon Tech' expires in 2 hours.</p>
+<div class="mt-2 flex gap-2">
+<button class="text-[10px] bg-primary text-white font-bold px-3 py-1 rounded">Follow Up</button>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="p-4 rounded-lg bg-background-dark/50 border border-[#3c4d53] flex flex-col gap-2 hover:border-red-500/50 transition-all cursor-pointer">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-bold uppercase tracking-wider text-red-400">Maintenance</span>
+<span class="text-[10px] text-[#9db2b8]">3h ago</span>
+</div>
+<p class="text-sm font-medium">Vehicle #12 Maintenance Overdue: Breakpad health at 5%</p>
+</div>
+</div>
+<div class="mt-12 bg-[#127da1]/10 p-6 rounded-xl border border-primary/20 relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-primary text-[10px] font-bold uppercase tracking-widest mb-1">Fleet Summary</p>
+<h4 class="text-lg font-bold mb-4">Coverage Optimization</h4>
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<div class="h-1 w-full bg-[#1c2426] rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[82%]"></div>
+</div>
+<p class="text-[10px] text-[#9db2b8] mt-1 italic">82% Operational efficiency today</p>
+</div>
+<span class="text-2xl font-bold">82%</span>
+</div>
+</div>
+<div class="absolute -right-10 -top-10">
+<span class="material-symbols-outlined text-[120px] text-primary opacity-10">hub</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

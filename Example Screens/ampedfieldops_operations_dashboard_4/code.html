@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AmpedFieldOps - OCR Expense Capture</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#127da1",
+                        "background-light": "#fafafa",
+                        "background-dark": "#121417",
+                        "card-dark": "#1c2426",
+                        "accent-amber": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            .active-nav {
+                background-color: #293438;
+                border-left: 4px solid #127da1;
+            }
+            .glass-panel {
+                backdrop-filter: blur(12px);
+                background-color: rgba(28, 36, 38, 0.8);
+            }
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #121417;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #3c4d53;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex flex-col border-r border-[#293438] bg-background-dark shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary size-10 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(18,125,161,0.4)]">
+<span class="material-symbols-outlined text-white">bolt</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-none tracking-tight">AmpedFieldOps</h1>
+<p class="text-[#9db2b8] text-[10px] uppercase tracking-widest font-bold">Expense Manager</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg text-[#9db2b8] hover:bg-[#293438] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Operations Hub</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg active-nav text-white">
+<span class="material-symbols-outlined">document_scanner</span>
+<p class="text-sm font-medium">OCR Capture</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">receipt_long</span>
+<p class="text-sm font-medium">Expense History</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">account_tree</span>
+<p class="text-sm font-medium">Cost Centers</p>
+</div>
+</nav>
+<div class="p-4 border-t border-[#293438] flex flex-col gap-4">
+<div class="flex items-center gap-3 p-2">
+<div class="relative size-10 rounded-full bg-center bg-cover border-2 border-primary/30" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCSbBAWfjs3W6Z7oHXPGh-8LoTC03OCFjXfiyeSvoBPTMlJTlx6MYqRRadgYcG1f_WXvJGIsigE36d1l7_VJAhTaH3J3HtVJ0Tq0wHDbJ3TRVcbUdPl9ynsSzHuVIRQcPw8UUkBjs7934mX2KHIlm9N9AFULnC98h607CwkRp9e1pCxo6vs9ETqp6DTm7ephNZpHEuUhqDGfKlq8KJu7K0rSqBytBgOOUErKv7nfKc4jyzk7q2G1zA1SJFm0nkgKd3Cip1HJXtOS_M")'>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background-dark"></div>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Marcus Vane</p>
+<p class="text-xs text-[#9db2b8] truncate">Lead Dispatcher</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden bg-background-dark">
+<header class="h-16 border-b border-[#293438] flex items-center justify-between px-8 bg-background-dark/50 glass-panel sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold tracking-tight">OCR Expense Capture</h2>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30">Wizard Mode</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-[#1c2426] px-3 py-1.5 rounded-lg border border-[#3c4d53]">
+<span class="text-[10px] font-bold uppercase tracking-wider text-[#9db2b8]">Sync Status:</span>
+<span class="text-[10px] font-bold uppercase tracking-wider text-green-500">Connected to Xero</span>
+</div>
+<button class="p-2 text-[#9db2b8] hover:text-white hover:bg-[#293438] rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 max-w-6xl mx-auto w-full">
+<div class="mb-12 flex items-center justify-between px-12 relative">
+<div class="absolute top-1/2 left-0 w-full h-0.5 bg-[#293438] -translate-y-1/2 -z-0"></div>
+<div class="relative z-10 flex flex-col items-center gap-2">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold ring-4 ring-background-dark">1</div>
+<span class="text-xs font-bold uppercase tracking-widest text-primary">Upload &amp; Scan</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-2">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-white font-bold ring-4 ring-background-dark">2</div>
+<span class="text-xs font-bold uppercase tracking-widest text-primary">Verification</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-2">
+<div class="size-10 rounded-full bg-[#1c2426] border border-[#3c4d53] flex items-center justify-center text-[#9db2b8] font-bold ring-4 ring-background-dark">3</div>
+<span class="text-xs font-bold uppercase tracking-widest text-[#9db2b8]">Allocation</span>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-8">
+<div class="space-y-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] overflow-hidden flex flex-col h-[600px]">
+<div class="p-4 border-b border-[#3c4d53] flex items-center justify-between">
+<h3 class="text-sm font-bold uppercase tracking-widest text-[#9db2b8]">Captured Document</h3>
+<button class="text-primary hover:text-primary/80 flex items-center gap-1 text-xs font-bold">
+<span class="material-symbols-outlined text-sm">refresh</span> Re-scan
+                                    </button>
+</div>
+<div class="flex-1 bg-black/40 relative flex items-center justify-center p-8 group">
+<div class="w-full h-full border-2 border-dashed border-[#3c4d53] rounded-lg flex flex-col items-center justify-center gap-4 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-6xl text-[#3c4d53] group-hover:text-primary transition-colors">receipt</span>
+<div class="text-center">
+<p class="font-bold text-sm">Receipt_0921_SiteB.jpg</p>
+<p class="text-xs text-[#9db2b8] mt-1">Uploaded 2 mins ago (1.2 MB)</p>
+</div>
+<button class="bg-[#293438] text-white px-4 py-2 rounded text-xs font-bold border border-[#3c4d53] hover:bg-[#3c4d53] transition-colors">Replace Image</button>
+</div>
+<div class="absolute top-20 left-20 w-32 h-6 border-2 border-primary/50 bg-primary/10 rounded flex items-center justify-center">
+<span class="text-[8px] font-bold text-primary uppercase">Detected Amount</span>
+</div>
+<div class="absolute bottom-40 right-20 w-40 h-8 border-2 border-primary/50 bg-primary/10 rounded flex items-center justify-center">
+<span class="text-[8px] font-bold text-primary uppercase">Detected Vendor</span>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] p-6">
+<h3 class="text-sm font-bold uppercase tracking-widest text-[#9db2b8] mb-6">Data Verification</h3>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Vendor Name</label>
+<input class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary" type="text" value="Apex Electrical Supplies"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Total Amount ($)</label>
+<input class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary" type="text" value="1,245.50"/>
+</div>
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Date</label>
+<input class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary" type="date" value="2023-11-20"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Category</label>
+<select class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary">
+<option>Material Costs</option>
+<option>Equipment Hire</option>
+<option>Travel &amp; Subsistence</option>
+<option>Subcontractor Fees</option>
+</select>
+</div>
+</div>
+</div>
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] p-6">
+<h3 class="text-sm font-bold uppercase tracking-widest text-[#9db2b8] mb-6">Cost Allocation</h3>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Linked Project</label>
+<select class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary">
+<option>PRJ-2023-NW-04: Metro Station Retrofit</option>
+<option>PRJ-2023-CENTRAL-12: Residential Solar</option>
+<option>PRJ-2023-SOUTH-09: Industrial Park Maintenance</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-bold text-[#9db2b8] uppercase mb-1.5">Cost Center</label>
+<select class="w-full bg-[#121417] border-[#3c4d53] rounded-lg text-sm text-white focus:ring-primary focus:border-primary">
+<option>CC-500: Electrical Hardware</option>
+<option>CC-602: On-site Logistics</option>
+<option>CC-101: General Operations</option>
+</select>
+</div>
+<div class="pt-4 flex items-center justify-between border-t border-[#3c4d53]">
+<div class="flex items-center gap-3">
+<div class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary cursor-pointer">
+<span class="inline-block h-4 w-4 transform translate-x-6 rounded-full bg-white transition"></span>
+</div>
+<span class="text-sm font-medium">Sync to Xero automatically</span>
+</div>
+<span class="material-symbols-outlined text-[#9db2b8] cursor-help" title="Once verified, data is pushed to Xero as a Bill.">info</span>
+</div>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 border border-[#3c4d53] hover:bg-[#293438] text-white font-bold py-4 rounded-xl transition-all">
+                                        Save Draft
+                                    </button>
+<button class="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(18,125,161,0.3)] transition-all">
+<span class="material-symbols-outlined">sync</span>
+                                        Process &amp; Sync
+                                    </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-4 bg-primary/5 border border-primary/20 rounded-lg flex gap-3">
+<span class="material-symbols-outlined text-primary">auto_fix_high</span>
+<div>
+<h4 class="text-xs font-bold uppercase mb-1">OCR Accuracy</h4>
+<p class="text-xs text-[#9db2b8]">Current scan confidence: 98.4%. High fidelity achieved on vendor and totals.</p>
+</div>
+</div>
+<div class="p-4 bg-accent-amber/5 border border-accent-amber/20 rounded-lg flex gap-3">
+<span class="material-symbols-outlined text-accent-amber">history_edu</span>
+<div>
+<h4 class="text-xs font-bold uppercase mb-1">Previous Entry</h4>
+<p class="text-xs text-[#9db2b8]">Apex Electrical was last billed to 'Metro Station Retrofit' last Tuesday.</p>
+</div>
+</div>
+<div class="p-4 bg-green-500/5 border border-green-500/20 rounded-lg flex gap-3">
+<span class="material-symbols-outlined text-green-500">verified</span>
+<div>
+<h4 class="text-xs font-bold uppercase mb-1">Policy Check</h4>
+<p class="text-xs text-[#9db2b8]">This expense falls within the pre-approved project budget for materials.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Project Pipeline - AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Electric Blue accent
+                        "navy-deep": "#0f172a", // Deep Navy background
+                        "navy-column": "#1e293b", // Subtle dark contrast for columns
+                        "navy-card": "#1a2233", // Card background
+                        "accent-blue": "#3b82f6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .kanban-column {
+            min-width: 320px;
+            max-width: 360px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .sidebar-item-active {
+            @apply bg-accent-blue/10 text-accent-blue border-r-4 border-accent-blue;
+        }
+    </style>
+</head>
+<body class="font-display bg-navy-deep text-slate-100 min-h-screen">
+<div class="flex min-h-screen">
+<aside class="w-64 border-r border-slate-800 bg-navy-deep flex flex-col sticky top-0 h-screen shrink-0">
+<div class="p-6">
+<div class="flex items-center gap-3 text-accent-blue mb-10">
+<div class="size-8">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight">AmpedFieldOps</h2>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span class="text-sm font-medium">Operations Dashboard</span>
+</a>
+<a class="sidebar-item-active flex items-center gap-3 px-3 py-2.5 rounded-r-none rounded-l-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">view_kanban</span>
+<span class="text-sm font-semibold">Project Pipeline</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+<span class="text-sm font-medium">Cost Centers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">group</span>
+<span class="text-sm font-medium">Field Teams</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">description</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+<div class="pt-6 pb-2">
+<p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Admin</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-medium">System Settings</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-4 border-t border-slate-800 bg-slate-900/20">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-700" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDYCRHG1NXp7HtU34TWtwKqu5r7jiglTjrmwPnTXhTDhAj52Wn3M4TXgUS4CMJvm9HycM2XtjoAEW0DBTDTbJCzhbhIMAnGowHmDdkFD-A82l7gVkoBjIAicEtosY4-eU56w61UG0ZaujRSmV7aXaD0MeYc8AFni3ZY20yUmkPIklP8NSRVB7RR5wnqj7Jq8H9x69qL0JAZiswxheuZSZ3DOvr64ZYLo3fwD-N6XZPr7h_fFxcvr7S2w0WXnGhtZbHnVUPqghRNGCY");'></div>
+<div class="flex flex-col min-w-0">
+<p class="text-sm font-bold text-white truncate">Alex Rivera</p>
+<p class="text-[11px] text-slate-500 truncate">Ops Director</p>
+</div>
+<button class="ml-auto text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-800 bg-navy-deep/80 backdrop-blur-md px-10 py-4 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<label class="flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-slate-400 flex border-none bg-slate-800/50 items-center justify-center pl-4 rounded-l-lg">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-slate-800/50 text-white focus:ring-1 focus:ring-accent-blue/50 h-full placeholder:text-slate-500 px-4 rounded-r-lg text-sm" placeholder="Search projects..."/>
+</div>
+</label>
+</div>
+<div class="flex gap-4 items-center">
+<div class="flex gap-2">
+<button class="flex size-10 items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<button class="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-lg h-10 px-4 bg-accent-blue text-white text-sm font-bold shadow-lg shadow-accent-blue/20 hover:bg-accent-blue/90 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Project</span>
+</button>
+</div>
+</header>
+<main class="flex flex-col flex-1 px-10 py-8 overflow-hidden">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h1 class="text-3xl font-bold text-white tracking-tight">Project Pipeline</h1>
+<p class="text-slate-400 text-sm mt-1">Manage operational workflow and project-level cost center allocation</p>
+</div>
+<div class="flex gap-3">
+<div class="flex bg-slate-800/40 border border-slate-700/50 rounded-xl p-1">
+<button class="p-2 text-slate-400 hover:text-white transition-colors rounded-lg">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white transition-colors rounded-lg">
+<span class="material-symbols-outlined">swap_vert</span>
+</button>
+<div class="w-[1px] bg-slate-700/50 mx-1"></div>
+<button class="p-2 bg-accent-blue/20 text-accent-blue rounded-lg">
+<span class="material-symbols-outlined">view_kanban</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white transition-colors rounded-lg">
+<span class="material-symbols-outlined">view_list</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex gap-6 overflow-x-auto pb-8 custom-scrollbar flex-1 items-start">
+<div class="kanban-column flex flex-col gap-4 shrink-0 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-3">
+<span class="size-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]"></span>
+<h3 class="font-bold text-xs uppercase tracking-[0.1em] text-slate-300">Discovery</h3>
+<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">3</span>
+</div>
+<button class="text-slate-500 hover:text-white"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 hover:border-accent-blue/50 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all cursor-pointer group relative overflow-hidden">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-accent-blue/10 text-accent-blue text-[10px] font-bold rounded border border-accent-blue/20 uppercase tracking-wide">New Opportunity</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-accent-blue transition-colors">Downtown Smart Lighting</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-0042</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-accent-blue">12%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-accent-blue h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" style="width: 12%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Public Works</span>
+</div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBAUjOWmi311bbbbfPu1nWD87nIlYgR8OxutV72HDMhFLrWHy199muHgy6HZkCJqMYYSJnJoW-wt7Sg17ODj_uiK2SVTdmES271FiVDYekkZ_kh4GJLwDal4AEwpSr7nDwLpPJZ_rjI1ejqSsFdHnPn6sa7g5snhk_usOjQmEasJq3n7G54MdLiWM4b9hd3Bk54bio74shBCmxjJ-A386-fJgHgUYS-ydpRFtego1O4LfKkGSfLQLMdxNkcw0YUBYr72-CRUuR9js0'); background-size: cover;"></div>
+</div>
+</div>
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 hover:border-accent-blue/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-orange-500/10 text-orange-400 text-[10px] font-bold rounded border border-orange-500/20 uppercase tracking-wide">Priority</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-accent-blue transition-colors">Solar Farm Site Survey</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-1109</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-accent-blue">28%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-accent-blue h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" style="width: 28%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Renewables</span>
+</div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDaxWldSyIYsrp3-Xg9aBZi7EzlCSIIhZ277p9MV8rnaTCrtGh8v4o7I9iW7nfhuw-hKbJ9kOxtyv32APfRew8viFOCwoK_3mKmicS3pJNMSiyQhC3MioIviopvsoklSpNRK1KPMY1n6pBJVCvwsVtC98NB2epH-SfYA9GEwb9LBsjNdxm2RRbqbSpoFeBAMWhz3MIWkd_3JuHfTA6vNuVJLwlkJm5HcAQIpU9JO5ZLGUaKG92NyMDkb73vGeEBzLJ9fY4urnpNCwY'); background-size: cover;"></div>
+</div>
+</div>
+<div class="border-2 border-dashed border-slate-800 rounded-xl p-5 flex items-center justify-center text-slate-500 hover:border-accent-blue/40 hover:text-accent-blue transition-all cursor-pointer group">
+<span class="material-symbols-outlined mr-2 text-[20px] group-hover:scale-110 transition-transform">add_circle</span>
+<span class="text-sm font-bold">Add Project</span>
+</div>
+</div>
+</div>
+<div class="kanban-column flex flex-col gap-4 shrink-0 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-3">
+<span class="size-2.5 rounded-full bg-accent-blue shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+<h3 class="font-bold text-xs uppercase tracking-[0.1em] text-slate-300">Active</h3>
+<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">8</span>
+</div>
+<button class="text-slate-500 hover:text-white"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 border-l-4 border-l-accent-blue hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-accent-blue/20 text-accent-blue text-[10px] font-bold rounded border border-accent-blue/30 uppercase tracking-wide">In Field</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-accent-blue transition-colors">Highline Substation Expansion</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-9042</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-accent-blue">75%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-accent-blue h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" style="width: 75%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Grid Infra</span>
+</div>
+<div class="flex -space-x-2">
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCliRQnhSIDOrqYlJMwShvlfVLwS1L4xwaSEbjWVdFmye27rPX4pdPqb2PnYFANC52B2_EpaiVIYOG-kGB1umh9zzgVO7pCvuc8fWuc3Izgf71AS8JntzAqOQchWEETgc6zJ50ES3lDprUtI0D9PLusZWVYeSDLveH0za7t3d5NCJdndcBBjJOE9o5B_FO9KD2jDGx_A4F5VyRpt6anFWj-PZNPtMgc1qokD2lOy4LKtFGtEJi7IXq3VcupQywHmg3SRW0ntxojbbU'); background-size: cover;"></div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBeGs49onLtqM1ceFoBFTUjHl4toJr8Yiy32S43-5JJxOW9vKkOfKCyCUZkvN6UkC6t_omJzXBkf0pykmcPOYN7c0bOEJP5f6Q2egEfKh8ebO86wi2Q69FJrVDgEI-Y_p-Bq7ocUY3JK3cGhLZ62lsvlHFAcqChBa9IcLJRuOCbopVcxYu313Q7zEI79JIpVJDA1i2HFpD99cfX291P0sCQ11Y_u00OtOkZl6IWfIAknBw0p5oCcwTzhF1DodlXE7FHusaqOJ74hpQ'); background-size: cover;"></div>
+</div>
+</div>
+</div>
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 hover:border-red-500/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] font-bold rounded border border-red-500/20 uppercase tracking-wide">Issue Flagged</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-red-400 transition-colors">Rural Broadband Rollout</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-2287</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-red-400">42%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-red-500 h-full rounded-full shadow-[0_0_8px_rgba(239,68,68,0.4)]" style="width: 42%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Telecom</span>
+</div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcMBqYv9eLcyS99Z5QKZZnl9PTdsKvcQ_-ZAjTRMUosKiGRXxLl3UV1zi8n3Phm_jjFD4hoftzY7g-Y-Ru2lCW3iSwsMHpr6su3bRYgek6JpLOdHq3UVSUE4w_uFTbWIK1pbYtpManARTr2T3EwXT8H81LZ1AZtIy1jdWALnrflkmZa49HQzj2c_9a-zcgnLBJu4OIA1dQW0OoL6YWRH5jmSb07v2XPUReBANobapLYGR7tfb_5zTBBRHwgpvZdS0z4cEhefMWt8Q'); background-size: cover;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="kanban-column flex flex-col gap-4 shrink-0 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-3">
+<span class="size-2.5 rounded-full bg-fuchsia-500 shadow-[0_0_8px_rgba(217,70,239,0.5)]"></span>
+<h3 class="font-bold text-xs uppercase tracking-[0.1em] text-slate-300">Finalizing</h3>
+<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">4</span>
+</div>
+<button class="text-slate-500 hover:text-white"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 hover:border-fuchsia-500/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-fuchsia-500/10 text-fuchsia-400 text-[10px] font-bold rounded border border-fuchsia-500/20 uppercase tracking-wide">QC Review</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-fuchsia-400 transition-colors">Campus Microgrid Pilot</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-8812</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-accent-blue">92%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-accent-blue h-full rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" style="width: 92%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Renewables</span>
+</div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBDz3Ekdhh07ntLPJ-xZ0JfG9GntpOvFiy1AO-6yMXn4pF7Rz9Oui65swkotY42Qs5B9AR4l6Fc_qRUgxDmRbu2NuFAmk7d-TD55U2OUAbtlh600eTa9COPYAy-29QlfFaYbFMcDa7uAExBLpuu48JqQuOTzJJ6nYZR-YS-uBSWMZ5ER_0eJVPh-MmkjUo7QKyft9_4BRFGSwSGmc5GIq0AJouQCPxOzDXHqAGEhjzPHV_Pe-47FINFjAa2URi-lti-WcFyrGJdvfQ'); background-size: cover;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="kanban-column flex flex-col gap-4 shrink-0 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50">
+<div class="flex items-center justify-between px-2 py-1">
+<div class="flex items-center gap-3">
+<span class="size-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+<h3 class="font-bold text-xs uppercase tracking-[0.1em] text-slate-300">Invoicing</h3>
+<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold">2</span>
+</div>
+<button class="text-slate-500 hover:text-white"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 hover:border-emerald-500/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded border border-emerald-500/20 uppercase tracking-wide">Completed</span>
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-400">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight group-hover:text-emerald-400 transition-colors">East Side Maintenance</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-7710</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-emerald-400">100%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Maintenance</span>
+</div>
+<div class="size-7 rounded-full bg-emerald-500/20 flex items-center justify-center border-2 border-navy-card ring-1 ring-emerald-500/30">
+<span class="material-symbols-outlined text-[16px] text-emerald-400 font-bold">check</span>
+</div>
+</div>
+</div>
+<div class="bg-navy-card p-5 rounded-xl border border-slate-800/80 opacity-60 hover:opacity-100 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 bg-slate-700 text-slate-300 text-[10px] font-bold rounded uppercase tracking-wide">Processing</span>
+<span class="material-symbols-outlined text-slate-600">drag_indicator</span>
+</div>
+<h4 class="font-bold text-white text-[15px] mb-1 leading-tight">Wind Turbine Refurbish</h4>
+<p class="text-slate-400 text-xs mb-5 uppercase tracking-wider">ID: PRJ-4450</p>
+<div class="space-y-2 mb-5">
+<div class="flex justify-between items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+<span class="text-[10px] font-black text-emerald-400">100%</span>
+</div>
+<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-slate-500">account_balance_wallet</span>
+<span class="text-[11px] font-semibold text-slate-300">Renewables</span>
+</div>
+<div class="size-7 rounded-full bg-slate-700 border-2 border-navy-card ring-1 ring-slate-800" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDR6JnYbriqPbX5HA8QMAkPD552FgQepqZz_V5dQb_mEqoGU4DP7qjBoAlQ35PUSCD2ba-FjFmzLdS_lDEXdgp_8O82-QbPBHc7xvDJeFHtCmRx74qc8nZ4zivC3nH0X4tNNj5VBHeYiiOMRm8Ly6B475ocXFxbLbmjgOJci5ORmu_1wg-RJdvQMZZb6Xlrzfx_ExxjR_1A5sURebk1TAFWcYwCm2NnbdJHoTCAAaZIgGqOafPQSAiPShndFQPjZqrGIscbuL6t8xY'); background-size: cover;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html>

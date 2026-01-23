@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Xero Integration Configuration | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ea5e9", // Electric Blue
+                        "background-navy": "#0b0e14",
+                        "card-dark": "#161b22",
+                        "border-dark": "#30363d",
+                        "sidebar-dark": "#0d1117"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        .stat-widget {
+            @apply bg-card-dark border border-border-dark p-5 rounded-xl transition-all hover:border-primary/50;
+        }
+    </style>
+</head>
+<body class="bg-background-navy text-gray-100 min-h-screen flex">
+<aside class="w-64 bg-sidebar-dark border-r border-border-dark flex flex-col fixed inset-y-0 left-0 z-50">
+<div class="p-6 flex items-center gap-3 text-primary">
+<div class="size-8">
+<svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<h1 class="text-white text-lg font-bold tracking-tight">AmpedFieldOps</h1>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">work</span>
+<span class="text-sm font-medium">Jobs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">inventory</span>
+<span class="text-sm font-medium">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-primary bg-primary/10 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="text-sm font-bold">Integrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-border-dark">
+<div class="flex items-center gap-3 p-2">
+<div class="size-10 rounded-full border border-border-dark bg-center bg-cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAc_OvwCiBicXg_HoL1CeGYBmeBm1zdQ2UPy3CycVoGMj_26xuA_VKNLEt_XlgqFyUu0Z1FQT0shsBdpjrP_5nOslIG5qUekLlvs1CEtAn_3ifwaPVXLDPhapAWUMZioouylbcZsrJPOpLKQLom75h0eF4PzU-B2I-a4bOS-eDk135QcYrSFs5iE2KtnPLS8HoyOgcuoXmIGWBx-GCHVIT1h73nbsryyECvn04VdLsucxWU-yAUIv1QRzpPNmfJ7ceKTvCDNwfoc-o");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-white truncate">Alex Fieldman</p>
+<p class="text-xs text-gray-500 truncate">Admin Account</p>
+</div>
+<button class="text-gray-500 hover:text-white">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 ml-64 flex flex-col">
+<header class="h-16 flex items-center justify-between px-8 border-b border-border-dark bg-background-navy/80 backdrop-blur-sm sticky top-0 z-40">
+<div class="flex items-center gap-2">
+<span class="text-gray-500 text-sm">Settings</span>
+<span class="material-symbols-outlined text-gray-600 text-[14px]">chevron_right</span>
+<span class="text-gray-300 text-sm">Xero Configuration</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="flex-1 max-w-[1200px] mx-auto w-full px-8 py-8">
+<div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+<span>Accounting Integration</span>
+</div>
+<h1 class="text-3xl font-bold text-white tracking-tight">Xero Configuration</h1>
+<p class="text-gray-400">Map your field operations data to your general ledger accounts.</p>
+</div>
+<div class="flex gap-3">
+<button class="h-10 px-4 rounded-lg border border-border-dark text-gray-300 text-sm font-semibold hover:bg-white/5 transition-colors">
+                    Test Connection
+                </button>
+<button class="h-10 px-6 rounded-lg bg-primary text-white text-sm font-bold hover:brightness-110 shadow-lg shadow-primary/20 transition-all">
+                    Save Configuration
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="stat-widget">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-green-500/10 rounded-lg">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+</div>
+<span class="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">+2.4%</span>
+</div>
+<p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Sync Health Score</p>
+<p class="text-3xl font-bold text-white mt-1">98.2%</p>
+</div>
+<div class="stat-widget">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-red-500/10 rounded-lg">
+<span class="material-symbols-outlined text-red-500">error</span>
+</div>
+<span class="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">Action Required</span>
+</div>
+<p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Failed Records</p>
+<p class="text-3xl font-bold text-white mt-1">12</p>
+</div>
+<div class="stat-widget">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary">sync</span>
+</div>
+<span class="text-[10px] font-bold text-gray-500 px-2 py-0.5 uppercase tracking-tighter">Automatic</span>
+</div>
+<p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Last Sync</p>
+<p class="text-3xl font-bold text-white mt-1">5 mins ago</p>
+</div>
+</div>
+<div class="mb-10 bg-card-dark rounded-xl border border-border-dark overflow-hidden">
+<div class="px-6 py-4 border-b border-border-dark bg-white/5">
+<h2 class="text-white text-base font-bold">General Sync Settings</h2>
+</div>
+<div class="p-6 space-y-4">
+<div class="flex items-center justify-between p-4 bg-background-navy rounded-lg border border-border-dark/50 hover:border-primary/30 transition-colors">
+<div>
+<p class="text-white text-sm font-bold mb-0.5">Automatic Invoice Sync</p>
+<p class="text-gray-400 text-xs">Push invoices automatically to Xero once a job is closed.</p>
+</div>
+<label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full bg-border-dark p-1 transition-colors has-[:checked]:bg-primary">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 bg-background-navy rounded-lg border border-border-dark/50 hover:border-primary/30 transition-colors">
+<div>
+<p class="text-white text-sm font-bold mb-0.5">Inventory Level Sync</p>
+<p class="text-gray-400 text-xs">Keep AmpedFieldOps stock levels in sync with Xero Inventory.</p>
+</div>
+<label class="relative flex h-6 w-11 cursor-pointer items-center rounded-full bg-border-dark p-1 transition-colors has-[:checked]:bg-primary">
+<input class="sr-only peer" type="checkbox"/>
+<div class="h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+<div class="space-y-4">
+<h3 class="text-white text-sm font-bold flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">account_tree</span>
+                    Chart of Accounts Mapping
+                </h3>
+<div class="bg-card-dark border border-border-dark rounded-xl overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 border-b border-border-dark">
+<th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amped Category</th>
+<th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Xero Account</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-dark/30">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">Labor Services</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>400 - Sales (Revenue)</option>
+<option>410 - Service Income</option>
+</select>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">Material Sales</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>420 - Material Revenue</option>
+<option>400 - Sales (Revenue)</option>
+</select>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">Discounts Given</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>430 - Sales Discounts</option>
+<option>600 - COGS</option>
+</select>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="space-y-4">
+<h3 class="text-white text-sm font-bold flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">receipt_long</span>
+                    Tax Rates Mapping
+                </h3>
+<div class="bg-card-dark border border-border-dark rounded-xl overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 border-b border-border-dark">
+<th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amped Tax Code</th>
+<th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Xero Tax Rate</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-dark/30">
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">GST (10%)</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>GST on Income (10%)</option>
+<option>Tax Exempt</option>
+</select>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">State Tax (5%)</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>Output Tax (5%)</option>
+<option>Sales Tax</option>
+</select>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-4 py-4 text-sm font-medium text-gray-200">Tax Exempt</td>
+<td class="px-4 py-4">
+<select class="w-full h-9 px-3 rounded border border-border-dark bg-background-navy text-xs text-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none">
+<option>Tax Exempt (0%)</option>
+</select>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="lg:col-span-2 space-y-4">
+<h3 class="text-white text-sm font-bold flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">inventory_2</span>
+                    Inventory &amp; Warehouse Mapping
+                </h3>
+<div class="bg-card-dark border border-border-dark rounded-xl overflow-hidden shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-6">
+<div class="space-y-2">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Main Warehouse</label>
+<select class="w-full h-10 px-3 rounded border border-border-dark bg-background-navy text-sm text-gray-300 focus:border-primary outline-none">
+<option>Xero Inventory - Central</option>
+<option>Xero Inventory - East</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Technician Vans</label>
+<select class="w-full h-10 px-3 rounded border border-border-dark bg-background-navy text-sm text-gray-300 focus:border-primary outline-none">
+<option>Xero Inventory - Mobile Units</option>
+<option>Do not sync van stock</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Default SKU Prefix</label>
+<input class="w-full h-10 px-3 rounded border border-border-dark bg-background-navy text-sm text-gray-300 focus:border-primary outline-none" type="text" value="AMP-"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-sidebar-dark border border-border-dark p-4 rounded-xl flex justify-between items-center shadow-2xl mt-8">
+<div class="flex items-center gap-4 text-xs text-gray-400">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px]">info</span>
+                    Last configuration save: Today at 09:42 AM
+                </span>
+</div>
+<div class="flex gap-4">
+<button class="px-5 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors">
+                    Discard Changes
+                </button>
+<button class="px-8 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:brightness-110 shadow-lg shadow-primary/20 transition-all">
+                    Save Configuration
+                </button>
+</div>
+</div>
+</main>
+<footer class="py-8 px-8 border-t border-border-dark mt-auto bg-sidebar-dark">
+<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="size-5 text-gray-600">
+<svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<p class="text-xs text-gray-500">© 2023 AmpedFieldOps Inc. Professional Services Edition</p>
+</div>
+<div class="flex gap-8 text-xs text-gray-500">
+<a class="hover:text-primary transition-colors" href="#">Support</a>
+<a class="hover:text-primary transition-colors" href="#">API Docs</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+</div>
+</div>
+</footer>
+</div>
+
+</body></html>

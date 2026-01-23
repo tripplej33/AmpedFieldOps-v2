@@ -1,0 +1,399 @@
+{
+  "projectName": "AmpedFieldOps V2",
+  "version": "2.0.0",
+  "status": "PHASE_6_QA",
+  "description": "Complete rewrite of field operations management system with React 18, TypeScript, TailwindCSS, and Supabase",
+  "techStack": {
+    "frontend": {
+      "runtime": "Node.js 20+",
+      "framework": "React 18 + TypeScript",
+      "buildTool": "Vite",
+      "styling": "TailwindCSS 3.4",
+      "stateManagement": "React Context + Hooks",
+      "forms": "react-hook-form + zod",
+      "routing": "react-router-dom v6",
+      "database": "Supabase (@supabase/supabase-js)",
+      "icons": "Material Symbols (web font)",
+      "fonts": "Google Fonts (Space Grotesk)"
+    },
+    "backend": {
+      "runtime": "Node.js 20+",
+      "framework": "Express.js",
+      "queue": "BullMQ + Redis",
+      "purpose": "Service-role operations only (Xero sync, admin tasks)"
+    }
+  },
+  "coreFeatures": [
+    {
+      "id": 1,
+      "name": "Authentication",
+      "phase": "Phase 1",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "description": "Supabase Auth with JWT, session persistence, protected routes"
+    },
+    {
+      "id": 2,
+      "name": "Design System & Layout",
+      "phase": "Phase 1",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "description": "Sidebar navigation, header, responsive grid, dark theme with teal accents"
+    },
+    {
+      "id": 3,
+      "name": "Clients Module",
+      "phase": "Phase 2",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "description": "Full CRUD for clients with table, filters, and form modal. Two-way sync with Xero Contacts."
+    },
+    {
+      "id": 4,
+      "name": "Projects Module",
+      "phase": "Phase 3",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "description": "Projects with Kanban + table views, multi-step wizard, status management (Pending, Active, On Hold, Completed, Invoiced, Archived)"
+    },
+    {
+      "id": 5,
+      "name": "Cost Centers",
+      "phase": "Phase 3",
+      "priority": "P0",
+      "status": "NOT_STARTED",
+      "description": "Internal budget buckets per project. Support for customer-supplied PO linking. Budget tracking and PO creation per cost center."
+    },
+    {
+      "id": 6,
+      "name": "Timesheets Module",
+      "phase": "Phase 4",
+      "priority": "P0",
+      "status": "COMPLETED",
+      "description": "Timesheet tracking with states: Draft → Submitted → Approved → Invoiced. Service type selector, submit/approve workflow."
+    },
+    {
+      "id": 7,
+      "name": "Dashboard & Metrics",
+      "phase": "Phase 5",
+      "priority": "P1",
+      "status": "NOT_STARTED",
+      "description": "Operations hub with stat cards, trends, activity feed, role-based views"
+    },
+    {
+      "id": 8,
+      "name": "Activity Types Management",
+      "phase": "Phase 5",
+      "priority": "P1",
+      "status": "DATABASE_READY",
+      "description": "Admin CRUD for activity types. Map to Xero Products/Services. Managed-by-Xero flag.",
+      "completedBy": "Backend Developer",
+      "completedAt": "2026-01-23T15:30:00Z",
+      "notes": "Database table updated, RLS policies configured. Ready for frontend integration."
+    },
+    {
+      "id": 9,
+      "name": "Financials Dashboard",
+      "phase": "Phase 5",
+      "priority": "P1",
+      "status": "NOT_STARTED",
+      "description": "Overview page showing Xero sync status, invoice/quote summaries, payment tracking. Draft/preview invoice creation from timesheets."
+    },
+    {
+      "id": 10,
+      "name": "File Management",
+      "phase": "Phase 6",
+      "priority": "P1",
+      "status": "IMPLEMENTATION_COMPLETE",
+      "description": "Upload/download files via Supabase Storage, project-scoped file browser",
+      "completedBy": "Frontend Developer",
+      "completedAt": "2026-01-24T00:00:00Z",
+      "notes": "Backend storage bucket + RLS created. Frontend UI with drag-drop upload, file list, preview, download, delete. Awaiting QA testing."
+    },
+    {
+      "id": 11,
+      "name": "Backend Service API",
+      "phase": "Phase 7",
+      "priority": "P1",
+      "status": "NOT_STARTED",
+      "description": "Express endpoints for Xero sync (stub), admin operations, invoice creation"
+    },
+    {
+      "id": 12,
+      "name": "Xero Integration (Phase 2)",
+      "phase": "Phase 7+",
+      "priority": "P2",
+      "status": "NOT_STARTED",
+      "description": "Two-way sync: Clients ↔ Contacts, Activity Types ← Products/Services, Invoices → Xero. Payment status from Xero. Optional: Tracking Categories."
+    }
+  ],
+  "roles": [
+    {
+      "name": "admin",
+      "permissions": [
+        "all_crud",
+        "approve_timesheets",
+        "manage_users",
+        "manage_activity_types",
+        "xero_sync",
+        "view_reports",
+        "access_settings"
+      ]
+    },
+    {
+      "name": "manager",
+      "permissions": [
+        "client_crud",
+        "project_crud",
+        "approve_timesheets",
+        "view_team_timesheets",
+        "view_reports"
+      ]
+    },
+    {
+      "name": "technician",
+      "permissions": [
+        "submit_timesheets",
+        "view_own_timesheets",
+        "view_own_projects"
+      ]
+    },
+    {
+      "name": "viewer",
+      "permissions": [
+        "view_reports",
+        "view_dashboard"
+      ]
+    }
+  ],
+  "dataSchema": {
+    "clients": "name, company_name, contact_name, email, phone, address, city, state, postal_code, country, website, is_active, xero_contact_id, created_by, created_at, updated_at",
+    "projects": "name, client_id, description, budget, hourly_rate, status (pending|active|on_hold|completed|invoiced|archived), start_date, end_date, company_name, created_by, created_at, updated_at",
+    "cost_centers": "project_id, name, budget, spent (calculated), customer_po_number (manual entry), notes, created_by, created_at, updated_at",
+    "timesheets": "project_id, cost_center_id, entry_date, hours, activity_type_id, status (draft|submitted|approved|invoiced), notes, submitted_by, approved_by, invoiced_at, created_by, created_at, updated_at",
+    "activity_types": "name, default_rate, xero_item_id, xero_item_code, xero_tax_type, managed_by_xero, created_by, created_at, updated_at",
+    "invoices": "client_id, project_id, invoice_number, reference (customer_po_number), notes (project_number - costcenter_name), total_amount, tax_amount, xero_invoice_id, sync_status (draft|synced|failed), created_at"
+  },
+  "designTokens": {
+    "colors": {
+      "primary": "#127da1",
+      "background-light": "#fafafa",
+      "background-dark": "#121417",
+      "card-dark": "#1c2426",
+      "accent-amber": "#f59e0b",
+      "nav-hover": "#293438",
+      "border-dark": "#3c4d53",
+      "text-muted": "#9db2b8"
+    },
+    "fonts": {
+      "primary": "Space Grotesk",
+      "weights": [300, 400, 500, 600, 700]
+    }
+  },
+  "phases": [
+    {
+      "phase": "Phase 1: Foundation",
+      "duration": "2 days",
+      "goal": "Auth + basic shell + design system",
+      "features": ["Authentication", "Design System & Layout"]
+    },
+    {
+      "phase": "Phase 2: Clients Module",
+      "duration": "2 days",
+      "goal": "Full CRUD for clients",
+      "features": ["Clients Module"]
+    },
+    {
+      "phase": "Phase 3: Projects Module",
+      "duration": "2 days",
+      "goal": "Projects with Kanban + table",
+      "features": ["Projects Module"]
+    },
+    {
+      "phase": "Phase 4: Timesheets Module",
+      "duration": "1 day",
+      "goal": "Timesheet tracking",
+      "features": ["Timesheets Module"]
+    },
+    {
+      "phase": "Phase 5: Dashboard & Activity Types",
+      "duration": "1 day",
+      "goal": "Real metrics + activity type management",
+      "features": ["Dashboard & Metrics", "Activity Types Management"]
+    },
+    {
+      "phase": "Phase 6: Polish & Files",
+      "duration": "1 day",
+      "goal": "Hardening and UX polish",
+      "features": ["File Management"]
+    },
+    {
+      "phase": "Phase 7: Backend & Xero",
+      "duration": "1 day",
+      "goal": "Minimal backend for admin tasks",
+      "features": ["Backend Service API", "Xero Integration (stub)"]
+    }
+  ],
+  "successCriteria": {
+    "performance": [
+      "First Contentful Paint < 1.5s",
+      "Time to Interactive < 2.5s",
+      "Lighthouse Performance score > 85"
+    ],
+    "functionality": [
+      "All CRUD operations work without errors",
+      "Forms validate inputs with clear error messages",
+      "Loading states show during async operations",
+      "Error states display user-friendly messages"
+    ],
+    "ux": [
+      "Design matches example screens",
+      "Responsive on tablet and desktop",
+      "Keyboard navigation works for forms",
+      "Empty states provide helpful guidance"
+    ],
+    "security": [
+      "RLS policies enforced on all queries",
+      "JWT tokens validated on every request",
+      "Service-role endpoints require admin check"
+    ]
+  },
+  "xeroIntegrationDetails": {
+    "mvpScope": {
+      "clientsContacts": {
+        "direction": "two-way",
+        "sync": "Create client in AmpedFieldOps → Contact in Xero. Update client → Update Contact. Edit Contact in Xero → Pulls to AmpedFieldOps.",
+        "status": "CONFIRMED"
+      },
+      "activityTypesServices": {
+        "direction": "one-way (import)",
+        "sync": "Pull Xero Products/Services → Map to Activity Types. Admin links activity type to Xero item. When invoicing, use Xero item details.",
+        "status": "CONFIRMED"
+      },
+      "invoiceWorkflow": {
+        "flow": "Draft timesheet → Submit → Manager approves → Create invoice preview (shows all unbilled timesheets for cost center) → Review (shows customer PO in reference field, project-costcenter in notes) → Send to Xero → Mark as synced",
+        "poHandling": "Customer-supplied PO stored at cost center level. Reference field = customer PO number. Notes field = 'PROJECT001 - Labor' (project number - costcenter name).",
+        "status": "CONFIRMED"
+      },
+      "paymentStatus": {
+        "display": "Badge showing Paid/Unpaid/Overdue from Xero",
+        "sync": "Poll Xero for payment status, auto-mark timesheets as invoiced if invoice is Paid",
+        "status": "CONFIRMED"
+      },
+      "taxRate": {
+        "approach": "Hard-code single default rate (e.g., 10% GST) for MVP. Config in Phase 2.",
+        "status": "CONFIRMED"
+      }
+    },
+    "phase2Scope": {
+      "trackingCategories": "Optional. If implemented: Tag each timesheet by category (e.g., Department: Labor). Flows to Xero reports.",
+      "accountMapping": "Defer. Use Xero defaults. Later: Add admin config for custom Chart of Accounts mapping.",
+      "advancedFeatures": "Recurring invoices, bulk PO creation, expense tracking, budget alerts"
+    }
+  },
+  "costCenterWorkflow": {
+    "creation": "When creating a project, admin optionally adds cost centers (e.g., Labor, Materials, Equipment). Each has its own budget.",
+    "poLinking": "Admin stores customer-supplied PO at cost center level (e.g., 'Cost Center: Labor, Customer PO: ABC123'). One PO per cost center.",
+    "timesheetAssignment": "Technician logs hours and selects which cost center they worked on.",
+    "invoicing": "When creating invoice for cost center, AmpedFieldOps auto-populates: Reference = customer PO (ABC123), Notes = Project#-CostCenterName (PROJ001 - Labor)",
+    "budgetTracking": "Cost center shows: Budget $X, Spent $Y (sum of approved timesheets + PO amounts), Remaining.",
+    "status": "CONFIRMED"
+  },
+  "projectStatusWorkflow": {
+    "statuses": ["Pending", "Active", "On Hold", "Completed", "Invoiced", "Archived"],
+    "archive": "Once project status = Invoiced, admin can archive. Archived projects hidden from main list but searchable/filterable.",
+    "status": "CONFIRMED"
+  },
+  "resolvedDecisions": [
+    {
+      "decision": "Cost Centers are internal budget buckets (not Xero-synced yet)",
+      "details": "Store customer PO at cost center level. Each cost center can have one PO. PO auto-populates on invoice creation."
+    },
+    {
+      "decision": "Customer PO reference format",
+      "details": "Reference field = customer's actual PO number (ABC123). Notes field = Project Number - Cost Center Name (PROJ001 - Labor)"
+    },
+    {
+      "decision": "PO storage approach",
+      "details": "Manual entry by admin. Stored at cost center level. One PO per cost center."
+    },
+    {
+      "decision": "Timesheet states",
+      "details": "Draft → Submitted → Approved → Invoiced (added Invoiced state to track if billed)"
+    },
+    {
+      "decision": "Project archive",
+      "details": "After Invoiced status, can be archived. Clears main project list."
+    },
+    {
+      "decision": "Xero Contacts",
+      "details": "Two-way sync enabled. MVP scope confirmed."
+    },
+    {
+      "decision": "Tracking Categories",
+      "details": "Optional for MVP. Decision deferred to Phase 2+."
+    }
+  ],
+  "criticalIssues": [
+    {
+      "id": "BUG-001",
+      "severity": "P0",
+      "status": "RESOLVED",
+      "title": "Users Table RLS Circular Dependency - 500 Errors",
+      "assignedTo": "Backend Developer",
+      "description": "RLS policies on users table cause recursive queries resulting in 500 errors for all /rest/v1/users endpoints",
+      "handoff": ".project/CRITICAL_BUGS_HANDOFF.md - Backend Task",
+      "identifiedAt": "2026-01-22T00:00:00Z",
+      "resolvedAt": "2026-01-22T00:00:00Z",
+      "resolution": "Created migration 20260122_fix_users_rls_circular_dependency.sql to fix circular dependency"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "P0",
+      "status": "RESOLVED",
+      "title": "Infinite Redirect Loop in Welcome.tsx",
+      "assignedTo": "Frontend Developer",
+      "description": "Welcome page redirects to dashboard hundreds of times due to failed user profile load (caused by BUG-001)",
+      "handoff": ".project/CRITICAL_BUGS_HANDOFF.md - Frontend Task",
+      "identifiedAt": "2026-01-22T00:00:00Z",
+      "resolvedAt": "2026-01-22T00:00:00Z",
+      "resolution": "Resolved after RLS fix was applied"
+    }
+  ],
+  "agentProgressTracking": {
+    "enabled": true,
+    "protocol": ".project/AGENT_PROGRESS_PROTOCOL.md",
+    "logDirectory": ".project/agent_logs/",
+    "mandatory": true,
+    "agents": {
+      "frontend_developer": {
+        "logFile": ".project/agent_logs/frontend_developer.log.md",
+        "responsibilities": ["UI components", "hooks", "pages", "styling", "client-side logic"]
+      },
+      "backend_developer": {
+        "logFile": ".project/agent_logs/backend_developer.log.md",
+        "responsibilities": ["API endpoints", "migrations", "RLS policies", "database schema", "server-side logic"]
+      },
+      "qa_engineer": {
+        "logFile": ".project/agent_logs/qa_engineer.log.md",
+        "responsibilities": ["Testing", "bug verification", "quality assurance", "test reports"]
+      },
+      "orchestrator": {
+        "logFile": ".project/agent_logs/orchestrator.log.md",
+        "responsibilities": ["Project management", "decisions", "handoffs", "scope changes", "blocker resolution"]
+      }
+    },
+    "updateRequirements": {
+      "frequency": "After each task or feature completion",
+      "requiredFields": ["task", "status", "filesChanged", "testsPerformed", "blockers", "nextSteps"],
+      "manifestUpdate": "Required when marking features as COMPLETED"
+    }
+  },
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=dcssbsxjtfibwfxoagxl"
+    }
+  },
+  "createdAt": "2026-01-21T00:00:00Z",
+  "lastUpdated": "2026-01-23T16:00:00Z"
+}

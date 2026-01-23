@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Profile &amp; Certifications | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#127da1",
+                        "background-light": "#fafafa",
+                        "background-dark": "#121417",
+                        "card-dark": "#1c2426",
+                        "accent-amber": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav {
+            background-color: #293438;
+            border-left: 4px solid #127da1;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background-color: rgba(28, 36, 38, 0.8);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121417;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3c4d53;
+            border-radius: 10px;
+        }
+        .toggle-checkbox:checked {
+            @apply right-0 border-primary bg-primary;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            @apply bg-primary/20;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white antialiased">
+<div class="flex h-screen overflow-hidden">
+<aside class="w-64 flex flex-col border-r border-[#293438] bg-background-dark shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary size-10 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(18,125,161,0.4)]">
+<span class="material-symbols-outlined text-white">bolt</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-none tracking-tight">AmpedFieldOps</h1>
+<p class="text-[#9db2b8] text-[10px] uppercase tracking-widest font-bold">Command Center</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Operations Hub</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">assignment</span>
+<p class="text-sm font-medium">Job Queue</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg active-nav text-white cursor-pointer">
+<span class="material-symbols-outlined">badge</span>
+<p class="text-sm font-medium">Technicians</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">local_shipping</span>
+<p class="text-sm font-medium">Fleet Analytics</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#293438] text-[#9db2b8] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">query_stats</span>
+<p class="text-sm font-medium">Insights</p>
+</div>
+</nav>
+<div class="p-4 border-t border-[#293438] flex flex-col gap-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+<span class="text-sm">Dispatch Job</span>
+</button>
+<div class="flex items-center gap-3 p-2">
+<div class="relative size-10 rounded-full bg-center bg-cover border-2 border-primary/30" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPxszquPqkhulJB-DFR4wuTjAIl_vYQbCkvaii1rzlV7DmRpj_7pUQTpvA046CCuEgC3dHAwlzeZH5cZC46KvtWgF6lbWgXzROh9J58Ph5CGnuCfMmuVE_29e95IbeRvxNITdTxK3JIvXYAOpNT3tRReoIuaQCuoNclyB8OvlJo3LpsuPQ9MYyjPpDddsDok5NfXVJtNKtaLjATCbLCMe2PUpCtJb3YQghJatPP0Z-9uPMM8R-XE7-oVENJ4tx2bKw_FdX3BLJndE")'>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background-dark"></div>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Marcus Vane</p>
+<p class="text-xs text-[#9db2b8] truncate">Lead Dispatcher</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden bg-background-dark">
+<header class="h-16 border-b border-[#293438] flex items-center justify-between px-8 bg-background-dark/50 glass-panel sticky top-0 z-10">
+<div class="flex items-center gap-2 text-sm text-[#9db2b8]">
+<span>Technicians</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-white font-medium">Marcus Vane</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-[#9db2b8] hover:text-white hover:bg-[#293438] rounded-lg transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-accent-amber rounded-full"></span>
+</button>
+<button class="p-2 text-[#9db2b8] hover:text-white hover:bg-[#293438] rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+<div class="flex items-center gap-6 pb-8 border-b border-[#293438]">
+<div class="relative size-24 rounded-2xl bg-center bg-cover border-4 border-card-dark shadow-2xl" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPxszquPqkhulJB-DFR4wuTjAIl_vYQbCkvaii1rzlV7DmRpj_7pUQTpvA046CCuEgC3dHAwlzeZH5cZC46KvtWgF6lbWgXzROh9J58Ph5CGnuCfMmuVE_29e95IbeRvxNITdTxK3JIvXYAOpNT3tRReoIuaQCuoNclyB8OvlJo3LpsuPQ9MYyjPpDddsDok5NfXVJtNKtaLjATCbLCMe2PUpCtJb3YQghJatPP0Z-9uPMM8R-XE7-oVENJ4tx2bKw_FdX3BLJndE")'>
+<button class="absolute -bottom-2 -right-2 size-8 bg-primary rounded-lg flex items-center justify-center text-white border-2 border-background-dark hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-sm">photo_camera</span>
+</button>
+</div>
+<div>
+<h2 class="text-3xl font-bold tracking-tight">Marcus Vane</h2>
+<p class="text-[#9db2b8] flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-sm">verified</span>
+                        Lead Dispatcher &amp; Certified Electrician
+                    </p>
+<div class="flex gap-3 mt-4">
+<span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">Active Now</span>
+<span class="px-3 py-1 bg-[#293438] text-[#9db2b8] text-xs font-bold rounded-full">HQ Operations</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] p-6">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold">Personal Information</h3>
+<button class="text-primary hover:text-primary/80 transition-colors">
+<span class="material-symbols-outlined text-xl">edit</span>
+</button>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-xs text-[#9db2b8] uppercase font-bold tracking-wider">Email Address</p>
+<p class="text-sm font-medium mt-1">m.vane@ampedfieldops.com</p>
+</div>
+<div>
+<p class="text-xs text-[#9db2b8] uppercase font-bold tracking-wider">Phone Number</p>
+<p class="text-sm font-medium mt-1">+1 (555) 234-8901</p>
+</div>
+<div>
+<p class="text-xs text-[#9db2b8] uppercase font-bold tracking-wider">Location</p>
+<p class="text-sm font-medium mt-1">Seattle, WA Office</p>
+</div>
+<div>
+<p class="text-xs text-[#9db2b8] uppercase font-bold tracking-wider">Employee ID</p>
+<p class="text-sm font-medium mt-1 text-primary">#AFO-99210</p>
+</div>
+</div>
+</div>
+<div class="bg-card-dark rounded-xl border border-primary/30 p-6 bg-gradient-to-b from-primary/5 to-transparent">
+<h3 class="text-lg font-bold mb-4">Add New License</h3>
+<form class="space-y-4">
+<div>
+<label class="text-xs text-[#9db2b8] font-bold block mb-1">License Name</label>
+<input class="w-full bg-background-dark border-[#3c4d53] rounded-lg text-sm focus:ring-primary focus:border-primary px-4 py-2" placeholder="e.g. OSHA 30" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="text-xs text-[#9db2b8] font-bold block mb-1">Issue Date</label>
+<input class="w-full bg-background-dark border-[#3c4d53] rounded-lg text-sm focus:ring-primary focus:border-primary px-3 py-2" type="date"/>
+</div>
+<div>
+<label class="text-xs text-[#9db2b8] font-bold block mb-1">Expiry Date</label>
+<input class="w-full bg-background-dark border-[#3c4d53] rounded-lg text-sm focus:ring-primary focus:border-primary px-3 py-2" type="date"/>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 rounded-lg text-sm transition-all mt-2" type="button">
+                                Save Certification
+                            </button>
+</form>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] overflow-hidden">
+<div class="p-6 border-b border-[#3c4d53] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<h3 class="text-lg font-bold">Licenses &amp; Certifications</h3>
+</div>
+<div class="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-xs font-bold border border-green-500/20">
+                                4 Verified
+                            </div>
+</div>
+<div class="divide-y divide-[#3c4d53]">
+<div class="p-6 hover:bg-white/[0.02] transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-background-dark flex items-center justify-center text-primary border border-[#3c4d53]">
+<span class="material-symbols-outlined">electric_bolt</span>
+</div>
+<div>
+<p class="font-bold text-base">Master Electrician License</p>
+<p class="text-xs text-[#9db2b8] mt-1">State Board of Electrical Contractors</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-xs text-[#9db2b8] font-bold uppercase">Issued / Expiry</p>
+<p class="text-sm font-medium mt-0.5">Jan 12, 2023 <span class="text-[#3c4d53] mx-1">|</span> <span class="text-primary">Jan 12, 2026</span></p>
+</div>
+<div class="flex flex-col items-center gap-1">
+<p class="text-[10px] text-[#9db2b8] font-bold uppercase">Notifications</p>
+<div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#3c4d53] right-5 transition-all duration-300" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-[#293438] cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 hover:bg-white/[0.02] transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-background-dark flex items-center justify-center text-primary border border-[#3c4d53]">
+<span class="material-symbols-outlined">health_and_safety</span>
+</div>
+<div>
+<p class="font-bold text-base">OSHA 30 Safety Training</p>
+<p class="text-xs text-[#9db2b8] mt-1">Occupational Safety and Health Administration</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-xs text-[#9db2b8] font-bold uppercase">Issued / Expiry</p>
+<p class="text-sm font-medium mt-0.5">Mar 05, 2022 <span class="text-[#3c4d53] mx-1">|</span> <span class="text-accent-amber">Mar 05, 2024</span></p>
+</div>
+<div class="flex flex-col items-center gap-1">
+<p class="text-[10px] text-[#9db2b8] font-bold uppercase">Notifications</p>
+<div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#3c4d53] right-5 transition-all duration-300" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-[#293438] cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 hover:bg-white/[0.02] transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-background-dark flex items-center justify-center text-primary border border-[#3c4d53]">
+<span class="material-symbols-outlined">car_repair</span>
+</div>
+<div>
+<p class="font-bold text-base">Commercial Driver License (CDL)</p>
+<p class="text-xs text-[#9db2b8] mt-1">Department of Motor Vehicles</p>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-xs text-[#9db2b8] font-bold uppercase">Issued / Expiry</p>
+<p class="text-sm font-medium mt-0.5">Jun 20, 2021 <span class="text-[#3c4d53] mx-1">|</span> <span class="text-primary">Jun 20, 2025</span></p>
+</div>
+<div class="flex flex-col items-center gap-1">
+<p class="text-[10px] text-[#9db2b8] font-bold uppercase">Notifications</p>
+<div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#3c4d53] right-5 transition-all duration-300" id="toggle3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-[#293438] cursor-pointer" for="toggle3"></label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-background-dark/30 border-t border-[#3c4d53] text-center">
+<button class="text-primary text-sm font-bold flex items-center justify-center gap-2 mx-auto hover:underline">
+<span class="material-symbols-outlined text-sm">download</span>
+                                Download All Documents (PDF)
+                            </button>
+</div>
+</div>
+<div class="bg-card-dark rounded-xl border border-[#3c4d53] p-6">
+<h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-amber">security</span>
+                            Security &amp; Access
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="p-4 bg-background-dark/50 rounded-lg border border-[#3c4d53]">
+<p class="text-sm font-bold">Two-Factor Authentication</p>
+<p class="text-xs text-[#9db2b8] mt-1">Currently enabled via SMS</p>
+<button class="mt-3 text-xs text-primary font-bold">Change Method</button>
+</div>
+<div class="p-4 bg-background-dark/50 rounded-lg border border-[#3c4d53]">
+<p class="text-sm font-bold">Last Password Change</p>
+<p class="text-xs text-[#9db2b8] mt-1">45 days ago (Secure)</p>
+<button class="mt-3 text-xs text-primary font-bold">Update Password</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

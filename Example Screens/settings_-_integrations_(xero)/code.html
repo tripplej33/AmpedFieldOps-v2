@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Integrations (Xero) | AmpedFieldOps</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ea5e9", // Electric blue brand color
+                        "background-dark": "#0B1015", // Deep navy/near-black theme
+                        "surface-dark": "#161B22",
+                        "glass": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "success": "#10b981",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body { 
+                font-family: 'Space Grotesk', sans-serif; 
+                @apply bg-background-dark text-white;
+            }
+        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card:hover {
+            border-color: rgba(14, 165, 233, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B1015;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D333B;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-hidden">
+<div class="layout-container flex h-screen w-full">
+<aside class="w-72 flex flex-col border-r border-glass-border bg-[#0D1117] shrink-0">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-10">
+<div class="size-9 bg-primary text-white flex items-center justify-center rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+<span class="material-symbols-outlined font-bold">bolt</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-white">AmpedFieldOps</h2>
+</div>
+<nav class="flex flex-col gap-2">
+<div class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-2 px-3">Main Menu</div>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 text-gray-400 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="text-sm font-semibold tracking-wide">Operations Hub</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 text-gray-400 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">list_alt</span>
+<span class="text-sm font-semibold tracking-wide">Job Queue</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 text-gray-400 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">groups</span>
+<span class="text-sm font-semibold tracking-wide">Team Dispatch</span>
+</a>
+<div class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-6 mb-2 px-3">Administration</div>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 transition-all" href="#">
+<span class="material-symbols-outlined">extension</span>
+<span class="text-sm font-bold tracking-wide">Integrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 text-gray-400 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span class="text-sm font-semibold tracking-wide">System Settings</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-glass-border">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl size-10 border border-glass-border" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBZp3mfByjLkwr7BIYhPB3zAglLGAz3xdYrRdj0uVAgLMBYS8KtLoItQ1bb_XaKiFXW8frwVnhu15p_ZAzs71SrMcunPGQUMMAgZrCoUx6a9pCnTGkf_kw_n5rAnZrISp8JMktlK9dIDXUT1FBw4okrl-4np3GBIml_lA2fkxLmVT9aHAO3KXlDrG534NzFCB3PFbFlGqqowz748-tJ-lag23vYoNg0vBjmCH03t2v2HbCsGQ1caA23x4cyGm6E2Gj6GRiDMEL6SR8");'></div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-white leading-tight">Alex Rivera</span>
+<span class="text-[11px] text-gray-500">Ops Admin</span>
+</div>
+<button class="ml-auto text-gray-500 hover:text-white">
+<span class="material-symbols-outlined text-xl">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-background-dark relative">
+<div class="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 blur-[100px] rounded-full pointer-events-none"></div>
+<div class="max-w-6xl mx-auto px-10 py-10 relative z-10">
+<div class="flex items-center justify-between mb-12">
+<div class="flex items-center gap-3 text-sm">
+<span class="text-gray-500">System</span>
+<span class="text-gray-700">/</span>
+<span class="text-white font-medium">Integrations</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="size-10 flex items-center justify-center rounded-xl glass-card text-gray-400 hover:text-white">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110 shadow-[0_0_20px_rgba(14,165,233,0.2)] transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+                        Request New
+                    </button>
+</div>
+</div>
+<div class="mb-12">
+<h1 class="text-5xl font-bold tracking-tight text-white mb-4">Integrations</h1>
+<p class="text-gray-400 text-lg max-w-2xl leading-relaxed">
+                    Synchronize your operational workflows with high-performance third-party business tools and accounting services.
+                </p>
+</div>
+<div class="mb-14">
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-gray-500 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="w-full pl-14 pr-6 py-5 bg-white/5 border border-glass-border rounded-2xl focus:border-primary/50 focus:ring-0 focus:bg-white/[0.07] transition-all text-lg placeholder:text-gray-600 text-white font-medium" placeholder="Search for an integration..." type="text"/>
+</div>
+</div>
+<div class="mb-16">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">account_balance</span>
+<h2 class="text-xs font-black uppercase tracking-[0.25em] text-gray-500">Accounting &amp; Financials</h2>
+</div>
+<div class="glass-card rounded-3xl p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
+<div class="flex items-center gap-8 flex-1">
+<div class="size-24 rounded-2xl flex items-center justify-center p-0.5 bg-gradient-to-br from-primary to-blue-600 shadow-lg shadow-primary/20">
+<div class="bg-[#0D1117] size-full rounded-[14px] flex items-center justify-center text-white">
+<span class="text-4xl font-black italic tracking-tighter">X</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-4">
+<h3 class="text-3xl font-bold text-white tracking-tight">Xero</h3>
+<div class="flex items-center gap-2 px-4 py-1.5 bg-success/20 border border-success/30 text-success rounded-full text-[11px] font-black uppercase tracking-widest">
+<span class="size-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></span>
+                                    Connected
+                                </div>
+</div>
+<p class="text-gray-400 font-medium">Automated invoice, expense, and ledger synchronization for field staff.</p>
+<div class="flex items-center gap-3 mt-3 text-xs font-bold text-gray-500">
+<span class="material-symbols-outlined text-base">history</span>
+                                LAST SYNC: OCT 24, 2023 · 10:45 AM
+                                <span class="px-2 py-0.5 bg-white/5 rounded">Auto-sync active</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-4 w-full lg:w-auto shrink-0">
+<button class="flex-1 lg:flex-none px-8 py-4 bg-white/5 border border-glass-border rounded-2xl font-bold text-sm text-white hover:bg-white/10 hover:border-gray-600 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">settings</span>
+                            Configure Mapping
+                        </button>
+<button class="flex-1 lg:flex-none px-8 py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:brightness-110 shadow-[0_0_30px_rgba(14,165,233,0.3)] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">sync</span>
+                            Sync Now
+                        </button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-xl">map</span>
+<h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Logistics &amp; Route</h2>
+</div>
+<div class="glass-card rounded-2xl p-8 group">
+<div class="flex items-center justify-between mb-8">
+<div class="size-14 bg-white/5 rounded-xl flex items-center justify-center overflow-hidden border border-glass-border">
+<img class="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAweK1rzEEtWFitLtfu0eFpgg8mWHsqAEKiRko_1oFHFdhBFfYtdyd9n-ELRqRAmjVDA8XKwhi86ZNwOmuvr5etWV8VOvrjXZRi1m9XDEIDoxbV2fQE0Fv8bgnpyDQUeOX1k1X56mz1iCE6EVjHKrO_xeWDN1s_iBdrE251fEtIs79PW2nIXBPzaes0lF7RHTW_VAsWQFOZHicbQ81eRjLEBDmB06VJtZdHg4CAQzP2h9PLvBjW_tBdyvIE9lJYgenE6n_xpwrzsDM"/>
+</div>
+<span class="px-3 py-1 bg-primary/20 text-primary border border-primary/20 rounded-lg text-[10px] font-black uppercase tracking-widest">Active</span>
+</div>
+<h3 class="text-xl font-bold text-white mb-2">Google Maps</h3>
+<p class="text-sm text-gray-400 mb-8 leading-relaxed">Real-time route optimization and geo-fencing for field assets.</p>
+<button class="w-full py-3.5 bg-white/5 border border-glass-border rounded-xl font-bold text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-all">Manage API Access</button>
+</div>
+</div>
+<div>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-xl">chat_bubble</span>
+<h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Communication</h2>
+</div>
+<div class="glass-card rounded-2xl p-8 opacity-60 hover:opacity-100 transition-all border-dashed">
+<div class="flex items-center justify-between mb-8">
+<div class="size-14 bg-red-500/10 rounded-xl flex items-center justify-center font-black text-red-500 border border-red-500/20 text-2xl">
+                                T
+                            </div>
+<span class="px-3 py-1 bg-white/5 text-gray-500 border border-glass-border rounded-lg text-[10px] font-black uppercase tracking-widest">Disconnected</span>
+</div>
+<h3 class="text-xl font-bold text-white mb-2">Twilio</h3>
+<p class="text-sm text-gray-400 mb-8 leading-relaxed">Automated SMS notifications and critical customer field alerts.</p>
+<button class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-xs hover:brightness-110 shadow-[0_0_20px_rgba(14,165,233,0.2)] transition-all">Connect Provider</button>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-10 lg:p-14 relative overflow-hidden border-primary/20">
+<div class="absolute -top-24 -right-24 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
+<div class="relative z-10 flex flex-col lg:flex-row items-center gap-12">
+<div class="flex-1">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                            Developer Hub
+                        </div>
+<h2 class="text-4xl font-bold text-white mb-6">Custom API Workflows</h2>
+<p class="text-gray-400 text-lg mb-10 max-w-lg leading-relaxed">Leverage our high-throughput Webhooks and REST API to architect bespoke integrations for your internal infrastructure.</p>
+<div class="flex flex-wrap gap-4">
+<button class="px-8 py-4 bg-white text-background-dark rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">menu_book</span>
+                                API Docs
+                            </button>
+<button class="px-8 py-4 bg-white/5 border border-glass-border text-white rounded-2xl font-bold hover:bg-white/10 transition-all">Dev Dashboard</button>
+</div>
+</div>
+<div class="hidden lg:block w-[400px] shrink-0 bg-[#0D1117] rounded-2xl border border-glass-border p-6 font-mono text-xs shadow-2xl">
+<div class="flex gap-2 mb-6">
+<div class="size-3 rounded-full bg-red-500/30"></div>
+<div class="size-3 rounded-full bg-yellow-500/30"></div>
+<div class="size-3 rounded-full bg-green-500/30"></div>
+</div>
+<div class="space-y-2">
+<p><span class="text-primary font-bold">curl</span> -X POST https://api.amped.ops/v1/sync</p>
+<p><span class="text-gray-600">-H</span> <span class="text-success">"Authorization: Bearer ●●●●●●"</span></p>
+<p><span class="text-gray-600">-d</span> '{</p>
+<p class="ml-4 text-gray-300">"service": <span class="text-primary">"xero_cloud"</span>,</p>
+<p class="ml-4 text-gray-300">"action": <span class="text-primary">"trigger_manual"</span>,</p>
+<p class="ml-4 text-gray-300">"options": { "reconcile": <span class="text-orange-400">true</span> }</p>
+<p class="text-gray-300">}'</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>
