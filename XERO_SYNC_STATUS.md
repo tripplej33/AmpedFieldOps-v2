@@ -47,9 +47,16 @@
   - Updates payment statuses for invoices
   - ✅ Status: Working (0 records processed - no invoices yet)
 
-- **Invoices Sync** (`sync-invoices`):
-  - Creates invoices from approved timesheets
-  - ✅ Status: Ready (no timesheets created yet)
+- **Invoices Sync** (`pull-invoices`):
+  - Fetches all invoices from Xero
+  - Maps statuses: Authorised → Awaiting Payment, Paid → Paid, etc.
+  - Automatically identifies Overdue invoices based on due date
+  - ✅ Status: WORKING
+
+- **Master Sync** (`sync-all`):
+  - Sequentially runs: Pull Contacts → Sync Items → Pull Invoices → Sync Payments
+  - Ensuring data integrity across all entities
+  - ✅ Status: WORKING
 
 ### 4. Endpoints Available
 
@@ -57,8 +64,12 @@
 GET  /api/admin/xero/status
      Returns: { connected, credentialsSaved, tenantId, tenantName, expiresAt, lastSync }
 
+POST /api/admin/xero/sync-all
+     Queue: sequential master sync
+     Returns: { message, jobId, status }
+
 POST /api/admin/xero/sync-clients
-     Queue: Client sync job
+     Queue: Client sync job (import/export)
      Returns: { message, jobId, status }
 
 POST /api/admin/xero/sync-items
@@ -66,11 +77,7 @@ POST /api/admin/xero/sync-items
      Returns: { message, jobId, status }
 
 POST /api/admin/xero/sync-payments
-     Queue: Payment sync job
-     Returns: { message, jobId, status }
-
-POST /api/admin/invoices/create
-     Queue: Invoice creation from timesheets
+     Queue: Payment sync job (updates existing invoices)
      Returns: { message, jobId, status }
 
 GET  /api/admin/xero/sync-log
