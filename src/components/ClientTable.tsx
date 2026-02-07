@@ -37,11 +37,10 @@ export default function ClientTable({ clients, isLoading, onEdit, onDelete }: Cl
         <thead>
           <tr className="border-b border-border-dark">
             <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Name</th>
-            <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Company</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Contact Person</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Email</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Phone</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Status</th>
-            <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Contact</th>
             <th className="px-6 py-3 text-left text-xs font-semibold text-text-muted font-display uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -50,31 +49,27 @@ export default function ClientTable({ clients, isLoading, onEdit, onDelete }: Cl
             <tr key={client.id} className="hover:bg-card-dark transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
                 <p className="text-white font-medium">
-                  {client.first_name} {client.last_name}
+                  {client.name}
                 </p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <p className="text-text-muted text-sm">{client.company || '—'}</p>
+                <p className="text-text-muted text-sm">{client.contact_name || '—'}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <p className="text-text-muted text-sm">{client.email}</p>
+                <p className="text-text-muted text-sm">{client.email || '—'}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <p className="text-text-muted text-sm">{client.phone || '—'}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    client.status === 'active'
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${client.status === 'active'
                       ? 'bg-green-900/30 text-green-400'
                       : 'bg-gray-700 text-gray-300'
-                  }`}
+                    }`}
                 >
                   {client.status === 'active' ? '✓ Active' : 'Inactive'}
                 </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <p className="text-text-muted text-sm">{client.notes ? '📝' : '—'}</p>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex gap-2">

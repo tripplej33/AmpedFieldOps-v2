@@ -42,7 +42,7 @@ export default function Layout() {
         onToggle={handleToggle}
         onMobileClose={handleMobileClose}
       />
-      
+
       <div
         className={`
           transition-all duration-300 ease-in-out
@@ -50,7 +50,7 @@ export default function Layout() {
         `}
       >
         <Header onMenuToggle={handleMobileToggle} />
-        
+
         <main className="p-4 lg:p-6">
           <Outlet />
         </main>

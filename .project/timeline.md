@@ -4,7 +4,7 @@
 **Project:** AmpedFieldOps V2 (Complete React Rewrite)  
 **Start Date:** January 21, 2026  
 **Target Completion:** January 30, 2026 (10 days)  
-**Status:** ✅ Phase 1-5 Complete | 🎯 Phase 6 Ready (Polish & Files)  
+**Status:** ✅ Phase 1-5 Complete | 🚀 Phase 6 IN PROGRESS (File Explorer)  
 **Lead:** GitHub Copilot (Project Orchestrator)
 
 ---
@@ -88,32 +88,154 @@ All critical bugs from Phases 1-4 have been resolved. Project is stable and read
 
 ---
 
-## 🚀 PHASE 6: POLISH & FILES - READY TO START
+## 🚀 PHASE 6: FILE EXPLORER & POLISH - IN PROGRESS
 
 **Start Date:** January 24, 2026  
 **Target Completion:** January 25, 2026  
-**Duration:** 1 day
+**Duration:** 1-2 days
 
 ### What Phase 6 Builds
-1. File Management via Supabase Storage (project-scoped)
-2. UX polish: error boundaries, toasts, loading skeletons
-3. Performance passes on heavy views
+1. **File Explorer** - All projects as folders, navigate into project to see/manage files
+2. **File Management** - Upload, download, preview, delete files per project
+3. **UX Polish** - Error boundaries, toasts, loading skeletons
 
-### Backend Tasks (2-3 hours)
-- Create storage bucket `project-files`
-- Add `project_files` metadata table + RLS policies
-- Seed minimal sample entries (optional)
+### Implementation Approach
+**Backend (First):**
+- Supabase Storage bucket `project-files` (already created)
+- `project_files` metadata table + RLS policies (already created)
 
-### Frontend Tasks (4-6 hours)
-- FilesPage with project filter and file browser
-- Uploader (drag-and-drop + progress)
-- Preview/download/delete interactions with optimistic updates
-- Toasts and skeleton loaders across core pages
+**Frontend (Second - Main Focus):**
+- Refactor FilesPage to show **all projects as folder grid**
+- ProjectFolderList component (browse projects)
+- ProjectFilesView component (browse files in selected project)
+- Breadcrumb navigation (back to folders)
+- File uploader, list, preview, download, delete
+- Toasts and skeleton loaders
 
 **Mission Briefs:**
-- [phase6_mission_brief.md](./phase6_mission_brief.md)
+- [PHASE_6_FILES_EXPLORER_SPEC.md](./memory/PHASE_6_FILES_EXPLORER_SPEC.md) - Detailed spec
+- [phase6_mission_brief.md](./memory/phase6_mission_brief.md) - Original brief
 
-**Status:** 📋 READY TO HANDOFF — Sequential execution (Backend → Frontend)
+**Status:** 🚀 IN PROGRESS — Frontend developer building explorer UI
+
+---
+
+## 📋 PHASE 7: BACKEND API & XERO INTEGRATION - PLANNED
+
+**Start Date:** January 26, 2026  
+**Target Completion:** January 28, 2026  
+**Duration:** 2-3 days
+**Status Update:** 🔄 ARCHITECTURE REFINED (Jan 28) - Analysis complete, hybrid approach adopted
+
+### Architecture Update (Jan 28, 2026)
+**Key Change:** Phase 7 has been refined to match the proven patterns from the legacy AmpedFieldOps app:
+- ✅ **Credentials Storage:** Moved from env-only to database (`app_settings` table) with admin form on Settings page
+- ✅ **Redirect URI:** Dynamic calculation from current domain (auto-adjusts localhost → production)
+- ✅ **OAuth Flow:** Frontend-initiated (same-window redirect, not popup)
+- ✅ **Frontend UI:** Settings page with Xero tab for credential management
+- ✅ **Token Encryption:** AES-256-CBC (already planned, confirmed correct approach)
+- ✅ **Sync Services:** Contacts, Items, Invoices, Payments (unchanged)
+- ✅ **Job Queue:** BullMQ + Redis (unchanged)
+
+**Reference Documentation:**
+- [PHASE_7_XERO_ANALYSIS.md](./memory/PHASE_7_XERO_ANALYSIS.md) - Comprehensive comparison of old vs new approach
+
+### What Phase 7 Builds
+1. **Express.js Backend** - Service-role API server for admin operations
+2. **Xero OAuth Integration** - Credentials stored in database, dynamic redirect URI, token management
+3. **Settings Endpoints** - Save/retrieve credentials, OAuth status, disconnect
+4. **Client ↔ Contact Sync** - Two-way synchronization
+5. **Products → Activity Types** - Import Xero items as service types
+6. **Invoice Creation** - Generate Xero invoices from approved timesheets
+7. **Payment Tracking** - Poll Xero for payment status updates
+8. **BullMQ Jobs** - Scheduled sync operations
+
+### Backend Tasks (18-24 hours)
+- Express server setup with TypeScript + Docker
+- Encryption service (AES-256-CBC for tokens & credentials)
+- Database tables: `app_settings` (credentials), `xero_tokens` (OAuth tokens)
+- Xero OAuth 2.0 flow:
+  - Settings endpoints: POST `/settings/xero/credentials`, GET `/settings/xero/status`
+  - OAuth endpoints: GET `/xero/auth`, GET `/xero/callback`
+  - Dynamic redirect URI calculation with domain shift detection
+- Sync services:
+  - Client ↔ Contact bidirectional
+  - Products → Activity Types (one-way import)
+  - Timesheets → Invoices (create in Xero)
+  - Payment status polling
+- BullMQ job queue (scheduled + manual triggers)
+- Admin API endpoints (protected)
+- Token refresh logic (auto-refresh on expiry check)
+
+### Frontend Tasks (6-8 hours)
+- Settings page with Xero integration tab
+- Credentials form (Client ID, Secret, Redirect URI auto-filled)
+- "Save Credentials" and "Connect to Xero" buttons
+- Xero status badge (Connected/Not Connected)
+- Manual sync trigger buttons
+- Sync log history table
+- Form validation (Client ID: 32 chars, hex only)
+
+**Mission Brief:**
+- [phase7_mission_brief.md](./memory/phase7_mission_brief.md) - UPDATED with hybrid approach
+
+**Status:** 📋 PLANNED — Awaiting Phase 6 completion
+
+**Dependencies:**
+- Phase 6 complete (file explorer functional)
+- Xero Developer account (sandbox for testing)
+- Redis for BullMQ
+
+---
+
+## 📋 PHASE 8: DOCUMENT INTELLIGENCE & OCR - PLANNED
+
+**Start Date:** January 29, 2026 (after Phase 7)  
+**Target Completion:** February 1, 2026  
+**Duration:** 3-4 days
+
+### What Phase 8 Builds
+1. **DeepSeek-OCR-2 Integration** - Vision language model for document OCR
+2. **Receipt/Invoice Analysis** - Extract date, vendor, amount, items automatically
+3. **Field Extraction** - Intelligent parsing of structured data from documents
+4. **Document Gallery** - Upload, browse, search, and manage scanned documents
+5. **Quick-Create Workflow** - Auto-populate expenses/activities from OCR results
+6. **Admin Monitoring** - Track OCR processing, success rates, performance
+
+### Backend Tasks (18-22 hours)
+- DeepSeek-OCR-2 service setup (Python microservice or Node.js wrapper)
+- GPU/CUDA configuration (vLLM 0.8.5 or Transformers)
+- OCR inference pipeline with timeout/error handling
+- Field extraction services (receipt, invoice, project document parsers)
+- Document categorization (receipt, invoice, contract, timesheet, other)
+- BullMQ job queue for async OCR processing
+- Database tables: `ocr_results`, `document_extractions`, `ocr_cache`
+- REST API endpoints for upload, processing, retrieval
+- Confidence scoring + manual field correction
+- Admin endpoints for OCR statistics and monitoring
+
+### Frontend Tasks (8-10 hours)
+- Document upload widget (drag-drop, image/PDF support)
+- Document gallery page (`/app/documents`) with filter and search
+- Document detail page with OCR preview and extracted data display
+- Extraction results modal with quick-create expense/activity
+- Progress indicator for async OCR processing
+- Admin dashboard: OCR statistics, job queue, failed document retry
+- Manual field correction UI
+- Document categorization and tagging
+
+**Mission Brief:**
+- [phase8_mission_brief.md](./memory/phase8_mission_brief.md) - Comprehensive OCR integration spec
+
+**Status:** 📋 PLANNED — Awaiting Phase 7 completion
+
+**Dependencies:**
+- Phase 7 complete (backend API structure, job queue established)
+- NVIDIA GPU with CUDA 11.8+ (or use CPU with reduced performance)
+- HuggingFace model access (deepseek-ai/DeepSeek-OCR-2)
+- Redis for BullMQ (already in use)
+
+---
 
 ### Phase 3: Projects Module (Days 5-6)
 - **Goal:** Projects with Kanban + table

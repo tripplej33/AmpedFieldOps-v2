@@ -394,3 +394,24 @@ This system is designed to **minimize context loss** while **maximizing accounta
 **Ready for Deployment: YES**
 
 Next: Share with agents and start Phase 4 with new logging system!
+
+---
+
+# Implementation Checklist: Xero as Source of Truth for Clients
+
+## Objective
+- Use Xero Contact ID as the unique identifier for all clients.
+- App can run without Xero, but all syncs use Xero Contact ID.
+- New in-app clients are pushed to Xero, and the local record is updated with the generated Xero Contact ID.
+
+## Steps
+- [x] Document plan and migration in project manifest and mission brief
+- [ ] Refactor client DB schema to use xero_contact_id as unique key
+- [ ] Update backend sync logic to match/create clients by xero_contact_id
+- [ ] Remove hard dependency on local user_id for clients
+- [ ] Ensure in-app client creation pushes to Xero and updates local record with new xero_contact_id
+- [ ] Test sync in both directions (Xero → app, app → Xero)
+
+## Notes
+- This change improves reliability and makes Xero the single source of truth for client data.
+- The app remains functional without Xero, but syncs will always reconcile using Xero Contact ID when available.

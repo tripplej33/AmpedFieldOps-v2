@@ -89,9 +89,9 @@ export default function TimesheetModal({
       activitySections.map((section, i) =>
         i === sectionIndex
           ? {
-              ...section,
-              userEntries: [...section.userEntries, { userId: '', hours: 1, notes: '' }],
-            }
+            ...section,
+            userEntries: [...section.userEntries, { userId: '', hours: 1, notes: '' }],
+          }
           : section
       )
     )
@@ -102,9 +102,9 @@ export default function TimesheetModal({
       activitySections.map((section, i) =>
         i === sectionIndex
           ? {
-              ...section,
-              userEntries: section.userEntries.filter((_, j) => j !== entryIndex),
-            }
+            ...section,
+            userEntries: section.userEntries.filter((_, j) => j !== entryIndex),
+          }
           : section
       )
     )
@@ -115,11 +115,11 @@ export default function TimesheetModal({
       activitySections.map((section, i) =>
         i === sectionIndex
           ? {
-              ...section,
-              userEntries: section.userEntries.map((entry, j) =>
-                j === entryIndex ? { ...entry, [field]: value } : entry
-              ),
-            }
+            ...section,
+            userEntries: section.userEntries.map((entry, j) =>
+              j === entryIndex ? { ...entry, [field]: value } : entry
+            ),
+          }
           : section
       )
     )

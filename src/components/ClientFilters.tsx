@@ -45,7 +45,7 @@ export default function ClientFilters({ onFiltersChange, isLoading = false }: Cl
         <label className="block text-xs font-medium text-text-muted mb-2">Search</label>
         <Input
           type="text"
-          placeholder="Name, company, email, phone..."
+          placeholder="Name, contact, email, phone..."
           value={search}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           disabled={isLoading}

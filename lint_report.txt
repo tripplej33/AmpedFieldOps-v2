@@ -1,0 +1,234 @@
+
+> ampedfieldops-v2@2.0.0 lint
+> eslint . --report-unused-disable-directives --max-warnings 0
+
+
+/root/AmpedFieldOps-v2/backend/dist/jobs/queue.d.ts
+  3:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  3:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  3:62   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  3:67   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  4:81   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  4:117  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  4:122  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/dist/jobs/worker.d.ts
+  3:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/index.ts
+  54:52  error  '_next' is defined but never used  @typescript-eslint/no-unused-vars
+
+/root/AmpedFieldOps-v2/backend/src/jobs/queue.ts
+   6:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   6:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   7:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/jobs/worker.ts
+  31:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/routes/admin.ts
+   69:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:7   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  344:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/routes/clients.ts
+  25:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:14  error  'apiErr' is defined but never used        @typescript-eslint/no-unused-vars
+  45:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/routes/settings.ts
+   59:19  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  101:36  error  '_syncError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  126:19  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  155:19  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/routes/xero.ts
+  177:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/auth.ts
+   71:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/contacts.ts
+  31:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/invoices.ts
+  99:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/items.ts
+  31:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/payments.ts
+  35:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/backend/src/services/xero/pull.ts
+   41:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   42:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  234:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/components/ActivityTypeModal.tsx
+  29:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/root/AmpedFieldOps-v2/src/components/ActivityTypeModal.tsx:29:7
+  27 |   useEffect(() => {
+  28 |     if (activityType) {
+> 29 |       setFormData({
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |         name: activityType.name,
+  31 |         default_rate: activityType.default_rate || undefined,
+  32 |         xero_item_code: activityType.xero_item_code || '',  react-hooks/set-state-in-effect
+
+/root/AmpedFieldOps-v2/src/components/ProjectModal.tsx
+  64:25  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/root/AmpedFieldOps-v2/src/components/ProjectModal.tsx:64:25
+  62 |   }, [project, setValue])
+  63 |
+> 64 |   const watchedValues = watch()
+     |                         ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  65 |
+  66 |   const handleNextStep = async () => {
+  67 |     let fieldsToValidate: (keyof ProjectFormData)[] = []  react-hooks/incompatible-library
+
+/root/AmpedFieldOps-v2/src/components/TimesheetFilters.tsx
+  29:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  38:6   warning  React Hook useEffect has a missing dependency: 'onChange'. Either include it or remove the dependency array. If 'onChange' changes too often, find the parent component that defines it and wrap that definition in useCallback                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  41:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/root/AmpedFieldOps-v2/src/components/TimesheetFilters.tsx:41:5
+  39 |
+  40 |   useEffect(() => {
+> 41 |     setIsManager(user?.role === 'manager' || user?.role === 'admin')
+     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  42 |   }, [user?.role])
+  43 |
+  44 |   return (  react-hooks/set-state-in-effect
+  81:68  error    '_' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+
+/root/AmpedFieldOps-v2/src/components/TimesheetModal.tsx
+  55:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/root/AmpedFieldOps-v2/src/components/TimesheetModal.tsx:55:7
+  53 |   useEffect(() => {
+  54 |     if (!projectId) {
+> 55 |       setCostCenterId(undefined)
+     |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  56 |     }
+  57 |   }, [projectId])
+  58 |  react-hooks/set-state-in-effect
+
+/root/AmpedFieldOps-v2/src/components/files/FileUploader.tsx
+  6:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/components/files/TimesheetFileUploader.tsx
+  7:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/components/layout/Layout.tsx
+  18:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/root/AmpedFieldOps-v2/src/components/layout/Layout.tsx:18:7
+  16 |     const saved = localStorage.getItem('sidebar-collapsed')
+  17 |     if (saved !== null) {
+> 18 |       setIsCollapsed(JSON.parse(saved))
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |     }
+  20 |   }, [])
+  21 |  react-hooks/set-state-in-effect
+
+/root/AmpedFieldOps-v2/src/contexts/AuthContext.tsx
+   11:14  warning  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file                      react-refresh/only-export-components
+   13:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  102:6   warning  React Hook useEffect has a missing dependency: 'hydrated'. Either include it or remove the dependency array                     react-hooks/exhaustive-deps
+
+/root/AmpedFieldOps-v2/src/hooks/useClients.ts
+  71:50  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  76:50  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  88:33  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  88:41  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  89:19  error  'aVal' is never reassigned. Use 'const' instead  prefer-const
+  90:19  error  'bVal' is never reassigned. Use 'const' instead  prefer-const
+
+/root/AmpedFieldOps-v2/src/hooks/useFiles.ts
+  79:21  error  '_storageData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/root/AmpedFieldOps-v2/src/hooks/useTimesheets.ts
+  65:6  warning  React Hook useCallback has missing dependencies: 'filters.endDate', 'filters.projectId', 'filters.startDate', 'filters.status', 'filters.userId', and 'sort'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/root/AmpedFieldOps-v2/src/pages/ActivityTypesPage.tsx
+  37:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/pages/FinancialsPage.tsx
+  43:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/pages/Login.tsx
+  39:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/root/AmpedFieldOps-v2/src/pages/Welcome.tsx
+  20:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/root/AmpedFieldOps-v2/src/pages/Welcome.tsx:20:7
+  18 |     // Still loading auth state - show loading screen
+  19 |     if (loading) {
+> 20 |       setMode('checking')
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  21 |       return
+  22 |     }
+  23 |  react-hooks/set-state-in-effect
+
+/root/AmpedFieldOps-v2/src/pages/XeroSettingsPage.tsx
+   77:19  error    Unexpected any. Specify a different type                                                                                          @typescript-eslint/no-explicit-any
+  101:19  error    Unexpected any. Specify a different type                                                                                          @typescript-eslint/no-explicit-any
+  154:6   warning  React Hook useEffect has missing dependencies: 'BACKEND_URL' and 'fetchLogs'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  224:19  error    Unexpected any. Specify a different type                                                                                          @typescript-eslint/no-explicit-any
+
+✖ 78 problems (71 errors, 7 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

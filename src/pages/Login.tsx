@@ -33,9 +33,9 @@ export default function Login() {
     try {
       setIsLoading(true)
       setErrorMessage(null)
-      
+
       await login(data)
-      
+
       const from = (location.state as any)?.from?.pathname || '/app/dashboard'
       navigate(from, { replace: true })
     } catch (error) {

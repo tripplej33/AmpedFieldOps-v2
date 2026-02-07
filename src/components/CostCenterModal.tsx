@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { costCenterSchema, CostCenterFormData as CostCenterFormDataZ } from '@/lib/validators/costCenters'
@@ -33,6 +34,27 @@ export default function CostCenterModal({
       notes: costCenter?.notes || '',
     },
   })
+
+  // Reset form when costCenter changes (edit mode)
+  useEffect(() => {
+    if (costCenter) {
+      form.reset({
+        project_id: costCenter.project_id,
+        name: costCenter.name,
+        budget: costCenter.budget || undefined,
+        customer_po_number: costCenter.customer_po_number || '',
+        notes: costCenter.notes || '',
+      })
+    } else if (projectId) {
+      form.reset({
+        project_id: projectId,
+        name: '',
+        budget: undefined,
+        customer_po_number: '',
+        notes: '',
+      })
+    }
+  }, [costCenter, projectId, form])
 
   const handleSubmit = form.handleSubmit(async (values) => {
     console.log('CostCenterModal: Form submitted with values:', values)

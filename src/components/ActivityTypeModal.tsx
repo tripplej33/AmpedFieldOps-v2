@@ -80,9 +80,8 @@ export default function ActivityTypeModal({
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g., HVAC Service, Electrical Work"
-            className={`w-full px-4 py-2 bg-background-dark border rounded-lg text-white placeholder-text-muted focus:outline-none transition-colors ${
-              errors.name ? 'border-red-500' : 'border-border-dark focus:border-primary'
-            }`}
+            className={`w-full px-4 py-2 bg-background-dark border rounded-lg text-white placeholder-text-muted focus:outline-none transition-colors ${errors.name ? 'border-red-500' : 'border-border-dark focus:border-primary'
+              }`}
           />
           {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
         </div>
@@ -97,9 +96,8 @@ export default function ActivityTypeModal({
             value={formData.default_rate ?? ''}
             onChange={e => setFormData({ ...formData, default_rate: e.target.value ? parseFloat(e.target.value) : undefined })}
             placeholder="e.g., 75.00"
-            className={`w-full px-4 py-2 bg-background-dark border rounded-lg text-white placeholder-text-muted focus:outline-none transition-colors ${
-              errors.default_rate ? 'border-red-500' : 'border-border-dark focus:border-primary'
-            }`}
+            className={`w-full px-4 py-2 bg-background-dark border rounded-lg text-white placeholder-text-muted focus:outline-none transition-colors ${errors.default_rate ? 'border-red-500' : 'border-border-dark focus:border-primary'
+              }`}
           />
           {errors.default_rate && <p className="text-red-400 text-sm mt-1">{errors.default_rate}</p>}
         </div>

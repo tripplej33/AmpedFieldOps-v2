@@ -1,7 +1,7 @@
 {
   "projectName": "AmpedFieldOps V2",
   "version": "2.0.0",
-  "status": "PHASE_6_QA",
+  "status": "PHASE_6_IN_PROGRESS",
   "description": "Complete rewrite of field operations management system with React 18, TypeScript, TailwindCSS, and Supabase",
   "techStack": {
     "frontend": {
@@ -104,11 +104,8 @@
       "name": "File Management",
       "phase": "Phase 6",
       "priority": "P1",
-      "status": "IMPLEMENTATION_COMPLETE",
-      "description": "Upload/download files via Supabase Storage, project-scoped file browser",
-      "completedBy": "Frontend Developer",
-      "completedAt": "2026-01-24T00:00:00Z",
-      "notes": "Backend storage bucket + RLS created. Frontend UI with drag-drop upload, file list, preview, download, delete. Awaiting QA testing."
+      "status": "NOT_STARTED",
+      "description": "Upload/download files via Supabase Storage, project-scoped file browser"
     },
     {
       "id": 11,
@@ -116,7 +113,7 @@
       "phase": "Phase 7",
       "priority": "P1",
       "status": "NOT_STARTED",
-      "description": "Express endpoints for Xero sync (stub), admin operations, invoice creation"
+      "description": "Express endpoints for Xero OAuth, settings management, sync services, admin operations. Credentials stored in database (app_settings table) with dynamic redirect URI calculation. Token encryption with AES-256-CBC."
     },
     {
       "id": 12,
@@ -125,6 +122,14 @@
       "priority": "P2",
       "status": "NOT_STARTED",
       "description": "Two-way sync: Clients ↔ Contacts, Activity Types ← Products/Services, Invoices → Xero. Payment status from Xero. Optional: Tracking Categories."
+    },
+    {
+      "id": 13,
+      "name": "Document Intelligence & OCR",
+      "phase": "Phase 8",
+      "priority": "P2",
+      "status": "NOT_STARTED",
+      "description": "DeepSeek-OCR-2 for receipt/invoice analysis. Extract date, vendor, amount, items. Auto-populate expenses/timesheets from documents. Document gallery with search and categorization."
     }
   ],
   "roles": [
@@ -395,5 +400,5 @@
     }
   },
   "createdAt": "2026-01-21T00:00:00Z",
-  "lastUpdated": "2026-01-23T16:00:00Z"
+  "lastUpdated": "2026-01-24T09:00:00Z"
 }

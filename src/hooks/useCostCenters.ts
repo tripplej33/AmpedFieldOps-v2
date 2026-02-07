@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { CostCenter, CostCenterFormData } from '../types'
 
+// NOTE: Placeholder folder creation removed - requires storage RLS policies to be fixed first
+// When RLS is working, files uploaded to cost_center_<id> will auto-create the folder structure
+
 export function useCostCenters(projectId?: string) {
   const { user } = useAuth()
   const [data, setData] = useState<CostCenter[]>([])

@@ -9,6 +9,7 @@ const navigationItems: NavItem[] = [
   { id: 'timesheets', label: 'Timesheets', icon: 'schedule', path: '/app/timesheets' },
   { id: 'financials', label: 'Financials', icon: 'payments', path: '/app/financials', roles: ['admin', 'manager'] },
   { id: 'activity-types', label: 'Activity Types', icon: 'category', path: '/app/settings/activity-types', roles: ['admin', 'manager'] },
+  { id: 'xero', label: 'Xero Integration', icon: 'sync', path: '/app/settings/xero', roles: ['admin'] },
   { id: 'files', label: 'Files', icon: 'folder', path: '/app/files' },
   { id: 'settings', label: 'Settings', icon: 'settings', path: '/app/settings', roles: ['admin'] },
 ]

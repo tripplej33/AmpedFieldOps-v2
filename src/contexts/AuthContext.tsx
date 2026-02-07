@@ -51,22 +51,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return
-      console.log('Auth state change:', event)
+      console.log('Auth state change:', event, { hasSession: !!session?.user })
 
-      // Always set base auth state synchronously so UI unblocks
-      setUser(null)
-      setHydrated(true)
-      setLoading(false)
-
-      if (session?.user) {
-        debouncedLoadProfile(session.user.id)
-      } else {
-        currentUserId = null
-      }
-
+      // Only clear user if actually signed out
       if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing user state')
+        setUser(null)
         setError(null)
         currentUserId = null
+        setLoading(false) // No session, stop loading
+      }
+
+      setHydrated(true)
+
+      // Load profile for signed-in users
+      if (session?.user) {
+        console.log('Session found, loading profile for user:', session.user.id)
+        setLoading(true) // Ensure loading is true while profile fetches
+        debouncedLoadProfile(session.user.id)
+      } else if (event !== 'SIGNED_OUT') {
+        setLoading(false)
       }
     })
 
@@ -75,12 +79,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       .then(({ data }) => {
         if (!isMounted || hydrated) return
         const session = data.session
-        setUser(null)
+        console.log('Initial session fetched:', { hasSession: !!session?.user })
         setHydrated(true)
-        setLoading(false)
 
         if (session?.user) {
+          console.log('Loading profile for initial session user:', session.user.id)
+          setLoading(true)
           debouncedLoadProfile(session.user.id)
+        } else {
+          // Only clear user if no session
+          setUser(null)
+          setLoading(false)
         }
       })
       .catch((err) => {
@@ -117,11 +126,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('User profile loaded successfully:', data)
       setUser(data as User)
       setError(null)
+      setLoading(false)
     } catch (err) {
       console.error('Error loading user profile:', err)
       await supabase.auth.signOut()
       setUser(null)
       setError(err instanceof Error ? err.message : 'Failed to load profile')
+      setLoading(false)
       throw err
     }
   }

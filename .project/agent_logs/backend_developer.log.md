@@ -1,24 +1,86 @@
 # Backend Developer - Progress Log
 
 **Agent:** Backend Developer  
-**Current Session:** Not started  
-**Last Updated:** 2026-01-22 12:00 UTC
+**Current Session:** 2026-01-23  
+**Last Updated:** 2026-01-28 19:30 UTC
 
 ---
 
 ## Current Task
 
-**Task:** Phase 6 Backend - Project Files bucket & RLS  
+**Task:** Phase 7+ Backend - Database-stored Xero credentials  
 **Status:** ✅ COMPLETED  
-**Started:** 2026-01-23 16:30 UTC  
-**Completed:** 2026-01-24 (current session)
-**Phase:** Phase 6  
+**Started:** 2026-01-28  
+**Phase:** Phase 7+  
 **Related Files:** 
-- [20260124_phase6_files.sql](../../supabase/migrations/20260124_phase6_files.sql)
+- [backend/src/routes/settings.ts](../../backend/src/routes/settings.ts)
+- [backend/src/config/xero.ts](../../backend/src/config/xero.ts)
+- [supabase/migrations/20260128_phase7_app_settings.sql](../../supabase/migrations/20260128_phase7_app_settings.sql)
 
 ---
 
 ## Session Log
+
+### 2026-01-28 - Phase 7+ Database Credentials Implementation
+
+**Related Agent(s):** PM Agent → Backend Developer → [Frontend Developer](../../agent_logs/frontend_developer.log.md)  
+**Blocks:** Frontend Settings UI (waiting on migration + endpoints)  
+**Depends On:** Phase 7 backend complete, PM analysis recommendations
+
+**What I Did:**
+- Created `app_settings` table migration for encrypted credentials storage (xero_client_id, xero_client_secret, xero_redirect_uri)
+- Implemented settings endpoints: POST /admin/settings/xero (save credentials), GET /admin/settings/xero/status (connection status), DELETE /admin/settings/xero (clear all)
+- Updated `getXeroCredentials()` helper to read from database with env fallback
+- Modified /xero/auth and /xero/callback to use dynamic XeroClient with database credentials
+- Added client ID validation (32 chars, hex only)
+- Auto-calculate redirect URI if not provided
+- RLS policies: admins can manage settings, service role has bypass
+
+**Files Changed:**
+- [supabase/migrations/20260128_phase7_app_settings.sql](../../supabase/migrations/20260128_phase7_app_settings.sql) — New table for encrypted credentials with RLS
+- [backend/src/routes/settings.ts](../../backend/src/routes/settings.ts) — New settings endpoints (POST/GET/DELETE)
+- [backend/src/config/xero.ts](../../backend/src/config/xero.ts) — Added getXeroCredentials() helper with DB + env fallback
+- [backend/src/routes/xero.ts](../../backend/src/routes/xero.ts) — Updated auth/callback to use dynamic credentials
+- [backend/src/index.ts](../../backend/src/index.ts) — Mounted /admin/settings routes
+
+**Tests Performed:**
+- npm run build → ✅ PASS
+
+**Status:** ✅ COMPLETED
+
+**Next Steps / Handoff:**
+- Apply 20260128_phase7_app_settings.sql migration to Supabase
+- Frontend to implement Settings page with Xero credentials form (Client ID, Secret, Redirect URI inputs)
+- Frontend to call POST /admin/settings/xero to save credentials
+- Frontend to display connection status from GET /admin/settings/xero/status
+- Test OAuth flow end-to-end with database-stored credentials
+
+---
+
+### 2026-01-23 - Phase 7 Xero API wiring (items & invoices)
+
+**Related Agent(s):** [Frontend Developer](../../agent_logs/frontend_developer.log.md) → Backend Developer → [QA Engineer](../../agent_logs/qa_engineer.log.md)  
+**Blocks:** Frontend + QA waiting on real sync data  
+**Depends On:** Xero credentials, Redis running for BullMQ
+
+**What I Did:**
+- Wired activity type sync to call Xero `createItems` via `ensureXeroAuth`, updating Supabase with managed_by_xero flag and falling back to placeholder IDs on API failure
+- Wired invoice sync to call Xero `createInvoices` (ACCREC, authorised, due +14d) grouped by cost center; falls back to placeholder IDs when API fails
+- Added Xero auth/client imports to items and invoices services for consistent tenant handling
+
+**Files Changed:**
+- [backend/src/services/xero/items.ts](../../backend/src/services/xero/items.ts) — Creates Xero items for unsynced activity types with fallback placeholders; marks managed_by_xero
+- [backend/src/services/xero/invoices.ts](../../backend/src/services/xero/invoices.ts) — Creates ACCREC invoices via Xero with contact/due date and fallback IDs; updates timesheets and invoices tables
+
+**Tests Performed:**
+- npm run build → ✅ PASS
+
+**Status:** 🔄 IN_PROGRESS
+
+**Next Steps / Handoff:**
+- Apply Phase 7 migration, configure Xero credentials, run docker-compose with Redis, and exercise sync jobs end-to-end; add admin route auth once jobs verified
+
+---
 
 ### 2026-01-23 - Phase 6 Project Files (bucket + RLS)
 
@@ -222,3 +284,97 @@ Dropped ALL policies and replaced with single SELECT policy per operation type. 
 Future sessions should follow the proper logging protocol outlined in `.project/AGENT_PROGRESS_PROTOCOL.md`.
 
 **Starting with Phase 4, this agent MUST update this log after each task completion.**
+
+---
+
+### 2026-01-23 - Phase 7 Backend Setup (Express + Xero OAuth)
+
+**Related Agent(s):** Frontend Developer → Backend Developer → [QA Engineer](../../agent_logs/qa_engineer.log.md)  
+**Blocks:** Frontend Developer (waiting for Xero OAuth endpoints)  
+**Depends On:** Phase 6 (storage setup), Xero developer account  
+
+**What I Did:**
+- Initialized backend project structure with Express.js, TypeScript, and required dependencies (xero-node v13.3.1, BullMQ, Redis, etc.)
+- Created Express server with health endpoint, CORS, error handling middleware
+- Built Xero OAuth configuration and routes (/xero/auth, /xero/callback, /xero/disconnect) with AES-256 token encryption
+- Created Supabase service role client configuration
+- Added Redis configuration for BullMQ job queue
+- Created admin route stubs for sync operations (clients, items, payments, invoices)
+- Created Phase 7 migration for xero_tokens, invoices tables, and added Xero columns to clients/timesheets
+- Fixed TypeScript compilation errors (unused params, duplicate imports)
+- Built and verified server compiles without errors
+
+**Files Changed:**
+- [backend/package.json](../../backend/package.json) — Project dependencies and scripts
+- [backend/tsconfig.json](../../backend/tsconfig.json) — TypeScript configuration
+- [backend/.env](../../backend/.env) — Environment variables (Supabase service key, encryption key)
+- [backend/src/index.ts](../../backend/src/index.ts) — Express app with health endpoint and routes
+- [backend/src/config/supabase.ts](../../backend/src/config/supabase.ts) — Service role client
+- [backend/src/config/xero.ts](../../backend/src/config/xero.ts) — Xero OAuth config
+- [backend/src/config/redis.ts](../../backend/src/config/redis.ts) — Redis connection
+- [backend/src/routes/xero.ts](../../backend/src/routes/xero.ts) — OAuth flow with token encryption
+- [backend/src/routes/admin.ts](../../backend/src/routes/admin.ts) — Admin endpoint stubs
+- [20260124_phase7_xero_integration.sql](../../supabase/migrations/20260124_phase7_xero_integration.sql) — xero_tokens, invoices tables + RLS
+- [backend/README.md](../../backend/README.md) — Setup guide and documentation
+
+**Tests Performed:**
+- TypeScript compilation → ✅ PASS (npm run build successful)
+- Package installation → ✅ PASS (500 packages installed, 0 vulnerabilities)
+- Server startup → ✅ PASS (server runs on port 3001, logs startup messages)
+
+**Status:** 🔄 IN_PROGRESS
+
+**Blocker Details (if blocked):**
+- Waiting on: Xero developer app credentials (client ID, secret) for OAuth testing
+- Issue: Cannot fully test OAuth flow without real Xero app configured
+- Escalated to: N/A (can continue with sync service implementation)
+
+**Next Steps / Handoff:**
+- Apply Phase 7 migration to Supabase (xero_tokens, invoices tables)
+- Implement Xero sync services (contacts, items, invoices, payments)
+- Create BullMQ job workers with cron schedules
+- Add authentication middleware for admin routes
+- Set up Docker Compose for Redis + backend
+- Test OAuth flow with Xero sandbox account
+- Hand off to Frontend Developer for admin dashboard integration
+
+
+### 2026-01-23 - Phase 7 Sync Services & Jobs
+
+**Related Agent(s):** Frontend Developer → Backend Developer → [QA Engineer](../../agent_logs/qa_engineer.log.md)  
+**Blocks:** QA waiting on stable API responses; Frontend needs endpoints after migration  
+**Depends On:** Redis available; Supabase Phase 7 migration applied  
+
+**What I Did:**
+- Implemented Xero sync service stubs (clients, items, invoices, payments) with Supabase updates and sync logging
+- Added BullMQ queue and worker to process sync jobs; wired worker startup in Express
+- Updated admin routes to enqueue jobs and expose sync status/log endpoints
+- Shared encryption helpers via `lib/crypto`
+
+**Files Changed:**
+- [backend/src/services/xero/contacts.ts](../../backend/src/services/xero/contacts.ts) — Client sync placeholder writes xero_contact_id
+- [backend/src/services/xero/items.ts](../../backend/src/services/xero/items.ts) — Activity types sync placeholder writes xero_item_id
+- [backend/src/services/xero/invoices.ts](../../backend/src/services/xero/invoices.ts) — Creates invoices and marks timesheets invoiced
+- [backend/src/services/xero/payments.ts](../../backend/src/services/xero/payments.ts) — Marks unpaid invoices as paid
+- [backend/src/services/xero/log.ts](../../backend/src/services/xero/log.ts) — Sync log helpers
+- [backend/src/jobs/queue.ts](../../backend/src/jobs/queue.ts) — BullMQ queue + enqueue helper
+- [backend/src/jobs/worker.ts](../../backend/src/jobs/worker.ts) — Worker processing sync jobs
+- [backend/src/routes/admin.ts](../../backend/src/routes/admin.ts) — Enqueue sync endpoints, sync status/log APIs
+- [backend/src/lib/crypto.ts](../../backend/src/lib/crypto.ts) — Shared encryption helpers
+- [backend/src/routes/xero.ts](../../backend/src/routes/xero.ts) — Use shared crypto helpers
+- [backend/src/index.ts](../../backend/src/index.ts) — Start worker on app bootstrap
+
+**Tests Performed:**
+- TypeScript build → ✅ PASS (`npm run build`)
+- Queue wiring compile check → ✅ PASS
+
+**Status:** 🔄 IN_PROGRESS (needs real Xero API wiring and Docker compose)
+
+**Blocker Details (if blocked):**
+- Requires Xero client credentials to test real API calls; Redis must be running for jobs
+
+**Next Steps / Handoff:**
+- Apply Phase 7 migration; run backend with Redis and hit admin endpoints to queue jobs
+- Implement real Xero API calls replacing placeholders; add auth middleware; add Docker Compose
+- Frontend can start wiring admin buttons to POST /admin/xero/sync-* and GET status/log endpoints once migration is applied
+

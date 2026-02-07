@@ -34,18 +34,18 @@ export default function ProjectModal({ isOpen, onClose, onSubmit, project, isPen
     resolver: zodResolver(projectSchema),
     defaultValues: project
       ? {
-          name: project.name,
-          description: project.description,
-          client_id: project.client_id,
-          status: project.status,
-          start_date: project.start_date,
-          end_date: project.end_date,
-          budget: project.budget,
-          notes: project.notes,
-        }
+        name: project.name,
+        description: project.description,
+        client_id: project.client_id,
+        status: project.status,
+        start_date: project.start_date,
+        end_date: project.end_date,
+        budget: project.budget,
+        notes: project.notes,
+      }
       : {
-          status: 'Pending',
-        },
+        status: 'Pending',
+      },
   })
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function ProjectModal({ isOpen, onClose, onSubmit, project, isPen
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof ProjectFormData)[] = []
-    
+
     // Validate only required fields for current step
     if (step === 1) {
       fieldsToValidate = ['name'] // description and budget are optional
@@ -83,7 +83,7 @@ export default function ProjectModal({ isOpen, onClose, onSubmit, project, isPen
         return // Don't advance if validation fails
       }
     }
-    
+
     if (step < 5) {
       setStep((prev) => prev + 1)
     }
@@ -174,9 +174,9 @@ export default function ProjectModal({ isOpen, onClose, onSubmit, project, isPen
                 className="w-full px-4 py-2 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
               >
                 <option value="">Choose a client...</option>
-                {clients?.map((client: { id: string; company?: string; first_name: string; last_name: string }) => (
+                {clients?.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.company || `${client.first_name} ${client.last_name}`}
+                    {client.name}
                   </option>
                 ))}
               </select>

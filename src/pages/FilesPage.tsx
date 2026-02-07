@@ -6,6 +6,7 @@ import Toast from '@/components/ui/Toast'
 import { useFiles } from '@/hooks/useFiles'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { useCostCenters } from '@/hooks/useCostCenters'
 import { Project, ProjectFile } from '@/types'
 
 type ToastState = { type: 'success' | 'error' | 'info'; message: string } | null
@@ -21,6 +22,7 @@ export default function FilesPage() {
 
   const { files, loading: filesLoading, error: filesError } = useFiles(currentProject?.id ?? '')
   const [filesList, setFilesList] = useState<ProjectFile[]>([])
+  const { data: costCenters } = useCostCenters(currentProject?.id)
 
   const loadExplorerData = useCallback(async () => {
     if (!user?.id) {
@@ -157,6 +159,7 @@ export default function FilesPage() {
             onError={handleError}
             onBack={handleBackToFolders}
             fileCount={fileCounts[currentProject.id] || filesList.length}
+            costCenters={costCenters}
           />
         )}
       </div>

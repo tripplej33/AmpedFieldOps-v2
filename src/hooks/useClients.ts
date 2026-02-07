@@ -42,7 +42,7 @@ export function useClients(
     }
 
     const fetchKey = `${user.id}-${JSON.stringify(filters)}-${page}-${refreshKey}`
-    
+
     // Prevent duplicate fetches
     if (fetchInProgress && lastFetchKey === fetchKey) {
       return
@@ -55,6 +55,55 @@ export function useClients(
         setLoading(true)
         setError(null)
 
+        // First try to fetch from backend API (includes Xero pulled clients)
+        try {
+          const apiRes = await fetch('/api/admin/clients', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`,
+            },
+          })
+
+          if (apiRes.ok) {
+            let allClients = await apiRes.json()
+
+            // Apply filters
+            if (filters.status && filters.status !== 'all') {
+              allClients = allClients.filter((c: any) => c.status === filters.status)
+            }
+
+            if (filters.search) {
+              const searchTerm = filters.search.toLowerCase()
+              allClients = allClients.filter((c: any) =>
+                (c.name?.toLowerCase().includes(searchTerm)) ||
+                (c.contact_name?.toLowerCase().includes(searchTerm)) ||
+                (c.email?.toLowerCase().includes(searchTerm)) ||
+                (c.phone?.toLowerCase().includes(searchTerm))
+              )
+            }
+
+            // Apply sorting
+            const sortColumn = filters.sortBy === 'name' ? 'name' : 'created_at'
+            allClients.sort((a: any, b: any) => {
+              let aVal = a[sortColumn] || ''
+              let bVal = b[sortColumn] || ''
+              const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+              return filters.sortOrder === 'asc' ? comparison : -comparison
+            })
+
+            // Apply pagination
+            const from = page * PAGE_SIZE
+            const to = from + PAGE_SIZE
+            const paginatedClients = allClients.slice(from, to + 1)
+
+            setHasMore(paginatedClients.length > PAGE_SIZE)
+            setClients(paginatedClients.slice(0, PAGE_SIZE))
+            return
+          }
+        } catch (apiErr) {
+          console.log('API fetch failed, falling back to Supabase:', apiErr)
+        }
+
+        // Fallback to Supabase if API fails
         let query = supabase
           .from('clients')
           .select('*')
@@ -68,7 +117,7 @@ export function useClients(
         if (filters.search) {
           const searchTerm = `%${filters.search}%`
           query = query.or(
-            `first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},company.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`
+            `name.ilike.${searchTerm},contact_name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`
           )
         }
 

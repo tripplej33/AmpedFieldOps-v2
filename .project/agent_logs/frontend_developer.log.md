@@ -8,15 +8,140 @@
 
 ## Current Task
 
-**Task:** Phase 6: File Explorer refactor (Frontend)  
+**Task:** Phase 7: Xero Credentials Management UI (Frontend)  
 **Status:** ✅ COMPLETED  
-**Started:** 2026-01-23  
-**Phase:** 6  
-**Related Files:** FilesPage, ProjectFolderList, ProjectFilesView, Breadcrumb, App routes
+**Started:** 2026-01-28  
+**Phase:** 7  
+**Related Files:** XeroSettingsPage (credentials form, validation, disconnect)
 
 ---
 
 ## Session Log
+
+### 2026-01-28 - Phase 7: Xero Credentials Management UI
+
+**Related Agent(s):** [Backend Developer](../../agent_logs/backend_developer.log.md) → Frontend Developer → [QA Engineer](../../agent_logs/qa_engineer.log.md)  
+**Blocks:** Backend Developer (needs to implement /admin/settings/xero endpoints)  
+**Depends On:** Phase 7 Backend API endpoints
+
+**What I Did:**
+- Implemented Xero credentials form per updated mission brief (hybrid approach)
+- Added form validation (Client ID: exactly 32 chars, hexadecimal only)
+- Implemented dynamic redirect URI calculation from window.location.origin
+- Added "Save Credentials" functionality with POST to /admin/settings/xero
+- Added "Disconnect" button to clear OAuth tokens
+- Enhanced connection status display with tenant name
+- Added credentialsSaved status indicator
+- Form only shows when not connected, following mission brief specs
+
+**Files Changed:**
+- [src/pages/XeroSettingsPage.tsx](../../src/pages/XeroSettingsPage.tsx) — Updated (438 lines, +125 lines)
+  - Added XeroCredentials interface and credentials state
+  - Added validation logic (32-char hex Client ID validation)
+  - Added handleSaveCredentials function (POST to backend)
+  - Added handleDisconnect function (clears tokens)
+  - Added credentials form UI (Client ID, Secret, Redirect URI inputs)
+  - Added validation error display
+  - Updated connection status to show tenant name
+  - Added disconnect button
+  - Enhanced status interface with credentialsSaved and tenantName
+
+**Implementation Details:**
+1. **Credentials Form** (shown when not connected):
+   - Client ID input (32 chars, hex validation)
+   - Client Secret input (password field)
+   - Redirect URI input (auto-filled from window.location.origin)
+   - Real-time character counter for Client ID
+   - Validation errors displayed inline
+   - Save button with loading state
+
+2. **Form Validation**:
+   - Client ID required and must be exactly 32 characters
+   - Client ID must match /^[a-fA-F0-9]{32}$/ pattern
+   - Client Secret required
+   - Errors shown in red below each field
+
+3. **Connection Management**:
+   - "Connect to Xero" button disabled until credentials saved
+   - "Disconnect" button with confirmation dialog
+   - Status badge shows "Credentials saved" after successful save
+   - Tenant name displayed when connected
+
+4. **API Integration**:
+   - POST ${BACKEND_URL}/admin/settings/xero (save credentials)
+   - POST ${BACKEND_URL}/xero/disconnect (clear tokens)
+   - Updated GET /admin/xero/status response type (credentialsSaved, tenantName)
+
+**Tests Performed:**
+- npm run build → ✅ PASS (built in 4.41s, 0 TypeScript errors)
+- TypeScript interface validation passed
+- All new functions type-checked successfully
+
+**Status:** ✅ COMPLETED
+
+**Next Steps / Handoff:**
+- Backend Developer: Implement missing endpoints:
+  - POST /admin/settings/xero (save encrypted credentials to app_settings)
+  - GET /admin/settings/xero/status (return credentialsSaved, tenantName)
+  - POST /xero/disconnect (clear xero_tokens)
+- Backend Developer: Update GET /admin/xero/status to include credentialsSaved and tenantName
+- Backend Developer: Implement app_settings table migration (keys: xero_client_id, xero_client_secret, xero_redirect_uri)
+- Backend Developer: Update xero/auth.ts to read credentials from database instead of env
+- QA Engineer: Test credentials save flow once backend endpoints implemented
+- QA Engineer: Test form validation (32-char hex Client ID)
+- QA Engineer: Test OAuth flow with database-stored credentials
+- QA Engineer: Test disconnect functionality
+
+**Blockers:**
+- Backend endpoints not yet implemented (POST /admin/settings/xero, POST /xero/disconnect)
+- app_settings table migration not yet created
+- Cannot test end-to-end flow until backend complete
+
+---
+
+### 2026-01-23 - Phase 7: Xero Integration Admin UI
+
+**Related Agent(s):** [Backend Developer](../../agent_logs/backend_developer.log.md) → Frontend Developer → [QA Engineer](../../agent_logs/qa_engineer.log.md)  
+**Blocks:** QA Engineer (needs Xero integration testing)  
+**Depends On:** Phase 7 Backend API & OAuth (backend complete)
+
+**What I Did:**
+- Created XeroSettingsPage with connection status, manual sync triggers, and sync history table
+- Integrated with all Phase 7 backend endpoints (/admin/xero/status, /admin/xero/sync-*, /admin/xero/sync-log)
+- Added "Connect to Xero" button initiating OAuth flow via backend /xero/auth
+- Built manual sync UI with 3 buttons (Sync Clients, Sync Products, Sync Payments) with loading states
+- Implemented sync history table displaying last 20 operations with status badges, duration, records processed
+- Added admin-only route at /app/settings/xero with navigation link in sidebar
+- Configured VITE_BACKEND_URL environment variable for API communication
+
+**Files Changed:**
+- [src/pages/XeroSettingsPage.tsx](../../src/pages/XeroSettingsPage.tsx) — NEW: Full admin dashboard (342 lines)
+  - Connection status section (connected/disconnected indicator, tenant ID, last sync)
+  - Manual sync button grid with loading states and toast feedback
+  - Sync history table with formatted dates, durations, status badges
+  - API integration: fetch to 4 backend endpoints
+- [src/App.tsx](../../src/App.tsx#L90-L95) — Added XeroSettingsPage route with admin-only protection
+- [src/components/layout/Sidebar.tsx](../../src/components/layout/Sidebar.tsx#L40-L46) — Added "Xero Integration" nav item (admin-only, sync icon)
+- [.env.example](.env.example) — Added VITE_BACKEND_URL=http://localhost:3001 with documentation
+- [.env](.env) — Appended VITE_BACKEND_URL configuration
+
+**Tests Performed:**
+- npm run build → ✅ PASS (0 TypeScript errors, built in 3.38s)
+- Fixed 2 TypeScript errors during development:
+  - Removed unused StatCard import
+  - Removed invalid size="sm" prop from Button component (ButtonProps doesn't include size)
+
+**Status:** ✅ COMPLETED
+
+**Next Steps / Handoff:**
+- QA Engineer: Validate Xero OAuth connection flow (requires backend server running + Xero credentials)
+- QA Engineer: Test manual sync triggers (Clients, Products, Payments)
+- QA Engineer: Verify sync history table updates after sync operations
+- QA Engineer: Validate admin-only route protection
+- Backend Team: Deploy backend server on port 3001 and run xero_tokens/xero_sync_log migrations
+- Backend Team: Configure XERO_CLIENT_ID, XERO_CLIENT_SECRET environment variables
+
+---
 
 ### 2026-01-23 - Phase 6: File Explorer refactor
 

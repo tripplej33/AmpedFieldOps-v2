@@ -1,41 +1,26 @@
 import { z } from 'zod'
 
 export const clientSchema = z.object({
-  first_name: z.string()
-    .min(2, 'First name must be at least 2 characters')
-    .max(255, 'First name must not exceed 255 characters'),
-  last_name: z.string()
-    .min(2, 'Last name must be at least 2 characters')
-    .max(255, 'Last name must not exceed 255 characters'),
-  company: z.string()
-    .max(255, 'Company name must not exceed 255 characters')
+  name: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(255, 'Name must not exceed 255 characters'),
+  contact_name: z.string()
+    .max(255, 'Contact name must not exceed 255 characters')
     .optional()
     .or(z.literal('')),
   email: z.string()
     .email('Please enter a valid email address')
-    .max(255, 'Email must not exceed 255 characters'),
+    .max(255, 'Email must not exceed 255 characters')
+    .optional()
+    .or(z.literal('')),
   phone: z.string()
-    .max(20, 'Phone number must not exceed 20 characters')
+    .max(50, 'Phone number must not exceed 50 characters')
     .optional()
     .or(z.literal('')),
-  street_address: z.string()
-    .max(255, 'Street address must not exceed 255 characters')
+  address: z.string()
     .optional()
     .or(z.literal('')),
-  city: z.string()
-    .max(100, 'City must not exceed 100 characters')
-    .optional()
-    .or(z.literal('')),
-  state_province: z.string()
-    .max(100, 'State/Province must not exceed 100 characters')
-    .optional()
-    .or(z.literal('')),
-  postal_code: z.string()
-    .max(20, 'Postal code must not exceed 20 characters')
-    .optional()
-    .or(z.literal('')),
-  country: z.string()
-    .max(100, 'Country must not exceed 100 characters')
+  billing_address: z.string()
     .optional()
     .or(z.literal('')),
   status: z.enum(['active', 'inactive']),

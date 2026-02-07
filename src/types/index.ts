@@ -26,38 +26,56 @@ export interface NavItem {
   roles?: Array<'admin' | 'manager' | 'technician' | 'viewer'>
 }
 
+
 export interface Client {
   id: string
-  user_id: string
-  first_name: string
-  last_name: string
-  company?: string
-  email: string
+  user_id: string | null
+  name: string
+  contact_name?: string
+  email?: string
   phone?: string
-  street_address?: string
-  city?: string
-  state_province?: string
-  postal_code?: string
-  country?: string
+  address?: string
+  billing_address?: string
   status: 'active' | 'inactive'
   notes?: string
+  xero_contact_id?: string
   created_at: string
   updated_at: string
 }
 
 export interface ClientFormData {
-  first_name: string
-  last_name: string
-  company?: string
-  email: string
+  name: string
+  contact_name?: string
+  email?: string
   phone?: string
-  street_address?: string
-  city?: string
-  state_province?: string
-  postal_code?: string
-  country?: string
+  address?: string
+  billing_address?: string
   status: 'active' | 'inactive'
   notes?: string
+}
+
+export interface Invoice {
+  id: string
+  client_id: string
+  xero_invoice_id: string
+  invoice_number: string
+  status: string
+  payment_status: 'draft' | 'awaiting_approval' | 'awaiting_payment' | 'paid' | 'overdue' | 'void'
+  issue_date: string
+  due_date: string
+  subtotal: number
+  tax: number
+  total: number
+  amount_paid: number
+  amount_due: number
+  currency: string
+  client_name?: string
+}
+
+export interface InvoicePipelineItem {
+  status: 'draft' | 'awaiting_approval' | 'awaiting_payment' | 'paid' | 'overdue' | 'void'
+  count: number
+  amount: number
 }
 
 export type ProjectStatus = 'Pending' | 'Active' | 'On Hold' | 'Completed' | 'Invoiced' | 'Archived'

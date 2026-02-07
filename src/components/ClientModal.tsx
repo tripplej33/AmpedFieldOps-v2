@@ -37,63 +37,47 @@ export default function ClientModal({
     resolver: zodResolver(clientSchema),
     defaultValues: client
       ? {
-          first_name: client.first_name,
-          last_name: client.last_name,
-          company: client.company || '',
-          email: client.email,
-          phone: client.phone || '',
-          street_address: client.street_address || '',
-          city: client.city || '',
-          state_province: client.state_province || '',
-          postal_code: client.postal_code || '',
-          country: client.country || '',
-          status: client.status,
-          notes: client.notes || '',
-        }
+        name: client.name,
+        contact_name: client.contact_name || '',
+        email: client.email || '',
+        phone: client.phone || '',
+        address: client.address || '',
+        billing_address: client.billing_address || '',
+        status: client.status,
+        notes: client.notes || '',
+      }
       : {
-          first_name: '',
-          last_name: '',
-          company: '',
-          email: '',
-          phone: '',
-          street_address: '',
-          city: '',
-          state_province: '',
-          postal_code: '',
-          country: '',
-          status: 'active',
-          notes: '',
-        },
+        name: '',
+        contact_name: '',
+        email: '',
+        phone: '',
+        address: '',
+        billing_address: '',
+        status: 'active',
+        notes: '',
+      },
   })
 
   useEffect(() => {
     if (isOpen && client) {
       reset({
-        first_name: client.first_name,
-        last_name: client.last_name,
-        company: client.company || '',
-        email: client.email,
+        name: client.name,
+        contact_name: client.contact_name || '',
+        email: client.email || '',
         phone: client.phone || '',
-        street_address: client.street_address || '',
-        city: client.city || '',
-        state_province: client.state_province || '',
-        postal_code: client.postal_code || '',
-        country: client.country || '',
+        address: client.address || '',
+        billing_address: client.billing_address || '',
         status: client.status,
         notes: client.notes || '',
       })
     } else if (isOpen) {
       reset({
-        first_name: '',
-        last_name: '',
-        company: '',
+        name: '',
+        contact_name: '',
         email: '',
         phone: '',
-        street_address: '',
-        city: '',
-        state_province: '',
-        postal_code: '',
-        country: '',
+        address: '',
+        billing_address: '',
         status: 'active',
         notes: '',
       })
@@ -131,57 +115,43 @@ export default function ClientModal({
     <Modal isOpen={isOpen} onClose={onClose} title={client ? 'Edit Client' : 'New Client'}>
       <div className="max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name Row */}
+          {/* Name & Contact Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1">First Name *</label>
+              <label className="block text-sm font-medium text-white mb-1">Display Name *</label>
               <Input
                 type="text"
-                placeholder="John"
-                {...register('first_name')}
+                placeholder="Company or Organization Name"
+                {...register('name')}
                 disabled={isSaving || isLoading}
-                className={errors.first_name ? 'border-red-500' : ''}
+                className={errors.name ? 'border-red-500' : ''}
               />
-              {errors.first_name && (
-                <p className="text-red-400 text-xs mt-1">{errors.first_name.message}</p>
+              {errors.name && (
+                <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Last Name *</label>
+              <label className="block text-sm font-medium text-white mb-1">Contact Person</label>
               <Input
                 type="text"
-                placeholder="Doe"
-                {...register('last_name')}
+                placeholder="John Doe"
+                {...register('contact_name')}
                 disabled={isSaving || isLoading}
-                className={errors.last_name ? 'border-red-500' : ''}
+                className={errors.contact_name ? 'border-red-500' : ''}
               />
-              {errors.last_name && (
-                <p className="text-red-400 text-xs mt-1">{errors.last_name.message}</p>
+              {errors.contact_name && (
+                <p className="text-red-400 text-xs mt-1">{errors.contact_name.message}</p>
               )}
             </div>
-          </div>
-
-          {/* Company */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Company</label>
-            <Input
-              type="text"
-              placeholder="Company Name"
-              {...register('company')}
-              disabled={isSaving || isLoading}
-            />
-            {errors.company && (
-              <p className="text-red-400 text-xs mt-1">{errors.company.message}</p>
-            )}
           </div>
 
           {/* Email & Phone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1">Email *</label>
+              <label className="block text-sm font-medium text-white mb-1">Email</label>
               <Input
                 type="email"
-                placeholder="john@example.com"
+                placeholder="contact@example.com"
                 {...register('email')}
                 disabled={isSaving || isLoading}
                 className={errors.email ? 'border-red-500' : ''}
@@ -204,72 +174,34 @@ export default function ClientModal({
             </div>
           </div>
 
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Street Address</label>
-            <Input
-              type="text"
-              placeholder="123 Main St"
-              {...register('street_address')}
-              disabled={isSaving || isLoading}
-            />
-            {errors.street_address && (
-              <p className="text-red-400 text-xs mt-1">{errors.street_address.message}</p>
-            )}
-          </div>
-
-          {/* City, State, Postal */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Addresses */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1">City</label>
-              <Input
-                type="text"
-                placeholder="New York"
-                {...register('city')}
+              <label className="block text-sm font-medium text-white mb-1">Physical Address</label>
+              <textarea
+                placeholder="123 Main St, City, Country"
+                {...register('address')}
                 disabled={isSaving || isLoading}
+                rows={3}
+                className="w-full bg-background-dark border border-border-dark rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               />
-              {errors.city && (
-                <p className="text-red-400 text-xs mt-1">{errors.city.message}</p>
+              {errors.address && (
+                <p className="text-red-400 text-xs mt-1">{errors.address.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1">State/Province</label>
-              <Input
-                type="text"
-                placeholder="NY"
-                {...register('state_province')}
+              <label className="block text-sm font-medium text-white mb-1">Billing Address</label>
+              <textarea
+                placeholder="PO Box 123, City, Country"
+                {...register('billing_address')}
                 disabled={isSaving || isLoading}
+                rows={3}
+                className="w-full bg-background-dark border border-border-dark rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               />
-              {errors.state_province && (
-                <p className="text-red-400 text-xs mt-1">{errors.state_province.message}</p>
+              {errors.billing_address && (
+                <p className="text-red-400 text-xs mt-1">{errors.billing_address.message}</p>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">Postal Code</label>
-              <Input
-                type="text"
-                placeholder="10001"
-                {...register('postal_code')}
-                disabled={isSaving || isLoading}
-              />
-              {errors.postal_code && (
-                <p className="text-red-400 text-xs mt-1">{errors.postal_code.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Country */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">Country</label>
-            <Input
-              type="text"
-              placeholder="USA"
-              {...register('country')}
-              disabled={isSaving || isLoading}
-            />
-            {errors.country && (
-              <p className="text-red-400 text-xs mt-1">{errors.country.message}</p>
-            )}
           </div>
 
           {/* Status */}

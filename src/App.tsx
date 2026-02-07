@@ -14,6 +14,7 @@ import TimesheetsPage from './pages/TimesheetsPage'
 import ActivityTypesPage from './pages/ActivityTypesPage'
 import FinancialsPage from './pages/FinancialsPage'
 import FilesPage from './pages/FilesPage'
+import XeroSettingsPage from './pages/XeroSettingsPage'
 
 // Placeholder pages (will be implemented in later phases)
 
@@ -95,6 +96,11 @@ function App() {
               <Route path="settings/activity-types" element={
                 <ProtectedRoute roles={['admin', 'manager']}>
                   <ActivityTypesPage />
+                </ProtectedRoute>
+              } />
+              <Route path="settings/xero" element={
+                <ProtectedRoute roles={['admin']}>
+                  <XeroSettingsPage />
                 </ProtectedRoute>
               } />
               <Route path="settings" element={

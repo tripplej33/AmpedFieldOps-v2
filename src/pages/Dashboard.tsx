@@ -1,20 +1,93 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import StatCard from '@/components/ui/StatCard'
 import ActivityFeed from '@/components/ActivityFeed'
 import { useAuth } from '@/contexts/AuthContext'
-import { mockDashboardStats, mockActivityFeed } from '@/mocks/dashboardData'
+import { ActivityFeedItem } from '@/mocks/dashboardData'
+
+interface DashboardStats {
+  totalJobs: number
+  completedToday: number
+  pendingApprovals: number
+  revenueToday: number
+  completedTodayTrend: number
+  pendingApprovalsTrend: number
+  revenueTodayTrend: number
+}
 
 export default function Dashboard() {
   const { user } = useAuth()
   const [activityOffset, setActivityOffset] = useState(0)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [allActivities, setAllActivities] = useState<ActivityFeedItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data - will be replaced with real API calls
-  const stats = mockDashboardStats
-  const allActivities = mockActivityFeed
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Fetch dashboard stats
+      const statsRes = await fetch('/api/admin/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      if (!statsRes.ok) throw new Error('Failed to fetch dashboard stats')
+      const statsData = await statsRes.json()
+      setStats(statsData)
+
+      // Fetch activity feed
+      const activityRes = await fetch('/api/admin/dashboard/activity-feed?limit=50', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      })
+      if (!activityRes.ok) throw new Error('Failed to fetch activity feed')
+      const activityData = await activityRes.json()
+      setAllActivities(activityData.items || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+      // Keep UI functional even if API fails
+      setStats({
+        totalJobs: 0,
+        completedToday: 0,
+        pendingApprovals: 0,
+        revenueToday: 0,
+        completedTodayTrend: 0,
+        pendingApprovalsTrend: 0,
+        revenueTodayTrend: 0,
+      })
+      setAllActivities([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const visibleActivities = allActivities.slice(0, activityOffset + 5)
 
   const handleLoadMore = () => {
     setActivityOffset(prev => prev + 5)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Operations Dashboard</h1>
+          <p className="text-text-muted">Loading...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-card-dark rounded-xl border border-border-dark h-32 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -23,36 +96,37 @@ export default function Dashboard() {
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Operations Dashboard</h1>
         <p className="text-text-muted">Real-time status of field operations and activities</p>
+        {error && <p className="text-red-400 text-sm mt-2">⚠️ {error}</p>}
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Jobs"
-          value={stats.totalJobs.toString()}
+          value={stats?.totalJobs.toString() || '0'}
           icon="work"
-          trend={{ value: stats.completedTodayTrend, isPositive: stats.completedTodayTrend >= 0 }}
+          trend={{ value: stats?.completedTodayTrend || 0, isPositive: (stats?.completedTodayTrend || 0) >= 0 }}
           subtitle="Active operations"
         />
         <StatCard
           title="Completed Today"
-          value={stats.completedToday.toString()}
+          value={stats?.completedToday.toString() || '0'}
           icon="check_circle"
-          trend={{ value: stats.completedTodayTrend, isPositive: stats.completedTodayTrend >= 0 }}
+          trend={{ value: stats?.completedTodayTrend || 0, isPositive: (stats?.completedTodayTrend || 0) >= 0 }}
           subtitle="Jobs finished"
         />
         <StatCard
           title="Pending Approvals"
-          value={stats.pendingApprovals.toString()}
+          value={stats?.pendingApprovals.toString() || '0'}
           icon="schedule"
-          trend={{ value: stats.pendingApprovalsTrend, isPositive: stats.pendingApprovalsTrend <= 0 }}
+          trend={{ value: stats?.pendingApprovalsTrend || 0, isPositive: (stats?.pendingApprovalsTrend || 0) <= 0 }}
           subtitle="Awaiting review"
         />
         <StatCard
           title="Revenue Today"
-          value={`$${stats.revenueToday.toLocaleString()}`}
+          value={`$${(stats?.revenueToday || 0).toLocaleString()}`}
           icon="trending_up"
-          trend={{ value: stats.revenueTodayTrend, isPositive: stats.revenueTodayTrend >= 0 }}
+          trend={{ value: stats?.revenueTodayTrend || 0, isPositive: (stats?.revenueTodayTrend || 0) >= 0 }}
           subtitle="Daily total"
         />
       </div>

@@ -12,16 +12,15 @@ export default function ClientCard({ client, onEdit, onDelete }: ClientCardProps
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="text-white font-semibold">
-            {client.first_name} {client.last_name}
+            {client.name}
           </h3>
-          {client.company && <p className="text-text-muted text-sm">{client.company}</p>}
+          {client.contact_name && <p className="text-text-muted text-sm">{client.contact_name}</p>}
         </div>
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
-            client.status === 'active'
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${client.status === 'active'
               ? 'bg-green-900/30 text-green-400'
               : 'bg-gray-700 text-gray-300'
-          }`}
+            }`}
         >
           {client.status === 'active' ? '✓ Active' : 'Inactive'}
         </span>
@@ -38,10 +37,9 @@ export default function ClientCard({ client, onEdit, onDelete }: ClientCardProps
             <span className="text-xs text-gray-400">Phone:</span> {client.phone}
           </p>
         )}
-        {client.city && (
+        {client.address && (
           <p>
-            <span className="text-xs text-gray-400">City:</span> {client.city}
-            {client.state_province && `, ${client.state_province}`}
+            <span className="text-xs text-gray-400">Address:</span> {client.address}
           </p>
         )}
       </div>

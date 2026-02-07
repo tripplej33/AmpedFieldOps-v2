@@ -320,3 +320,31 @@ After 1 month of using this system, measure:
 **Status:** ✅ READY FOR USE
 
 All infrastructure is in place. Agents can start using the new logging system immediately.
+
+---
+
+# System Implementation: Xero as Source of Truth for Clients
+
+## Overview
+- All clients are uniquely identified by their Xero Contact ID.
+- The app can operate without Xero, but when connected, all client syncs (pull/push) use Xero Contact ID as the unique key.
+- When a client is created in-app, it is pushed to Xero, and the local record is updated with the generated Xero Contact ID.
+
+## Data Flow
+1. **Xero → App:**
+   - On sync, pull all contacts from Xero.
+   - For each contact, create or update the local client record using Xero Contact ID as the unique key.
+2. **App → Xero:**
+   - When a client is created in-app, push it to Xero.
+   - After Xero returns the new Contact ID, update the local client record with this ID.
+
+## Migration Steps
+- Refactor DB schema to use xero_contact_id as unique key for clients.
+- Update backend sync logic to always match/create clients by xero_contact_id.
+- Remove any hard dependency on local user_id for client records.
+- Update all client-related API endpoints and UI components to use xero_contact_id for lookups and associations.
+
+## Testing
+- Test both sync directions:
+  - Xero → app: All Xero contacts appear as clients in the app.
+  - App → Xero: New clients created in-app are pushed to Xero and updated locally with the returned Contact ID.

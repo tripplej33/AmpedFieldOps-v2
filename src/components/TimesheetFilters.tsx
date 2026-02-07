@@ -69,7 +69,7 @@ export default function TimesheetFilters({ onChange, onClear }: TimesheetFilters
         <div>
           <label className="block text-sm font-medium text-text-muted mb-1.5">Status</label>
           <div className="grid grid-cols-2 gap-2">
-            {(['draft','submitted','approved','invoiced'] as TimesheetStatus[]).map((s) => (
+            {(['draft', 'submitted', 'approved', 'invoiced'] as TimesheetStatus[]).map((s) => (
               <label key={s} className="flex items-center gap-2 text-sm text-white">
                 <input
                   type="checkbox"

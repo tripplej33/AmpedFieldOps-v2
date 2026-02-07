@@ -1,25 +1,106 @@
 # Orchestrator (PM) - Progress Log
 
 **Agent:** Lead PM / Project Orchestrator  
-**Current Session:** January 22, 2026  
-**Last Updated:** 2026-01-22 12:30 UTC
+**Current Session:** January 28, 2026  
+**Last Updated:** 2026-01-28 15:30 UTC
 
 ---
 
 ## Current Task
 
-**Task:** Phase 5 Handoff – Frontend Developer  
-**Status:** READY_FOR_HANDOFF  
-**Started:** 2026-01-23 09:00 UTC  
-**Phase:** Phase 5 (Operations & Scheduling)  
+**Task:** Phase 7 Architecture Refinement — Xero Integration Hybrid Approach  
+**Status:** ✅ COMPLETED  
+**Started:** 2026-01-28 14:00 UTC  
+**Completed:** 2026-01-28 15:30 UTC  
 **Related Files:**
-- .project/manifest.json
-- .project/timeline.md
-- .project/memory/current_task.md
-- .project/memory/phase5_mission_brief_frontend.md
-- .project/memory/phase5_mission_brief_backend.md
+- `.project/memory/PHASE_7_XERO_ANALYSIS.md` (NEW - comprehensive analysis)
+- `.project/memory/phase7_mission_brief.md` (UPDATED - hybrid approach)
+- `.project/manifest.json` (UPDATED - Phase 7 description)
+- `.project/timeline.md` (UPDATED - Phase 7 architecture changes)
 
-**Context:** Phase 1-4 marked complete; Phase 5 briefs ready. Sequential execution required; frontend goes first with mock data while backend waits for handoff.
+**Context:** User requested analysis of old app's Xero implementation to identify what Phase 7 needs to change. Analysis complete; Phase 7 mission brief updated with hybrid approach combining old app's proven patterns with new app's security features.
+
+---
+
+## Session Log
+
+### 2026-01-28 15:30 - Phase 7 Architecture Refinement: Xero Integration
+
+**What I Did:**
+1. **Analyzed Old App's Xero Implementation** (Legacy AmpedFieldOps):
+   - Reviewed 504-line XERO_INTEGRATION_PLAN.md (OAuth 2.0 architecture)
+   - Reviewed 413-line XERO_QUICK_START.md (setup checklist & implementation guide)
+   - Examined backend/src/lib/xero/auth.ts (token management & refresh logic)
+   - Deep-dived into Settings.tsx (lines 980-1200) Xero credentials form
+   - Identified key proven patterns:
+     - Credentials stored in `settings` table (admin enters on Settings page)
+     - Redirect URI auto-calculated from `window.location.origin`
+     - Auto-detection of domain shift (localhost → production) with auto-update
+     - Form validation (Client ID: 32 chars, hex only)
+     - Frontend-initiated OAuth (same-window redirect, not popup)
+
+2. **Created Comprehensive Analysis Document**:
+   - `.project/memory/PHASE_7_XERO_ANALYSIS.md` (detailed breakdown)
+   - Side-by-side comparison: Old App vs Phase 7 Brief vs Recommended Changes
+   - Identified 5 key misalignments and solutions
+   - Provided hybrid approach combining old app's proven patterns + new app's security features
+
+3. **Updated Phase 7 Mission Brief** (`phase7_mission_brief.md`):
+   - **Credentials Storage:** Database-backed (`app_settings` table) instead of env-only
+   - **Redirect URI:** Dynamic calculation with domain shift auto-detection
+   - **OAuth Flow:** Frontend-initiated, same-window redirect (not popup)
+   - **Database Schema:** Added `app_settings` table for encrypted credentials
+   - **API Endpoints:** Added Settings endpoints (POST `/settings/xero/credentials`, GET `/settings/xero/status`)
+   - **Frontend UI:** Updated to include Settings page with Xero credentials form
+   - **Development Workflow:** Day 1 now includes credentials infrastructure + Settings page
+   - **Testing Strategy:** Added domain shift validation, form validation, connection testing
+   - **Environment Variables:** Clarified that credentials go in database, not .env
+
+4. **Updated Project State Files**:
+   - `manifest.json`: Updated Phase 7 description to reflect database-backed credentials approach
+   - `timeline.md`: Added "Architecture Update" section documenting the refinement
+
+**Key Findings:**
+| Aspect | Old App (Proven) | Phase 7 Brief (Original) | Phase 7 (Updated) |
+|--------|------------------|--------------------------|-------------------|
+| **Credentials Storage** | Database (`settings` table) | Environment variables | Database (`app_settings`) ✅ |
+| **Redirect URI** | Dynamic from domain | Static from config | Dynamic with auto-detect ✅ |
+| **OAuth Flow** | Same-window redirect | Popup (postMessage) | Same-window redirect ✅ |
+| **Credentials UI** | Settings page form | Not specified | Settings page form ✅ |
+| **Token Encryption** | Plain (security gap) | AES-256-CBC | AES-256-CBC ✅ |
+
+**Files Changed:**
+- `.project/memory/PHASE_7_XERO_ANALYSIS.md` (NEW - comprehensive analysis & recommendations)
+- `.project/memory/phase7_mission_brief.md` (UPDATED - hybrid approach, 9 major sections)
+- `.project/manifest.json` (UPDATED - Phase 7 description)
+- `.project/timeline.md` (UPDATED - Phase 7 section with architecture update note)
+- `.project/agent_logs/orchestrator.log.md` (this entry)
+
+**Status:** ✅ COMPLETED
+
+**Blockers:** None - Ready for Phase 7 backend developer to begin implementation using updated mission brief
+
+**Next Steps:**
+- Backend developer uses updated `phase7_mission_brief.md` as specification
+- Frontend developer adds Xero credentials form to Settings page (part of Phase 6 settings tab)
+- Both should reference `.project/memory/PHASE_7_XERO_ANALYSIS.md` for architectural justification
+
+**Status:** ✅ READY_FOR_HANDOFF
+
+**Blockers:** None
+
+**Next Steps:**
+- Frontend Developer reads `phase6_mission_brief_frontend.md` and `PHASE_6_FILES_EXPLORER_SPEC.md`
+- Frontend Developer begins implementation (FilesPage refactor → ProjectFolderList → ProjectFilesView)
+- Estimated duration: 4-6 hours for full implementation
+- QA follows after frontend completes
+
+**Key Points:**
+- File explorer is the PRIMARY focus (all projects as folders)
+- UX polish (error boundaries, toasts, skeletons) is secondary
+- Backend infrastructure (storage bucket, RLS) already complete
+- Frontend reuses existing FileUploader and FileList components
+- Single route (`/app/files`) with state-based view toggle
 
 ---
 

@@ -9,7 +9,7 @@ export default function ActivityTypesPage() {
   const { mutate: createActivityType } = useCreateActivityType()
   const { mutate: updateActivityType } = useUpdateActivityType()
   const { mutate: deleteActivityType } = useDeleteActivityType()
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedActivityType, setSelectedActivityType] = useState<ActivityType | null>(null)
   const [searchTerm, setSearchTerm] = useState('')

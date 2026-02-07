@@ -1,6 +1,6 @@
 import FileUploader from '@/components/files/FileUploader'
 import FileList from '@/components/files/FileList'
-import { Project, ProjectFile } from '@/types'
+import { CostCenter, Project, ProjectFile } from '@/types'
 
 interface ProjectFilesViewProps {
   project: Project
@@ -12,6 +12,7 @@ interface ProjectFilesViewProps {
   onFileDeleted: (fileId: string) => void
   onError: (error: string) => void
   onBack: () => void
+  costCenters?: CostCenter[]
 }
 
 export default function ProjectFilesView({
@@ -24,6 +25,7 @@ export default function ProjectFilesView({
   onFileDeleted,
   onError,
   onBack,
+  costCenters,
 }: ProjectFilesViewProps) {
   return (
     <div className="space-y-6">
@@ -83,6 +85,7 @@ export default function ProjectFilesView({
             loading={loading}
             onFileDeleted={onFileDeleted}
             onError={onError}
+            costCenters={costCenters}
           />
         </div>
       </div>

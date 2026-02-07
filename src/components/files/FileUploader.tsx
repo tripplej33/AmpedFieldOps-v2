@@ -66,11 +66,10 @@ export default function FileUploader({
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className={`relative rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors ${
-        dragActive
+      className={`relative rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors ${dragActive
           ? 'border-primary bg-primary/5'
           : 'border-border-dark bg-card-dark hover:border-primary/50'
-      } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <input
         type="file"

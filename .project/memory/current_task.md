@@ -1,66 +1,123 @@
-# Current Task - Phase 6: Polish & Files
+# Current Task - Phase 6: File Explorer & UX Polish
 *Date: January 24, 2026*
-*Status: IMPLEMENTATION COMPLETE, AWAITING QA TESTING*
+*Status: READY FOR IMPLEMENTATION*
 
 ## Overview
 
-Phase 6 file management system is fully implemented and ready for QA testing. The backend prepared Supabase Storage + RLS policies; the frontend built the complete user interface for uploading, downloading, previewing, and deleting project files.
+**Phase 6** focuses on building a file explorer interface. All infrastructure is ready; we're now implementing the frontend UI to let users browse projects as folders and manage files within each project.
 
-## What Was Completed
+**Backend Status:** ✅ Complete  
+- Storage bucket `project-files` created
+- `project_files` metadata table + RLS policies in place
+- Ready for frontend consumption
 
-### Backend ✅
-- Storage bucket `project-files` with RLS
-- `project_files` metadata table
-- RLS policies enforcing project-level access
-- Helper functions and signed URL RPC
+**Frontend Status:** 🚀 Starting Now  
+- Detailed mission brief ready
+- Specifications and component breakdown provided
+- Ready for implementation
 
-### Frontend ✅
-- File upload (drag-drop + file picker)
-- File listing with metadata
-- File preview (images, PDF)
-- File download (signed URLs)
-- File deletion (optimistic update)
-- Toast notifications
-- Skeleton loaders
-- Full TypeScript support (0 errors)
-- Production build verified
+---
 
-## QA Testing Checklist
+## Architecture
 
-**Quick Checklist:** [phase6_qa_checklist.md](./phase6_qa_checklist.md)
+### Two Views (Single Route)
 
-**Comprehensive Guide:** [../PHASE_6_HANDOFF.md](../PHASE_6_HANDOFF.md)
+**Route:** `/app/files`
 
-**Summary for QA:** [phase6_handoff_summary.md](./phase6_handoff_summary.md)
+**View 1: Folder List (currentProjectId = null)**
+- All projects displayed as folder cards in a grid
+- Click folder to navigate to file view
 
-## Key Tests
+**View 2: File View (currentProjectId = 'uuid')**
+- Files for selected project with full CRUD
+- Breadcrumb to navigate back
 
-1. **File Upload** — Drag-drop, file picker, 20MB limit
-2. **File List** — All project files visible, sorted by date
-3. **File Operations** — Preview (images/PDF), download (signed URL), delete (confirmation)
-4. **RLS Security** — Users only access own project files
-5. **Error Handling** — Toast notifications, helpful messages
-6. **Responsive Design** — Desktop, tablet, mobile layouts
-7. **Browser Quality** — No console errors
+---
+
+## Components to Build
+
+| Component | Location | Status | Purpose |
+|-----------|----------|--------|---------|
+| FilesPage (refactored) | `src/pages/FilesPage.tsx` | 🔧 Build | Entry point; toggle between views |
+| ProjectFolderList | `src/components/files/ProjectFolderList.tsx` | ✨ New | Grid of project folders |
+| ProjectFilesView | `src/components/files/ProjectFilesView.tsx` | ✨ New | Files browser for one project |
+| Breadcrumb | `src/components/files/Breadcrumb.tsx` | ✨ New | Navigation helper |
+| FileUploader | `src/components/files/FileUploader.tsx` | ✅ Reuse | Drag & drop uploader |
+| FileList | `src/components/files/FileList.tsx` | ✅ Reuse | File browser with actions |
+
+---
+
+## Data Flow
+
+```
+FilesPage
+├─ currentProjectId = null
+│  └─ ProjectFolderList
+│     ├─ useProjects() → fetch all projects
+│     ├─ onClick → setCurrentProjectId(id)
+│     └─ Render folder grid
+│
+└─ currentProjectId = 'uuid'
+   └─ ProjectFilesView
+      ├─ useProjects() → find selected project name
+      ├─ useFiles(projectId) → fetch files
+      ├─ FileUploader → upload files
+      ├─ FileList → browse/delete/download
+      └─ Breadcrumb → onClick back to null
+```
+
+---
+
+## Key Features
+
+✅ **Folder Browser** - Grid of project cards  
+✅ **File Management** - Upload, download, preview, delete  
+✅ **Breadcrumb Navigation** - Easy back button  
+✅ **RLS Secure** - Only shows accessible projects/files  
+✅ **Responsive Design** - Mobile/tablet/desktop  
+✅ **Loading States** - Skeletons during fetch  
+✅ **Toast Notifications** - Success/error feedback  
+✅ **Error Boundaries** - Graceful error handling  
+
+---
 
 ## Files to Reference
 
-- **Handoff Document:** `.project/PHASE_6_HANDOFF.md` (comprehensive test plan)
-- **QA Checklist:** `.project/memory/phase6_qa_checklist.md` (quick reference)
-- **Summary:** `.project/memory/phase6_handoff_summary.md` (overview for QA)
-- **Frontend Log:** `.project/agent_logs/frontend_developer.log.md` (implementation details)
-- **Backend Log:** `.project/agent_logs/backend_developer.log.md` (database setup details)
+**Mission Brief (Detailed):**
+- [phase6_mission_brief_frontend.md](./phase6_mission_brief_frontend.md) ← Start here
 
-## Estimated Testing Time
+**File Explorer Spec:**
+- [PHASE_6_FILES_EXPLORER_SPEC.md](./PHASE_6_FILES_EXPLORER_SPEC.md)
 
-2-3 hours
+**Project Status:**
+- Manifest: `.project/manifest.json`
+- Timeline: `.project/timeline.md`
 
-## Sign-Off
+---
 
-- Frontend Developer: ✅ COMPLETE
-- Backend Developer: ✅ COMPLETE
-- QA Engineer: ⏳ TESTING (start here)
+## Success Criteria
 
+✅ All projects display as clickable folder cards  
+✅ Clicking folder shows that project's files  
+✅ Breadcrumb allows navigation back to folders  
+✅ File operations work (upload/download/preview/delete)  
+✅ Responsive on mobile, tablet, desktop  
+✅ No console errors; TypeScript strict mode passes  
+✅ Loading skeletons and toasts show correctly  
 
-## Notes
-Handoff will proceed to Frontend Developer after Backend confirms bucket + policies are operational and logs completion in `agent_logs`.
+---
+
+## Next: Frontend Implementation
+
+Frontend developer should:
+
+1. Read `phase6_mission_brief_frontend.md` in full
+2. Start with FilesPage refactoring
+3. Build ProjectFolderList component
+4. Build ProjectFilesView component
+5. Wire up hooks and navigation
+6. Test all flows
+
+---
+
+**Status: Ready for Frontend Developer to begin Phase 6 implementation.**

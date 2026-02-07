@@ -19,7 +19,7 @@ export function useTimesheets(
 
   const fetchTimesheets = useCallback(async () => {
     if (!user?.id) return
-    
+
     setIsLoading(true)
     setError(null)
 

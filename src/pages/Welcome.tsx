@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import Login from './Login'
 import Signup from './Signup'
@@ -8,6 +8,7 @@ type WelcomeMode = 'checking' | 'login' | 'signup'
 
 export default function Welcome() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, loading } = useAuth()
   const [mode, setMode] = useState<WelcomeMode>('checking')
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
@@ -21,10 +22,11 @@ export default function Welcome() {
       return
     }
 
-    // User is authenticated - redirect to dashboard immediately
+    // User is authenticated - redirect to intended page or dashboard
     if (user) {
-      console.log('User authenticated, redirecting to dashboard')
-      navigate('/app/dashboard', { replace: true })
+      const from = (location.state as any)?.from?.pathname || '/app/dashboard'
+      console.log(`User authenticated, redirecting to ${from}`)
+      navigate(from, { replace: true })
       return
     }
 
@@ -32,7 +34,7 @@ export default function Welcome() {
     console.log('User not authenticated, showing login')
     setIsFirstTimeSetup(false)
     setMode('login')
-  }, [user, loading, navigate])
+  }, [user, loading, navigate, location.state])
 
   if (mode === 'checking') {
     return (
