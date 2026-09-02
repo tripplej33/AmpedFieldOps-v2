@@ -29,11 +29,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://dcssbsxjtfibwfxoagxl.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjc3Nic3hqdGZpYndmeG9hZ3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1Mjk5NDUsImV4cCI6MjA4NDEwNTk0NX0.Vb6hR1oV5fUuO0M7l_u6u4u4_O4G9F2d8oX0L7W8y8c' }}
 
-      - name: Set up Java JDK 17
+      - name: Set up Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
