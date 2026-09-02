@@ -9,7 +9,10 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "migrate": "node migrate.js",
-    "test:supabase": "node test-supabase.js"
+    "test:supabase": "node test-supabase.js",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -32,6 +35,17 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/camera": "^8.2.4",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
+    "@capacitor/geolocation": "^8.2.2",
+    "@capacitor/ios": "^8.5.1",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.91.0",
     "lucide-react": "^0.562.0",

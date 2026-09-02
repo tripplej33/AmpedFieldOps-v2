@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 
 export interface GeoCoordinates {
   latitude: number
@@ -58,8 +60,8 @@ export function calculateHaversineDistanceKm(
 export function calculateTravelBilling({
   distanceKm,
   travelTimeMinutes = 0,
-  ratePerKm = 0.95, // Default NZ IRD / standard vehicle reimbursement rate per km
-  hourlyRate = 85.0, // Default technician hourly travel rate
+  ratePerKm = 0.95, // Standard NZ/AU mileage rate default
+  hourlyRate = 85.0, // Standard electrician hourly charge-out rate default
 }: TravelBillingParams): TravelBillingResult {
   const safeDistance = Math.max(0, distanceKm)
   const safeMinutes = Math.max(0, travelTimeMinutes)
@@ -85,64 +87,103 @@ export function useGeolocation() {
   const [isTracking, setIsTracking] = useState<boolean>(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
+    if (typeof window === 'undefined' && !Capacitor.isNativePlatform()) {
       setIsSupported(false)
-      setError('Geolocation is not supported by your device or browser.')
+      setError('Geolocation is not supported on this platform.')
     }
   }, [])
 
   /**
    * Retrieves current GPS position with promise resolution and custom options.
+   * Uses native Capacitor Geolocation on Android/iOS and HTML5 Geolocation in browser.
    */
   const getCurrentLocation = useCallback(
-    (options?: PositionOptions): Promise<GeoCoordinates> => {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          const errMsg = 'Geolocation is not supported on this device.'
-          setError(errMsg)
-          reject(new Error(errMsg))
-          return
-        }
+    async (options?: PositionOptions): Promise<GeoCoordinates> => {
+      setLoading(true)
+      setError(null)
 
-        setLoading(true)
-        setError(null)
+      try {
+        if (Capacitor.isNativePlatform()) {
+          // Check/Request native mobile permissions
+          const perm = await Geolocation.checkPermissions()
+          if (perm.location !== 'granted') {
+            const requested = await Geolocation.requestPermissions()
+            if (requested.location !== 'granted') {
+              throw new Error('Location permission was denied on this device.')
+            }
+          }
 
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const coords: GeoCoordinates = {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-              altitude: pos.coords.altitude,
-              speed: pos.coords.speed,
-              heading: pos.coords.heading,
-              timestamp: pos.timestamp,
-            }
-            setCoordinates(coords)
-            setLoading(false)
-            resolve(coords)
-          },
-          (err) => {
-            let message = 'Failed to acquire GPS location.'
-            if (err.code === err.PERMISSION_DENIED) {
-              message = 'Location access denied. Please allow location permissions in your browser.'
-            } else if (err.code === err.POSITION_UNAVAILABLE) {
-              message = 'GPS position unavailable. Ensure location services are enabled.'
-            } else if (err.code === err.TIMEOUT) {
-              message = 'Location request timed out. Retrying with lower accuracy...'
-            }
-            setError(message)
-            setLoading(false)
-            reject(new Error(message))
-          },
-          {
+          const pos = await Geolocation.getCurrentPosition({
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 30000,
-            ...options,
+          })
+
+          const coords: GeoCoordinates = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+            altitude: pos.coords.altitude,
+            speed: pos.coords.speed,
+            heading: pos.coords.heading,
+            timestamp: pos.timestamp,
           }
-        )
-      })
+          setCoordinates(coords)
+          setLoading(false)
+          return coords
+        }
+
+        // Browser fallback
+        return await new Promise((resolve, reject) => {
+          if (!navigator.geolocation) {
+            const errMsg = 'Geolocation is not supported on this browser.'
+            setError(errMsg)
+            reject(new Error(errMsg))
+            return
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const coords: GeoCoordinates = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                altitude: pos.coords.altitude,
+                speed: pos.coords.speed,
+                heading: pos.coords.heading,
+                timestamp: pos.timestamp,
+              }
+              setCoordinates(coords)
+              setLoading(false)
+              resolve(coords)
+            },
+            (err) => {
+              let message = 'Failed to acquire GPS location.'
+              if (err.code === err.PERMISSION_DENIED) {
+                message = 'Location access denied. Please allow location permissions in your settings.'
+              } else if (err.code === err.POSITION_UNAVAILABLE) {
+                message = 'GPS position unavailable. Ensure location services are enabled.'
+              } else if (err.code === err.TIMEOUT) {
+                message = 'Location request timed out. Retrying with lower accuracy...'
+              }
+              setError(message)
+              setLoading(false)
+              reject(new Error(message))
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 30000,
+              ...options,
+            }
+          )
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to acquire GPS coordinates'
+        setError(message)
+        setLoading(false)
+        throw err
+      }
     },
     []
   )
@@ -152,9 +193,49 @@ export function useGeolocation() {
    */
   const startTracking = useCallback(
     (onUpdate?: (coords: GeoCoordinates) => void, options?: PositionOptions) => {
+      setIsTracking(true)
+
+      if (Capacitor.isNativePlatform()) {
+        let watchCallbackId: string | null = null
+        Geolocation.watchPosition(
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 10000,
+          },
+          (pos, err) => {
+            if (err) {
+              setError(err.message)
+              return
+            }
+            if (pos) {
+              const coords: GeoCoordinates = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                altitude: pos.coords.altitude,
+                speed: pos.coords.speed,
+                heading: pos.coords.heading,
+                timestamp: pos.timestamp,
+              }
+              setCoordinates(coords)
+              onUpdate?.(coords)
+            }
+          }
+        ).then((id) => {
+          watchCallbackId = id
+        })
+
+        return () => {
+          if (watchCallbackId) {
+            Geolocation.clearWatch({ id: watchCallbackId })
+          }
+          setIsTracking(false)
+        }
+      }
+
       if (!navigator.geolocation) return () => {}
 
-      setIsTracking(true)
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
           const coords: GeoCoordinates = {

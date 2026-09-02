@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useUploadFile } from '@/hooks/useFiles'
 import { usePermissions } from '@/hooks/usePermissions'
+import { captureNativePhoto } from '@/lib/camera'
 import type { CostCenter } from '@/types'
 
 interface FileUploaderProps {
@@ -122,6 +124,21 @@ export default function FileUploader({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       handleStageFile(e.target.files[0])
+    }
+  }
+
+  const handleLaunchCamera = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const photoFile = await captureNativePhoto()
+        if (photoFile) {
+          handleStageFile(photoFile)
+        }
+      } catch (err) {
+        onError(err instanceof Error ? err.message : 'Camera failed to capture photo')
+      }
+    } else {
+      document.getElementById('camera-input')?.click()
     }
   }
 
@@ -280,13 +297,15 @@ export default function FileUploader({
                 <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
                 Choose File
               </label>
-              <label
-                htmlFor="camera-input"
-                className="px-3 py-1.5 rounded-lg bg-card-dark border border-border-dark hover:border-cyan-400 text-xs font-medium text-white cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm"
+              <button
+                type="button"
+                onClick={handleLaunchCamera}
+                disabled={uploading}
+                className="px-3 py-1.5 rounded-lg bg-card-dark border border-border-dark hover:border-cyan-400 text-xs font-medium text-white cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-sm text-cyan-400">photo_camera</span>
                 Take Photo
-              </label>
+              </button>
             </div>
           </div>
 

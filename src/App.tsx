@@ -23,6 +23,7 @@ import SettingsPage from './pages/SettingsPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import { useMobileInit } from './hooks/useMobileInit'
 
 const ProjectRedirect = () => {
   const { id } = useParams()
@@ -32,6 +33,11 @@ const ProjectRedirect = () => {
 const ClientRedirect = () => {
   const { id } = useParams()
   return <Navigate to={`/app/clients/${id}`} replace />
+}
+
+function MobileInitializer() {
+  useMobileInit()
+  return null
 }
 
 const NotFound = () => (
@@ -56,6 +62,7 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
+          <MobileInitializer />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Welcome />} />

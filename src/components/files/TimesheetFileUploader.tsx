@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useUploadFile } from '@/hooks/useFiles'
+import { captureNativePhoto } from '@/lib/camera'
 
 interface TimesheetFileUploaderProps {
   projectId: string
@@ -75,6 +77,26 @@ export default function TimesheetFileUploader({
       setProgress(0)
     }
   }, [projectId, stagedFile, customFileName, costCenterId, upload, onUploadComplete, onError])
+
+  const handleLaunchCamera = async () => {
+    if (!projectId) {
+      onError('Project must be selected first')
+      return
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const photoFile = await captureNativePhoto()
+        if (photoFile) {
+          handleStageFile(photoFile)
+        }
+      } catch (err) {
+        onError(err instanceof Error ? err.message : 'Failed to capture photo')
+      }
+    } else {
+      document.getElementById('timesheet-camera-input')?.click()
+    }
+  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -211,7 +233,7 @@ export default function TimesheetFileUploader({
 
         <button
           type="button"
-          onClick={() => document.getElementById('timesheet-camera-input')?.click()}
+          onClick={handleLaunchCamera}
           disabled={uploading || !projectId}
           className="flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-400 hover:bg-cyan-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Take photo on mobile"
@@ -267,13 +289,15 @@ export default function TimesheetFileUploader({
             <span className="material-symbols-outlined text-sm text-primary">folder_open</span>
             Choose File
           </label>
-          <label
-            htmlFor="timesheet-camera-input"
-            className="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark hover:border-cyan-400 text-xs font-medium text-white cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm"
+          <button
+            type="button"
+            onClick={handleLaunchCamera}
+            disabled={uploading || !projectId}
+            className="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark hover:border-cyan-400 text-xs font-medium text-white cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-sm text-cyan-400">photo_camera</span>
             Take Photo
-          </label>
+          </button>
         </div>
       </div>
 
