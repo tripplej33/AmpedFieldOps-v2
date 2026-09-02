@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,7 +9,7 @@ import Input from '@/components/ui/Input'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(1, 'Password is required'),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -17,9 +17,16 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useAuth()
+  const { login, user, loading } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!loading && user) {
+      const from = (location.state as any)?.from?.pathname || '/app/dashboard'
+      navigate(from, { replace: true })
+    }
+  }, [user, loading, navigate, location.state])
 
   const {
     register,
@@ -73,6 +80,7 @@ export default function Login() {
             <Input
               label="Email"
               type="email"
+              autoComplete="email"
               placeholder="your.email@example.com"
               error={errors.email?.message}
               {...register('email')}
@@ -81,6 +89,7 @@ export default function Login() {
             <Input
               label="Password"
               type="password"
+              autoComplete="current-password"
               placeholder="••••••••"
               error={errors.password?.message}
               {...register('password')}
@@ -97,12 +106,12 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <a
-              href="#"
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
+            <Link
+              to="/forgot-password"
+              className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
         </div>
 

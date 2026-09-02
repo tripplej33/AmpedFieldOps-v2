@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Project, ProjectFormData, ProjectFilters } from '../types'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 50
 
 export function useProjects(filters?: ProjectFilters, page: number = 1) {
   const { user } = useAuth()
@@ -12,59 +12,114 @@ export function useProjects(filters?: ProjectFilters, page: number = 1) {
   const [error, setError] = useState<string | null>(null)
   const [pageCount, setPageCount] = useState(0)
 
-  useEffect(() => {
+  const fetchProjects = useCallback(async () => {
     if (!user?.id) return
 
-    const fetchProjects = async () => {
-      setIsLoading(true)
-      setError(null)
+    setIsLoading(true)
+    setError(null)
 
-      try {
-        let query = supabase
-          .from('projects')
-          .select('*', { count: 'exact' })
-          .eq('user_id', user.id)
+    try {
+      // 1. Check user role permissions for scoped visibility
+      const isAdminOrManager = user.role === 'admin' || user.role === 'manager'
+      let isRestrictedToAssigned = false
 
-        // Apply filters
-        if (filters?.status && filters.status.length > 0) {
-          query = query.in('status', filters.status)
-        }
+      if (!isAdminOrManager) {
+        // Query user's role from roles table
+        const { data: roleData } = await supabase
+          .from('roles')
+          .select('permissions')
+          .eq('id', user.role)
+          .maybeSingle()
 
-        if (filters?.clientId) {
-          query = query.eq('client_id', filters.clientId)
-        }
-
-        if (filters?.startDate) {
-          query = query.gte('start_date', filters.startDate)
-        }
-
-        if (filters?.endDate) {
-          query = query.lte('end_date', filters.endDate)
-        }
-
-        // Pagination
-        const from = (page - 1) * PAGE_SIZE
-        const to = from + PAGE_SIZE - 1
-
-        const { data: projects, error: err, count } = await query
-          .order('created_at', { ascending: false })
-          .range(from, to)
-
-        if (err) throw err
-
-        setData(projects || [])
-        setPageCount(Math.ceil((count || 0) / PAGE_SIZE))
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch projects')
-      } finally {
-        setIsLoading(false)
+        const permissions = (roleData?.permissions || []) as string[]
+        const hasViewAll = permissions.includes('projects.view_all')
+        isRestrictedToAssigned = !hasViewAll
       }
+
+      let assignedProjectIds: string[] = []
+      if (isRestrictedToAssigned) {
+        // Fetch project IDs assigned to this user and created by user in parallel
+        const [{ data: assignments }, { data: createdProjects }] = await Promise.all([
+          supabase.from('project_members').select('project_id').eq('user_id', user.id),
+          supabase.from('projects').select('id').eq('user_id', user.id),
+        ])
+
+        const memberProjectIds = (assignments || []).map((a) => a.project_id)
+        const createdProjectIds = (createdProjects || []).map((p) => p.id)
+        assignedProjectIds = Array.from(new Set([...memberProjectIds, ...createdProjectIds]))
+
+        if (assignedProjectIds.length === 0) {
+          setData([])
+          setPageCount(0)
+          setIsLoading(false)
+          return
+        }
+      }
+
+      // 2. Build Query
+      let query = supabase
+        .from('projects')
+        .select(
+          `
+          *,
+          clients(id, name, contact_name),
+          assigned_members:project_members(
+            id,
+            user_id,
+            role_in_project,
+            assigned_at,
+            user:users(id, full_name, email, role)
+          )
+        `,
+          { count: 'exact' }
+        )
+
+      if (isRestrictedToAssigned && assignedProjectIds.length > 0) {
+        query = query.in('id', assignedProjectIds)
+      }
+
+      // Apply filters
+      if (filters?.status && filters.status.length > 0) {
+        query = query.in('status', filters.status)
+      }
+
+      if (filters?.clientId) {
+        query = query.eq('client_id', filters.clientId)
+      }
+
+      if (filters?.startDate) {
+        query = query.gte('start_date', filters.startDate)
+      }
+
+      if (filters?.endDate) {
+        query = query.lte('end_date', filters.endDate)
+      }
+
+      // Pagination
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data: projects, error: err, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (err) throw err
+
+      setData((projects as Project[]) || [])
+      setPageCount(Math.ceil((count || 0) / PAGE_SIZE))
+    } catch (err) {
+      console.error('Fetch projects error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch projects')
+    } finally {
+      setIsLoading(false)
     }
+  }, [user?.id, user?.role, filters, page])
 
+  useEffect(() => {
     fetchProjects()
-  }, [user?.id, filters, page])
+  }, [fetchProjects])
 
-  return { data, isLoading, error, pageCount }
+  return { data, isLoading, error, pageCount, refresh: fetchProjects }
 }
 
 export function useProject(id: string) {
@@ -73,35 +128,46 @@ export function useProject(id: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchProject = useCallback(async () => {
     if (!user?.id || !id) return
 
-    const fetchProject = async () => {
-      setIsLoading(true)
-      setError(null)
+    setIsLoading(true)
+    setError(null)
 
-      try {
-        // Fetch project with client info
-        const { data: project, error: err } = await supabase
-          .from('projects')
-          .select('*, clients(company, first_name, last_name)')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single()
+    try {
+      const { data: project, error: err } = await supabase
+        .from('projects')
+        .select(
+          `
+          *,
+          clients(id, name, contact_name),
+          assigned_members:project_members(
+            id,
+            user_id,
+            role_in_project,
+            assigned_at,
+            user:users(id, full_name, email, role)
+          )
+        `
+        )
+        .eq('id', id)
+        .single()
 
-        if (err) throw err
-        setData(project)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch project')
-      } finally {
-        setIsLoading(false)
-      }
+      if (err) throw err
+      setData(project as Project)
+    } catch (err) {
+      console.error('Fetch project error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch project')
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchProject()
   }, [user?.id, id])
 
-  return { data, isLoading, error }
+  useEffect(() => {
+    fetchProject()
+  }, [fetchProject])
+
+  return { data, isLoading, error, refresh: fetchProject }
 }
 
 export function useCreateProject() {
@@ -120,7 +186,6 @@ export function useCreateProject() {
       setError(null)
 
       try {
-        // Clean the data - remove undefined values and ensure proper types
         const cleanData = {
           name: data.name,
           description: data.description || null,
@@ -130,24 +195,36 @@ export function useCreateProject() {
           end_date: data.end_date || null,
           budget: data.budget ? Number(data.budget) : null,
           notes: data.notes || null,
+          address: data.address || null,
+          suburb: data.suburb || null,
+          city: data.city || null,
+          postal_code: data.postal_code || null,
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+          site_access_notes: data.site_access_notes || null,
           user_id: user.id,
         }
-
-        console.log('Creating project with data:', cleanData)
 
         const { data: project, error: err } = await supabase
           .from('projects')
           .insert([cleanData])
-          .select()
+          .select('*, clients(id, name, contact_name)')
           .single()
 
-        if (err) {
-          console.error('Supabase insert error:', err)
-          throw err
+        if (err) throw err
+
+        // If assigned members were chosen, insert them
+        if (data.assigned_user_ids && data.assigned_user_ids.length > 0) {
+          const memberRows = data.assigned_user_ids.map((uid) => ({
+            project_id: project.id,
+            user_id: uid,
+            role_in_project: 'technician',
+          }))
+
+          await supabase.from('project_members').insert(memberRows)
         }
-        
-        console.log('Project created successfully:', project)
-        return project
+
+        return project as Project
       } catch (err) {
         console.error('Create project failed:', err)
         const message = err instanceof Error ? err.message : 'Failed to create project'
@@ -169,7 +246,7 @@ export function useUpdateProject() {
   const [error, setError] = useState<string | null>(null)
 
   const mutate = useCallback(
-    async (id: string, data: Partial<ProjectFormData>) => {
+    async (id: string, data: Partial<ProjectFormData> & Record<string, any>) => {
       if (!user?.id) {
         setError('User not authenticated')
         return null
@@ -179,17 +256,54 @@ export function useUpdateProject() {
       setError(null)
 
       try {
+        const cleanPayload: Record<string, any> = {
+          updated_at: new Date().toISOString(),
+        }
+
+        if (data.name !== undefined) cleanPayload.name = data.name
+        if (data.description !== undefined) cleanPayload.description = data.description || null
+        if (data.client_id !== undefined) cleanPayload.client_id = data.client_id
+        if (data.status !== undefined) cleanPayload.status = data.status
+        if (data.start_date !== undefined) cleanPayload.start_date = data.start_date || null
+        if (data.end_date !== undefined) cleanPayload.end_date = data.end_date || null
+        if (data.budget !== undefined) cleanPayload.budget = data.budget ? Number(data.budget) : null
+        if (data.notes !== undefined) cleanPayload.notes = data.notes || null
+        if (data.address !== undefined) cleanPayload.address = data.address || null
+        if (data.suburb !== undefined) cleanPayload.suburb = data.suburb || null
+        if (data.city !== undefined) cleanPayload.city = data.city || null
+        if (data.postal_code !== undefined) cleanPayload.postal_code = data.postal_code || null
+        if (data.latitude !== undefined) cleanPayload.latitude = data.latitude || null
+        if (data.longitude !== undefined) cleanPayload.longitude = data.longitude || null
+        if (data.site_access_notes !== undefined) cleanPayload.site_access_notes = data.site_access_notes || null
+
         const { data: project, error: err } = await supabase
           .from('projects')
-          .update({ ...data, updated_at: new Date().toISOString() })
+          .update(cleanPayload)
           .eq('id', id)
-          .eq('user_id', user.id)
-          .select()
+          .select('*, clients(id, name, contact_name)')
           .single()
 
         if (err) throw err
-        return project
+
+        // If assigned members array provided, sync members
+        if (data.assigned_user_ids !== undefined) {
+          // Delete existing assignments
+          await supabase.from('project_members').delete().eq('project_id', id)
+
+          // Insert new ones
+          if (data.assigned_user_ids.length > 0) {
+            const rows = data.assigned_user_ids.map((uid: string) => ({
+              project_id: id,
+              user_id: uid,
+              role_in_project: 'technician',
+            }))
+            await supabase.from('project_members').insert(rows)
+          }
+        }
+
+        return project as Project
       } catch (err) {
+        console.error('Update project failed:', err)
         const message = err instanceof Error ? err.message : 'Failed to update project'
         setError(message)
         return null
@@ -223,7 +337,6 @@ export function useDeleteProject() {
           .from('projects')
           .delete()
           .eq('id', id)
-          .eq('user_id', user.id)
 
         if (err) throw err
         return true
@@ -239,40 +352,4 @@ export function useDeleteProject() {
   )
 
   return { mutate, isPending, error }
-}
-
-export function useProjectsForClient(clientId: string) {
-  const { user } = useAuth()
-  const [data, setData] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!user?.id || !clientId) return
-
-    const fetchProjects = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const { data: projects, error: err } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('client_id', clientId)
-          .order('created_at', { ascending: false })
-
-        if (err) throw err
-        setData(projects || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch projects')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchProjects()
-  }, [user?.id, clientId])
-
-  return { data, isLoading, error }
 }

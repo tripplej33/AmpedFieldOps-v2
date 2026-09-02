@@ -1,0 +1,41 @@
+services:
+  amped-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_SUPABASE_URL: https://dcssbsxjtfibwfxoagxl.supabase.co
+        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjc3Nic3hqdGZpYndmeG9hZ3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1Mjk5NDUsImV4cCI6MjA4NDEwNTk0NX0.SwXX6sn_FKBVY1caY33P9Mq7oh7zOlTjwoXq8IkRoCQ
+    container_name: amped-frontend
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    depends_on:
+      - amped-backend
+
+  amped-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: amped-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - REDIS_URL=redis://amped-redis:6379
+      - SUPABASE_URL=https://dcssbsxjtfibwfxoagxl.supabase.co
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjc3Nic3hqdGZpYndmeG9hZ3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1Mjk5NDUsImV4cCI6MjA4NDEwNTk0NX0.SwXX6sn_FKBVY1caY33P9Mq7oh7zOlTjwoXq8IkRoCQ
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjc3Nic3hqdGZpYndmeG9hZ3hsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyOTk0NSwiZXhwIjoyMDg0MTA1OTQ1fQ.t2e3QIeyrY020ld3IpdCA8fQTLFA0kdAmGzCWe7A-tk
+      - ENCRYPTION_KEY=vps_amped_fieldops_encryption_key_32bytes!
+      - FRONTEND_URL=http://192.168.1.201:8085
+    depends_on:
+      - amped-redis
+
+  amped-redis:
+    image: redis:7-alpine
+    container_name: amped-redis
+    restart: unless-stopped
+    volumes:
+      - /mnt/data/ampedfieldops/redis:/data

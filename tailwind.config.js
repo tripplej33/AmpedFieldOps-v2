@@ -7,15 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#127da1",
+        primary: "rgb(var(--primary-rgb, 18 125 161) / <alpha-value>)",
         "background-light": "#fafafa",
-        "background-dark": "#121417",
-        "card-dark": "#1c2426",
+        "background-dark": "var(--bg-main, #121417)",
+        "card-dark": "var(--bg-card, #1c2426)",
         "accent-amber": "#f59e0b",
-        "nav-hover": "#293438",
-        "border-dark": "#3c4d53",
-        "text-muted": "#9db2b8",
-        "text-disabled": "#64748b",
+        "nav-hover": "var(--bg-nav-hover, #293438)",
+        "border-dark": "var(--border-main, #3c4d53)",
+        "text-muted": "var(--text-muted, #9db2b8)",
+        "text-disabled": "var(--text-disabled, #64748b)",
       },
       fontFamily: {
         display: ["Space Grotesk", "sans-serif"],
@@ -26,6 +26,10 @@ export default {
       },
       backdropBlur: {
         glass: "12px",
+      },
+      gridTemplateColumns: {
+        '14': 'repeat(14, minmax(0, 1fr))',
+        '24': 'repeat(24, minmax(0, 1fr))',
       },
     },
   },

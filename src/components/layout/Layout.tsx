@@ -7,10 +7,6 @@ export default function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
-  useEffect(() => {
-    console.log('Layout mounted')
-  }, [])
-
   // Load collapsed state from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed')

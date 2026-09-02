@@ -44,6 +44,7 @@ export default function ClientModal({
         address: client.address || '',
         billing_address: client.billing_address || '',
         status: client.status,
+        contact_type: client.contact_type || (client.is_supplier ? 'vendor' : 'customer'),
         notes: client.notes || '',
       }
       : {
@@ -54,6 +55,7 @@ export default function ClientModal({
         address: '',
         billing_address: '',
         status: 'active',
+        contact_type: 'customer',
         notes: '',
       },
   })
@@ -68,6 +70,7 @@ export default function ClientModal({
         address: client.address || '',
         billing_address: client.billing_address || '',
         status: client.status,
+        contact_type: client.contact_type || (client.is_supplier ? 'vendor' : 'customer'),
         notes: client.notes || '',
       })
     } else if (isOpen) {
@@ -79,6 +82,7 @@ export default function ClientModal({
         address: '',
         billing_address: '',
         status: 'active',
+        contact_type: 'customer',
         notes: '',
       })
     }
@@ -204,30 +208,58 @@ export default function ClientModal({
             </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">Status</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="active"
-                  {...register('status')}
-                  disabled={isSaving || isLoading}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-text-muted">Active</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="inactive"
-                  {...register('status')}
-                  disabled={isSaving || isLoading}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-text-muted">Inactive</span>
-              </label>
+          {/* Contact Type & Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">Directory Type</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="customer"
+                    {...register('contact_type')}
+                    disabled={isSaving || isLoading}
+                    className="w-4 h-4 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-text-muted">Client / Customer</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="vendor"
+                    {...register('contact_type')}
+                    disabled={isSaving || isLoading}
+                    className="w-4 h-4 text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="text-sm text-text-muted">Vendor / Supplier</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">Status</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="active"
+                    {...register('status')}
+                    disabled={isSaving || isLoading}
+                    className="w-4 h-4 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-text-muted">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="inactive"
+                    {...register('status')}
+                    disabled={isSaving || isLoading}
+                    className="w-4 h-4 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-text-muted">Inactive</span>
+                </label>
+              </div>
             </div>
           </div>
 

@@ -117,7 +117,7 @@ export default function ClientsPage() {
             ) : clients.length === 0 ? (
               <div className="flex items-center justify-center h-96">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">📋</div>
+                  <span className="material-symbols-outlined text-5xl text-text-muted mb-4 block">assignment</span>
                   <p className="text-white text-lg font-semibold mb-2">No clients found</p>
                   <p className="text-text-muted">Start by creating your first client</p>
                 </div>

@@ -75,6 +75,7 @@ export default function ProjectTable({
               </th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted hidden md:table-cell">Client</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted">Status</th>
+              <th className="px-4 py-3 text-left font-semibold text-text-muted hidden sm:table-cell">Assigned Team</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted hidden lg:table-cell cursor-pointer hover:text-primary" onClick={() => onSort('start_date')}>
                 Start Date <span className="material-symbols-outlined text-xs">unfold_more</span>
               </th>
@@ -86,15 +87,48 @@ export default function ProjectTable({
             </tr>
           </thead>
           <tbody>
-            {projects.map((project) => (
-              <tr key={project.id} className="border-b border-border-dark hover:bg-background-dark/50 transition-colors">
-                <td className="px-4 py-3 font-medium text-white cursor-pointer hover:text-primary" onClick={() => navigate(`/app/projects/${project.id}`)}>{project.name}</td>
-                <td className="px-4 py-3 text-text-muted hidden md:table-cell">{project.client_id}</td>
-                <td className="px-4 py-3">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[project.status] || 'bg-gray-900/30 text-gray-300'}`}>
-                    {project.status}
-                  </span>
-                </td>
+              {projects.map((project) => {
+                const clientName = project.clients?.name || project.clients?.company || (project.clients ? `${project.clients.first_name || ''} ${project.clients.last_name || ''}`.trim() : '') || '—'
+                const members = project.assigned_members || []
+                return (
+                <tr key={project.id} className="border-b border-border-dark hover:bg-background-dark/50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-white cursor-pointer hover:text-primary" onClick={() => navigate(`/app/projects/${project.id}`)}>{project.name}</td>
+                  <td className="px-4 py-3 text-text-muted hidden md:table-cell cursor-pointer hover:text-white" onClick={() => navigate('/app/clients')}>
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm text-primary">apartment</span>
+                      {clientName}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[project.status] || 'bg-gray-900/30 text-gray-300'}`}>
+                      {project.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    {members.length > 0 ? (
+                      <div className="flex items-center -space-x-1.5 overflow-hidden">
+                        {members.slice(0, 3).map((m) => {
+                          const initial = (m.user?.full_name || m.user?.email || 'T').charAt(0).toUpperCase()
+                          return (
+                            <div
+                              key={m.id}
+                              title={m.user?.full_name || m.user?.email}
+                              className="w-5 h-5 rounded-full bg-primary/30 border border-card-dark text-primary text-[9px] font-bold flex items-center justify-center"
+                            >
+                              {initial}
+                            </div>
+                          )
+                        })}
+                        {members.length > 3 && (
+                          <div className="w-5 h-5 rounded-full bg-background-dark border border-card-dark text-text-muted text-[8px] font-bold flex items-center justify-center">
+                            +{members.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-text-muted/40 text-xs">—</span>
+                    )}
+                  </td>
                 <td className="px-4 py-3 text-text-muted hidden lg:table-cell">{formatDate(project.start_date)}</td>
                 <td className="px-4 py-3 text-text-muted hidden lg:table-cell">{formatDate(project.end_date)}</td>
                 <td className="px-4 py-3 text-text-muted hidden xl:table-cell">
@@ -118,8 +152,9 @@ export default function ProjectTable({
                     </button>
                   </div>
                 </td>
-              </tr>
-            ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

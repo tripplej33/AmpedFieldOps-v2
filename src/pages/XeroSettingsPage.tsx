@@ -60,18 +60,15 @@ export default function XeroSettingsPage() {
 
   const fetchStatus = async () => {
     try {
-      console.log('[XeroSettings] Fetching status from:', '/api/admin/xero/status')
       const res = await fetch('/api/admin/xero/status', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       })
-      console.log('[XeroSettings] Status response:', res.status, res.statusText)
       if (!res.ok) {
         const text = await res.text()
         throw new Error(`Failed to fetch status: ${res.status} - ${text}`)
       }
       const data = await res.json()
-      console.log('[XeroSettings] Status fetched:', data)
       setStatus(data)
     } catch (err: any) {
       console.error('[XeroSettings] Failed to fetch status:', err.message || err)
@@ -84,18 +81,15 @@ export default function XeroSettingsPage() {
 
   const fetchLogs = async () => {
     try {
-      console.log('[XeroSettings] Fetching logs from:', '/api/admin/xero/sync-log')
       const res = await fetch('/api/admin/xero/sync-log', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       })
-      console.log('[XeroSettings] Logs response:', res.status, res.statusText)
       if (!res.ok) {
         const text = await res.text()
         throw new Error(`Failed to fetch logs: ${res.status} - ${text}`)
       }
       const data = await res.json()
-      console.log('[XeroSettings] Logs fetched:', data)
       setLogs(data.logs || [])
     } catch (err: any) {
       console.error('[XeroSettings] Failed to fetch logs:', err.message || err)
@@ -105,11 +99,9 @@ export default function XeroSettingsPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      console.log('[XeroSettings] Starting to load data...')
       setLoading(true)
       try {
         // First check if credentials are saved (quick check)
-        console.log('[XeroSettings] Checking if credentials are saved...')
         const statusRes = await fetch('/api/admin/xero/status', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
@@ -120,15 +112,12 @@ export default function XeroSettingsPage() {
         }
 
         const statusData = await statusRes.json()
-        console.log('[XeroSettings] Status fetched:', statusData)
         setStatus(statusData)
 
         // Only load sync logs if credentials are saved
         if (statusData.credentialsSaved) {
-          console.log('[XeroSettings] Credentials saved, loading sync logs...')
           await fetchLogs()
         } else {
-          console.log('[XeroSettings] No credentials saved yet, skipping sync logs')
           setLogs([])
         }
       } catch (err) {
@@ -145,7 +134,6 @@ export default function XeroSettingsPage() {
         })
         setLogs([])
       } finally {
-        console.log('[XeroSettings] Setting loading to false')
         setLoading(false)
       }
     }
@@ -185,25 +173,21 @@ export default function XeroSettingsPage() {
 
     setSavingCredentials(true)
     try {
-      console.log('[XeroSettings] Saving credentials to:', '/api/admin/settings/xero')
       const res = await fetch('/api/admin/settings/xero', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       })
 
-      console.log('[XeroSettings] Save response:', res.status, res.statusText)
       if (!res.ok) {
         const error = await res.json()
         throw new Error(error.message || `Failed to save credentials (${res.status})`)
       }
 
-      const result = await res.json()
-      console.log('[XeroSettings] Credentials saved:', result)
+      await res.json()
       setToast({ type: 'success', message: 'Credentials saved successfully' })
 
       // Refresh status after saving credentials
-      console.log('[XeroSettings] Refreshing status after save...')
       const statusRes = await fetch('/api/admin/xero/status', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -211,7 +195,6 @@ export default function XeroSettingsPage() {
 
       if (statusRes.ok) {
         const statusData = await statusRes.json()
-        console.log('[XeroSettings] Status refreshed:', statusData)
         setStatus(statusData)
 
         // Load logs if credentials are now saved
@@ -609,7 +592,7 @@ export default function XeroSettingsPage() {
                         log.status === 'failed' ? 'bg-red-500/10 text-red-400' :
                           'bg-yellow-500/10 text-yellow-400'
                         }`}>
-                        {log.status === 'success' ? '✓' : log.status === 'failed' ? '✗' : '⟳'} {log.status}
+                        {log.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-text-muted">{formatTime(log.started_at)}</td>

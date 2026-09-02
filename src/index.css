@@ -5,6 +5,15 @@
 @layer base {
   :root {
     --font-display: "Space Grotesk", sans-serif;
+    --primary-rgb: 18 125 161;
+    --primary-color: #127da1;
+    --bg-main: #121417;
+    --bg-card: #1c2426;
+    --bg-nav-hover: #293438;
+    --border-main: #3c4d53;
+    --text-main: #fafafa;
+    --text-muted: #9db2b8;
+    --text-disabled: #64748b;
   }
   
   * {
@@ -16,22 +25,149 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Default Dark Mode Theme */
   body {
     margin: 0;
     padding: 0;
     font-family: var(--font-display);
-    background: #121417;
-    color: #fafafa;
+    background-color: var(--bg-main, #121417);
+    color: var(--text-main, #fafafa);
     overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* High-Contrast Clean Light Mode Theme */
+  html.light-theme {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-nav-hover: #e2e8f0;
+    --border-main: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --text-disabled: #94a3b8;
+  }
+
+  html.light-theme body {
+    background-color: #f1f5f9;
+    color: #0f172a;
+  }
+
+  /* Full surface & contrast rules in Light Mode */
+  html.light-theme .bg-background-dark,
+  html.light-theme [class*="bg-background-dark"] {
+    background-color: #f1f5f9 !important;
+  }
+
+  html.light-theme .bg-card-dark,
+  html.light-theme [class*="bg-card-dark"] {
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  html.light-theme .border-border-dark,
+  html.light-theme [class*="border-border-dark"] {
+    border-color: #cbd5e1 !important;
+  }
+
+  html.light-theme .text-white,
+  html.light-theme [class*="text-white"] {
+    color: #0f172a !important;
+  }
+
+  html.light-theme .text-text-muted,
+  html.light-theme [class*="text-text-muted"] {
+    color: #475569 !important;
+  }
+
+  /* Ensure primary buttons retain high contrast white text in Light Mode */
+  html.light-theme .bg-primary,
+  html.light-theme button.bg-primary,
+  html.light-theme a.bg-primary {
+    color: #ffffff !important;
+  }
+
+  html.light-theme .bg-primary *,
+  html.light-theme button.bg-primary *,
+  html.light-theme a.bg-primary * {
+    color: #ffffff !important;
+  }
+
+  html.light-theme .glass-morphism {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  html.light-theme .bg-nav-hover {
+    background-color: #e2e8f0 !important;
+  }
+
+  html.light-theme thead {
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+  }
+
+  html.light-theme tbody tr:hover {
+    background-color: #f8fafc !important;
+  }
+
+  html.light-theme input,
+  html.light-theme select,
+  html.light-theme textarea {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  html.light-theme input::placeholder,
+  html.light-theme textarea::placeholder {
+    color: #94a3b8 !important;
   }
 
   #root {
     width: 100%;
     min-height: 100vh;
   }
+
+  /* Sleek minimalist scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 9999px;
+  }
+
+  html.light-theme ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color, rgba(18, 125, 161, 0.6));
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  }
 }
 
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   .glass-morphism {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -39,7 +175,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #127da1 0%, #0ea5e9 100%);
+    background: linear-gradient(135deg, var(--primary-color, #127da1) 0%, #0ea5e9 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

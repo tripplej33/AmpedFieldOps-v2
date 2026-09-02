@@ -43,7 +43,10 @@ export function useCreateCostCenter() {
 
   const mutate = useCallback(
     async (data: CostCenterFormData) => {
-      if (!user?.id) { setError('User not authenticated'); return null }
+      if (!user?.id) {
+        setError('User not authenticated')
+        return null
+      }
       setIsPending(true)
       setError(null)
       try {
@@ -53,6 +56,24 @@ export function useCreateCostCenter() {
           .select('*')
           .single()
         if (err) throw err
+
+        // Auto-create folder for this cost center in project_files
+        try {
+          const keepPath = `project_${data.project_id}/cost_center_${inserted.id}/.keep`
+          const keepBlob = new Blob([''], { type: 'text/plain' })
+          await supabase.storage.from('project-files').upload(keepPath, keepBlob, { upsert: true })
+          await supabase.from('project_files').insert({
+            project_id: data.project_id,
+            path: keepPath,
+            name: '.keep',
+            size_bytes: 0,
+            mime_type: 'text/plain',
+            uploaded_by: user.id,
+          })
+        } catch (folderErr) {
+          console.warn('[useCostCenters] Auto-create folder note:', folderErr)
+        }
+
         return inserted as CostCenter
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create cost center')
@@ -60,7 +81,8 @@ export function useCreateCostCenter() {
       } finally {
         setIsPending(false)
       }
-    }, [user?.id]
+    },
+    [user?.id]
   )
 
   return { mutate, isPending, error }

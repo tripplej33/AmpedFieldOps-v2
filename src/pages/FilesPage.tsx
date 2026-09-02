@@ -40,7 +40,6 @@ export default function FilesPage() {
         supabase
           .from('projects')
           .select('id, name, status, client_id, created_at, user_id, updated_at')
-          .eq('user_id', user.id)
           .order('name', { ascending: true }),
         supabase
           .from('project_files')
@@ -94,6 +93,11 @@ export default function FilesPage() {
       }))
     }
     setToast({ type: 'success', message: 'File deleted successfully' })
+  }
+
+  const handleFileUpdated = (updatedFile: ProjectFile) => {
+    setFilesList((prev) => prev.map((f) => (f.id === updatedFile.id ? updatedFile : f)))
+    setToast({ type: 'success', message: `File renamed to "${updatedFile.name}"` })
   }
 
   const handleError = (error: string) => {
@@ -156,6 +160,7 @@ export default function FilesPage() {
             fetchError={filesError}
             onUploadComplete={handleUploadComplete}
             onFileDeleted={handleFileDeleted}
+            onFileUpdated={handleFileUpdated}
             onError={handleError}
             onBack={handleBackToFolders}
             fileCount={fileCounts[currentProject.id] || filesList.length}

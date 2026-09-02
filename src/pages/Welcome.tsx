@@ -25,13 +25,11 @@ export default function Welcome() {
     // User is authenticated - redirect to intended page or dashboard
     if (user) {
       const from = (location.state as any)?.from?.pathname || '/app/dashboard'
-      console.log(`User authenticated, redirecting to ${from}`)
       navigate(from, { replace: true })
       return
     }
 
     // User is not authenticated - show login screen
-    console.log('User not authenticated, showing login')
     setIsFirstTimeSetup(false)
     setMode('login')
   }, [user, loading, navigate, location.state])

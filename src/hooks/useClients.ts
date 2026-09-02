@@ -6,6 +6,7 @@ import { Client, ClientFormData } from '../types'
 export interface ClientsFilters {
   search?: string
   status?: 'active' | 'inactive' | 'all'
+  contactType?: 'all' | 'customer' | 'vendor'
   sortBy?: 'name' | 'created_at'
   sortOrder?: 'asc' | 'desc'
 }
@@ -19,7 +20,72 @@ export interface UseClientsResult {
 
 const PAGE_SIZE = 10
 
-// Cache to prevent duplicate simultaneous fetches
+export function useAllClients() {
+  const [clients, setClients] = useState<Client[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchAllClients = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // 1. First try backend endpoint which includes Xero contacts
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token || ''
+        const res = await fetch('/api/admin/clients', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        if (res.ok) {
+          const apiClients = await res.json()
+          if (Array.isArray(apiClients) && apiClients.length > 0) {
+            const formatted = apiClients.map((c: any) => ({
+              ...c,
+              name: c.name || c.company || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unnamed Client',
+              contact_name: c.contact_name || (c.company ? `${c.first_name || ''} ${c.last_name || ''}`.trim() : undefined),
+            }))
+            setClients(formatted)
+            return
+          }
+        }
+      } catch {
+        // Fallback to Supabase
+      }
+
+      // 2. Direct Supabase query
+      const { data, error: fetchErr } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (fetchErr) throw fetchErr
+
+      const formatted = (data || []).map((c: any) => ({
+        ...c,
+        name: c.name || c.company || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unnamed Client',
+        contact_name: c.contact_name || (c.company ? `${c.first_name || ''} ${c.last_name || ''}`.trim() : undefined),
+      }))
+
+      setClients(formatted)
+    } catch (err) {
+      console.error('Fetch all clients error:', err)
+      const msg = err instanceof Error ? err.message : 'Failed to fetch clients'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchAllClients()
+  }, [fetchAllClients])
+
+  return { clients, loading, error, refresh: fetchAllClients }
+}
+
 let fetchInProgress = false
 let lastFetchKey = ''
 
@@ -43,7 +109,6 @@ export function useClients(
 
     const fetchKey = `${user.id}-${JSON.stringify(filters)}-${page}-${refreshKey}`
 
-    // Prevent duplicate fetches
     if (fetchInProgress && lastFetchKey === fetchKey) {
       return
     }
@@ -55,7 +120,7 @@ export function useClients(
         setLoading(true)
         setError(null)
 
-        // First try to fetch from backend API (includes Xero pulled clients)
+        // 1. Try to fetch from backend API (includes Xero pulled clients)
         try {
           const apiRes = await fetch('/api/admin/clients', {
             headers: {
@@ -66,22 +131,29 @@ export function useClients(
           if (apiRes.ok) {
             let allClients = await apiRes.json()
 
-            // Apply filters
             if (filters.status && filters.status !== 'all') {
               allClients = allClients.filter((c: any) => c.status === filters.status)
             }
 
+            if (filters.contactType && filters.contactType !== 'all') {
+              if (filters.contactType === 'customer') {
+                allClients = allClients.filter((c: any) => c.contact_type !== 'vendor')
+              } else if (filters.contactType === 'vendor') {
+                allClients = allClients.filter((c: any) => c.contact_type === 'vendor' || c.is_supplier === true || c.contact_type === 'both')
+              }
+            }
+
             if (filters.search) {
               const searchTerm = filters.search.toLowerCase()
-              allClients = allClients.filter((c: any) =>
-                (c.name?.toLowerCase().includes(searchTerm)) ||
-                (c.contact_name?.toLowerCase().includes(searchTerm)) ||
-                (c.email?.toLowerCase().includes(searchTerm)) ||
-                (c.phone?.toLowerCase().includes(searchTerm))
+              allClients = allClients.filter(
+                (c: any) =>
+                  c.name?.toLowerCase().includes(searchTerm) ||
+                  c.contact_name?.toLowerCase().includes(searchTerm) ||
+                  c.email?.toLowerCase().includes(searchTerm) ||
+                  c.phone?.toLowerCase().includes(searchTerm)
               )
             }
 
-            // Apply sorting
             const sortColumn = filters.sortBy === 'name' ? 'name' : 'created_at'
             allClients.sort((a: any, b: any) => {
               let aVal = a[sortColumn] || ''
@@ -90,7 +162,6 @@ export function useClients(
               return filters.sortOrder === 'asc' ? comparison : -comparison
             })
 
-            // Apply pagination
             const from = page * PAGE_SIZE
             const to = from + PAGE_SIZE
             const paginatedClients = allClients.slice(from, to + 1)
@@ -100,18 +171,22 @@ export function useClients(
             return
           }
         } catch (apiErr) {
-          console.log('API fetch failed, falling back to Supabase:', apiErr)
+          console.error('API fetch failed, falling back to Supabase:', apiErr)
         }
 
-        // Fallback to Supabase if API fails
-        let query = supabase
-          .from('clients')
-          .select('*')
-          .eq('user_id', user.id)
+        // 2. Fallback to Supabase
+        let query = supabase.from('clients').select('*')
 
-        // Apply filters
         if (filters.status && filters.status !== 'all') {
           query = query.eq('status', filters.status)
+        }
+
+        if (filters.contactType && filters.contactType !== 'all') {
+          if (filters.contactType === 'customer') {
+            query = query.or('contact_type.eq.customer,contact_type.eq.both,contact_type.is.null')
+          } else if (filters.contactType === 'vendor') {
+            query = query.or('contact_type.eq.vendor,contact_type.eq.both,is_supplier.eq.true')
+          }
         }
 
         if (filters.search) {
@@ -121,29 +196,27 @@ export function useClients(
           )
         }
 
-        // Apply sorting
-        const sortColumn = filters.sortBy === 'name' ? 'first_name' : 'created_at'
+        const sortColumn = filters.sortBy === 'name' ? 'name' : 'created_at'
         const sortOrder = filters.sortOrder === 'asc' ? 'asc' : 'desc'
         query = query.order(sortColumn, { ascending: sortOrder === 'asc' })
 
-        // Apply pagination
         const from = page * PAGE_SIZE
         const to = from + PAGE_SIZE
-
         query = query.range(from, to)
 
         const { data, error: fetchError } = await query
 
-        if (fetchError) {
-          throw new Error(fetchError.message)
-        }
+        if (fetchError) throw fetchError
 
-        // Check if there are more results
         setHasMore(data ? data.length > PAGE_SIZE : false)
 
-        // Remove the last item if there are more (used for pagination check)
-        const clientsData = data ? data.slice(0, PAGE_SIZE) : []
-        setClients(clientsData)
+        const formatted = (data ? data.slice(0, PAGE_SIZE) : []).map((c: any) => ({
+          ...c,
+          name: c.name || c.company || `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unnamed Client',
+          contact_name: c.contact_name || (c.company ? `${c.first_name || ''} ${c.last_name || ''}`.trim() : undefined),
+        }))
+
+        setClients(formatted)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to fetch clients'
         console.error('Fetch clients error:', message)
@@ -167,48 +240,52 @@ export function useClients(
 }
 
 export function useClient(id: string | null) {
-  const { user } = useAuth()
   const [client, setClient] = useState<Client | null>(null)
   const [loading, setLoading] = useState(!!id)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!id || !user?.id) {
+  const fetchClient = useCallback(async () => {
+    if (!id) {
       setClient(null)
       setLoading(false)
       return
     }
 
-    const fetchClient = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+    try {
+      setLoading(true)
+      setError(null)
 
-        const { data, error: fetchError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single()
+      const { data, error: fetchError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id)
+        .single()
 
-        if (fetchError) {
-          throw new Error(fetchError.message)
-        }
-
-        setClient(data)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to fetch client'
-        setError(message)
-        setClient(null)
-      } finally {
-        setLoading(false)
+      if (fetchError) {
+        throw new Error(fetchError.message)
       }
+
+      const formatted: Client = {
+        ...data,
+        name: data.name || data.company || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unnamed Client',
+        contact_name: data.contact_name || (data.company ? `${data.first_name || ''} ${data.last_name || ''}`.trim() : undefined),
+      }
+
+      setClient(formatted)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch client'
+      setError(message)
+      setClient(null)
+    } finally {
+      setLoading(false)
     }
+  }, [id])
 
+  useEffect(() => {
     fetchClient()
-  }, [id, user?.id])
+  }, [fetchClient])
 
-  return { client, loading, error }
+  return { client, loading, error, refresh: fetchClient }
 }
 
 export function useCreateClient() {
@@ -225,24 +302,6 @@ export function useCreateClient() {
       try {
         setLoading(true)
         setError(null)
-
-        // Prevent duplicate by email for this user
-        if (data.email) {
-          const { data: existing, error: existingError } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('email', data.email)
-            .limit(1)
-
-          if (existingError) {
-            throw new Error(existingError.message)
-          }
-
-          if (existing && existing.length > 0) {
-            throw new Error('A client with this email already exists')
-          }
-        }
 
         const { data: newClient, error: insertError } = await supabase
           .from('clients')
@@ -289,9 +348,11 @@ export function useUpdateClient() {
 
         const { data: updatedClient, error: updateError } = await supabase
           .from('clients')
-          .update(data)
+          .update({
+            ...data,
+            updated_at: new Date().toISOString(),
+          })
           .eq('id', id)
-          .eq('user_id', user.id)
           .select()
           .single()
 
@@ -333,7 +394,6 @@ export function useDeleteClient() {
           .from('clients')
           .delete()
           .eq('id', id)
-          .eq('user_id', user.id)
 
         if (deleteError) {
           throw new Error(deleteError.message)

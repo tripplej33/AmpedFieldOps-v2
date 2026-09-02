@@ -1,11 +1,12 @@
 import { ReactNode, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
   children: ReactNode
   title?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
 export default function Modal({ isOpen, onClose, children, title, size = 'md' }: ModalProps) {
@@ -16,12 +17,12 @@ export default function Modal({ isOpen, onClose, children, title, size = 'md' }:
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
+      document.body.classList.add('overflow-hidden')
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      document.body.classList.remove('overflow-hidden')
     }
   }, [isOpen, onClose])
 
@@ -32,31 +33,39 @@ export default function Modal({ isOpen, onClose, children, title, size = 'md' }:
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
+    '2xl': 'max-w-6xl',
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  const modalContent = (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? 'modal-title' : undefined}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm animate-fadeIn"
         onClick={onClose}
       />
-      
-      {/* Modal */}
-      <div className={`relative bg-card-dark rounded-xl border border-border-dark shadow-2xl w-full ${sizes[size]} max-h-[90vh] flex flex-col`}>
+
+      {/* Modal Dialog */}
+      <div className={`relative bg-card-dark rounded-2xl border border-border-dark shadow-2xl w-full ${sizes[size]} max-h-[90vh] flex flex-col z-10 animate-scaleUp`}>
         {/* Header */}
         {title && (
-          <div className="px-6 py-4 border-b border-border-dark flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">{title}</h2>
+          <div className="px-6 py-4 border-b border-border-dark flex items-center justify-between shrink-0 bg-background-dark/50 rounded-t-2xl">
+            <h2 id="modal-title" className="text-base font-bold text-white">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
-              className="text-text-muted hover:text-white transition-colors p-1"
+              aria-label="Close modal"
+              className="text-text-muted hover:text-white transition-colors p-1.5 rounded-lg hover:bg-border-dark flex items-center justify-center"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined text-lg">close</span>
             </button>
           </div>
         )}
-        
+
         {/* Content */}
         <div className="px-6 py-4 overflow-y-auto flex-1">
           {children}
@@ -64,4 +73,6 @@ export default function Modal({ isOpen, onClose, children, title, size = 'md' }:
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

@@ -22,82 +22,104 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+const getInitialCachedUser = (): User | null => {
+  try {
+    const cached = localStorage.getItem('amped_user_profile')
+    return cached ? JSON.parse(cached) : null
+  } catch {
+    return null
+  }
+}
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(getInitialCachedUser)
+  // If we already have a cached profile, we don't block render on initial load
+  const [loading, setLoading] = useState<boolean>(!getInitialCachedUser())
   const [error, setError] = useState<string | null>(null)
-  const [hydrated, setHydrated] = useState(false)
+
+  const loadUserProfile = async (userId: string, attempt = 0): Promise<User | null> => {
+    try {
+      const { data, error: fetchErr } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (fetchErr || !data) {
+        // Retry with backoff if network transient failure
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
+          return loadUserProfile(userId, attempt + 1)
+        }
+        console.error('Error loading user profile after retries:', fetchErr)
+        await supabase.auth.signOut()
+        setUser(null)
+        localStorage.removeItem('amped_user_profile')
+        setError('Profile not found. Please contact support.')
+        setLoading(false)
+        return null
+      }
+
+      const loadedUser = data as User
+      setUser(loadedUser)
+      localStorage.setItem('amped_user_profile', JSON.stringify(loadedUser))
+      setError(null)
+      setLoading(false)
+      return loadedUser
+    } catch (err) {
+      if (attempt >= 2) {
+        console.error('Error loading user profile:', err)
+        await supabase.auth.signOut()
+        setUser(null)
+        localStorage.removeItem('amped_user_profile')
+        setError(err instanceof Error ? err.message : 'Failed to load profile')
+        setLoading(false)
+      }
+      return null
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
-    let currentUserId: string | null = null
-    let profileFetchInProgress = false
 
-    const debouncedLoadProfile = (userId: string) => {
-      if (profileFetchInProgress || currentUserId === userId) return
-      currentUserId = userId
-      profileFetchInProgress = true
-
-      setTimeout(() => {
-        loadUserProfile(userId)
-          .catch((err) => {
-            console.error('Deferred profile load failed:', err)
-          })
-          .finally(() => {
-            profileFetchInProgress = false
-          })
-      }, 100)
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return
-      console.log('Auth state change:', event, { hasSession: !!session?.user })
-
-      // Only clear user if actually signed out
-      if (event === 'SIGNED_OUT') {
-        console.log('User signed out, clearing user state')
-        setUser(null)
-        setError(null)
-        currentUserId = null
-        setLoading(false) // No session, stop loading
-      }
-
-      setHydrated(true)
-
-      // Load profile for signed-in users
-      if (session?.user) {
-        console.log('Session found, loading profile for user:', session.user.id)
-        setLoading(true) // Ensure loading is true while profile fetches
-        debouncedLoadProfile(session.user.id)
-      } else if (event !== 'SIGNED_OUT') {
-        setLoading(false)
-      }
-    })
-
-    // Ensure hydration even if INITIAL_SESSION arrives before render
-    supabase.auth.getSession()
-      .then(({ data }) => {
-        if (!isMounted || hydrated) return
-        const session = data.session
-        console.log('Initial session fetched:', { hasSession: !!session?.user })
-        setHydrated(true)
-
+    // 1. Initial background session validation
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        if (!isMounted) return
         if (session?.user) {
-          console.log('Loading profile for initial session user:', session.user.id)
-          setLoading(true)
-          debouncedLoadProfile(session.user.id)
+          await loadUserProfile(session.user.id)
         } else {
-          // Only clear user if no session
           setUser(null)
+          localStorage.removeItem('amped_user_profile')
           setLoading(false)
         }
       })
       .catch((err) => {
         if (!isMounted) return
-        console.error('Error fetching session:', err)
-        setHydrated(true)
+        console.error('Session check failed:', err)
         setLoading(false)
       })
+
+    // 2. Realtime listener for Auth changes (tokens, signout, signin)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
+
+      if (event === 'SIGNED_OUT' || !session) {
+        setUser(null)
+        localStorage.removeItem('amped_user_profile')
+        setError(null)
+        setLoading(false)
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        if (session?.user) {
+          await loadUserProfile(session.user.id)
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        setLoading(false)
+      }
+    })
 
     return () => {
       isMounted = false
@@ -105,55 +127,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, [])
 
-  const loadUserProfile = async (userId: string, attempt = 0): Promise<void> => {
-    try {
-      console.log(`Loading user profile for ${userId} (attempt ${attempt})`)
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error || !data) {
-        console.error('Error loading user profile:', error)
-        await supabase.auth.signOut()
-        setUser(null)
-        setError('Profile not found. Please contact support.')
-        throw new Error('Profile not found')
-      }
-
-      console.log('User profile loaded successfully:', data)
-      setUser(data as User)
-      setError(null)
-      setLoading(false)
-    } catch (err) {
-      console.error('Error loading user profile:', err)
-      await supabase.auth.signOut()
-      setUser(null)
-      setError(err instanceof Error ? err.message : 'Failed to load profile')
-      setLoading(false)
-      throw err
-    }
-  }
-
   const login = async ({ email, password }: LoginCredentials) => {
     try {
       setLoading(true)
       setError(null)
 
-      console.log('Attempting login...')
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        console.error('Login error:', error)
-        throw error
+      if (signInErr) {
+        console.error('Login error:', signInErr)
+        throw signInErr
       }
 
-      console.log('Login successful, loading profile...')
       if (data.user) {
         await loadUserProfile(data.user.id)
       }
@@ -163,7 +151,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setError(message)
       throw new Error(message)
     } finally {
-      console.log('Login process complete, setting loading to false')
       setLoading(false)
     }
   }
@@ -171,10 +158,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      localStorage.removeItem('amped_user_profile')
       setUser(null)
       setError(null)
+      const { error: signOutErr } = await supabase.auth.signOut()
+      if (signOutErr) throw signOutErr
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Logout failed'
       setError(message)
@@ -185,7 +173,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }
 
   const refreshUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (session?.user) {
       await loadUserProfile(session.user.id)
     }

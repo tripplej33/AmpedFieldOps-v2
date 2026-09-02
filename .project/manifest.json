@@ -1,7 +1,7 @@
 {
   "projectName": "AmpedFieldOps V2",
-  "version": "2.0.0",
-  "status": "PHASE_6_IN_PROGRESS",
+  "version": "2.1.0",
+  "status": "PHASE_8_IN_PROGRESS",
   "description": "Complete rewrite of field operations management system with React 18, TypeScript, TailwindCSS, and Supabase",
   "techStack": {
     "frontend": {
@@ -30,7 +30,7 @@
       "phase": "Phase 1",
       "priority": "P0",
       "status": "COMPLETED",
-      "description": "Supabase Auth with JWT, session persistence, protected routes"
+      "description": "Supabase Auth with JWT, session persistence, protected routes, tab focus resilience"
     },
     {
       "id": 2,
@@ -61,8 +61,8 @@
       "name": "Cost Centers",
       "phase": "Phase 3",
       "priority": "P0",
-      "status": "NOT_STARTED",
-      "description": "Internal budget buckets per project. Support for customer-supplied PO linking. Budget tracking and PO creation per cost center."
+      "status": "COMPLETED",
+      "description": "Internal budget buckets per project, customer PO number badges, and total allocated budget calculations."
     },
     {
       "id": 6,
@@ -77,7 +77,7 @@
       "name": "Dashboard & Metrics",
       "phase": "Phase 5",
       "priority": "P1",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Operations hub with stat cards, trends, activity feed, role-based views"
     },
     {
@@ -85,18 +85,15 @@
       "name": "Activity Types Management",
       "phase": "Phase 5",
       "priority": "P1",
-      "status": "DATABASE_READY",
-      "description": "Admin CRUD for activity types. Map to Xero Products/Services. Managed-by-Xero flag.",
-      "completedBy": "Backend Developer",
-      "completedAt": "2026-01-23T15:30:00Z",
-      "notes": "Database table updated, RLS policies configured. Ready for frontend integration."
+      "status": "COMPLETED",
+      "description": "Admin CRUD for activity types. Map to Xero Products/Services. Managed-by-Xero flag."
     },
     {
       "id": 9,
       "name": "Financials Dashboard",
       "phase": "Phase 5",
       "priority": "P1",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Overview page showing Xero sync status, invoice/quote summaries, payment tracking. Draft/preview invoice creation from timesheets."
     },
     {
@@ -104,7 +101,7 @@
       "name": "File Management",
       "phase": "Phase 6",
       "priority": "P1",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Upload/download files via Supabase Storage, project-scoped file browser"
     },
     {
@@ -112,15 +109,15 @@
       "name": "Backend Service API",
       "phase": "Phase 7",
       "priority": "P1",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Express endpoints for Xero OAuth, settings management, sync services, admin operations. Credentials stored in database (app_settings table) with dynamic redirect URI calculation. Token encryption with AES-256-CBC."
     },
     {
       "id": 12,
       "name": "Xero Integration (Phase 2)",
-      "phase": "Phase 7+",
+      "phase": "Phase 7",
       "priority": "P2",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Two-way sync: Clients ↔ Contacts, Activity Types ← Products/Services, Invoices → Xero. Payment status from Xero. Optional: Tracking Categories."
     },
     {
@@ -130,6 +127,30 @@
       "priority": "P2",
       "status": "NOT_STARTED",
       "description": "DeepSeek-OCR-2 for receipt/invoice analysis. Extract date, vendor, amount, items. Auto-populate expenses/timesheets from documents. Document gallery with search and categorization."
+    },
+    {
+      "id": 14,
+      "name": "Local Supabase & Session Resilience",
+      "phase": "Phase 8",
+      "priority": "P1",
+      "status": "COMPLETED",
+      "description": "Tab focus token refresh bug fix, dual environment configurations (Cloud/VPS vs Local Supabase CLI)."
+    },
+    {
+      "id": 15,
+      "name": "Field Operations & Asset Dispatch",
+      "phase": "Phase 9",
+      "priority": "P1",
+      "status": "PLANNED",
+      "description": "Equipment tracking, maintenance scheduling, and project asset dispatch for field teams."
+    },
+    {
+      "id": 16,
+      "name": "Cost Center Budget Tracking & PO Link",
+      "phase": "Phase 9",
+      "priority": "P1",
+      "status": "PLANNED",
+      "description": "PO generation per cost center, budget burn-down visualization, and multi-tier timesheet approvals."
     }
   ],
   "roles": [

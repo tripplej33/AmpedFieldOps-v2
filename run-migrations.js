@@ -19,16 +19,10 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-const migrations = [
-  '20260121_create_users_table.sql',
-  '20260121_fix_users_rls.sql',
-  '20260121_create_clients_table.sql',
-  '20260121_create_projects_table.sql',
-  '20260121_users_policies_fix.sql',
-  '20260121_update_users_policies.sql',
-  '20260122_fix_users_rls_circular_dependency.sql',
-  '20260123_create_timesheets_tables.sql',
-];
+const migrationsDir = path.join(__dirname, 'supabase', 'migrations');
+const migrations = fs.readdirSync(migrationsDir)
+  .filter(file => file.endsWith('.sql'))
+  .sort();
 
 async function executeSql(sql, filename) {
   try {

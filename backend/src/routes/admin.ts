@@ -271,10 +271,10 @@ router.get('/xero/invoices', async (req: Request, res: Response) => {
 // GET /admin/dashboard/stats - Get dashboard statistics
 router.get('/dashboard/stats', async (_req: Request, res: Response) => {
   try {
-    // Query job statistics
+    // Query project statistics
     const { data: jobsData, error: jobsError } = await supabase
-      .from('jobs')
-      .select('id, created_at, status, estimated_hours')
+      .from('projects')
+      .select('id, created_at, status')
       .order('created_at', { ascending: false });
 
     if (jobsError) {

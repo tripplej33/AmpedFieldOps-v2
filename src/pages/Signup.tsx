@@ -136,6 +136,7 @@ export default function Signup({ isFirstTimeSetup = false }: SignupPageProps) {
             <Input
               label="Full Name"
               type="text"
+              autoComplete="name"
               placeholder="John Doe"
               error={errors.fullName?.message}
               {...register('fullName')}
@@ -144,6 +145,7 @@ export default function Signup({ isFirstTimeSetup = false }: SignupPageProps) {
             <Input
               label="Email"
               type="email"
+              autoComplete="email"
               placeholder="your.email@example.com"
               error={errors.email?.message}
               {...register('email')}
@@ -152,6 +154,7 @@ export default function Signup({ isFirstTimeSetup = false }: SignupPageProps) {
             <Input
               label="Password"
               type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               error={errors.password?.message}
               {...register('password')}
@@ -169,6 +172,7 @@ export default function Signup({ isFirstTimeSetup = false }: SignupPageProps) {
             <Input
               label="Confirm Password"
               type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               error={errors.confirmPassword?.message}
               {...register('confirmPassword')}

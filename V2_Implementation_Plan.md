@@ -941,6 +941,21 @@ export function useClients(filters?: ClientFilters) {
 
 ---
 
+## Phase 8 & Phase 9 Roadmap: Field Operations Features
+
+### Phase 8: Hardening & Local Supabase Capabilities
+- [x] **Tab Focus & Session Resilience:** Fixed token refresh state lock when switching browser tabs.
+- [x] **Local Supabase CLI Integration:** Dual environment templates (`.env` for VPS/Cloud, `.env.local.example` for local Supabase Docker container).
+- [ ] **Offline Sync & Cache Queue:** IndexedDB caching for timesheets and field notes when mobile connectivity drops in remote sites.
+
+### Phase 9: Advanced Field Operations Management System
+- [ ] **Cost Center Budget Tracking & PO Link:** Interactive PO creation and live budget burn-down visualization per project cost center.
+- [ ] **Enhanced Timesheet Approval Workflow:** Multi-tier approvals (Technician → Manager → Admin) with auto-calculation of overtime and allowances.
+- [ ] **Equipment & Asset Dispatch:** Field gear tracking, maintenance scheduling, and assignment to field projects.
+- [ ] **Xero Bi-directional Advanced Sync:** Automated reconciliation for quotes, POs, and line-item invoice adjustments.
+
+---
+
 ## Next Steps
 
 1. **Review this plan** with user to confirm scope and priorities

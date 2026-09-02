@@ -57,7 +57,6 @@ export default function CostCenterModal({
   }, [costCenter, projectId, form])
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    console.log('CostCenterModal: Form submitted with values:', values)
     try {
       const formData: CostCenterFormData = {
         project_id: values.project_id,
@@ -66,9 +65,7 @@ export default function CostCenterModal({
         customer_po_number: values.customer_po_number,
         notes: values.notes,
       }
-      console.log('CostCenterModal: Calling onSave with:', formData)
       await onSave(formData)
-      console.log('CostCenterModal: Save successful, closing modal')
       form.reset()
       onClose()
     } catch (error) {

@@ -24,6 +24,7 @@ export const clientSchema = z.object({
     .optional()
     .or(z.literal('')),
   status: z.enum(['active', 'inactive']),
+  contact_type: z.enum(['customer', 'vendor', 'both']).optional().default('customer'),
   notes: z.string()
     .max(500, 'Notes must not exceed 500 characters')
     .optional()

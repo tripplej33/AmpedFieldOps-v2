@@ -1,67 +1,156 @@
 import { useCallback, useMemo, useState } from 'react'
 import { CostCenter, ProjectFile } from '@/types'
-import { useDeleteFile, getSignedDownloadUrl, getSignedPreviewUrl } from '@/hooks/useFiles'
+import {
+  useDeleteFile,
+  useDeleteFolder,
+  useCreateFolder,
+  useRenameFile,
+  getSignedDownloadUrl,
+  getSignedPreviewUrl,
+} from '@/hooks/useFiles'
+import { usePermissions } from '@/hooks/usePermissions'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 interface FileListProps {
   files: ProjectFile[]
   loading?: boolean
   onFileDeleted: (fileId: string) => void
+  onFileUpdated?: (file: ProjectFile) => void
   onError: (error: string) => void
   costCenters?: CostCenter[]
+  projectId?: string
+  onFolderCreated?: (folderFile: ProjectFile) => void
+  onSelectFolderForUpload?: (folderKey: string) => void
+  onFolderDeleted?: (deletedFileIds: string[]) => void
 }
 
 export default function FileList({
   files,
   loading = false,
   onFileDeleted,
+  onFileUpdated,
   onError,
   costCenters = [],
+  projectId,
+  onFolderCreated,
+  onSelectFolderForUpload,
+  onFolderDeleted,
 }: FileListProps) {
+  const { hasPermission, isAdmin } = usePermissions()
+  const canCreateFolder = isAdmin || hasPermission('files.create_folder')
+  const canDeleteFile = isAdmin || hasPermission('files.delete')
+  const canRenameFile = isAdmin || hasPermission('files.rename') || hasPermission('files.upload')
+
   const { deleteFile, deleting } = useDeleteFile()
+  const { deleteFolder } = useDeleteFolder()
+  const { createFolder, creating: isCreatingFolder } = useCreateFolder()
+  const { renameFile, renaming } = useRenameFile()
+
   const [previewFile, setPreviewFile] = useState<{ file: ProjectFile; url: string } | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [fileToDelete, setFileToDelete] = useState<ProjectFile | null>(null)
+  const [folderToDelete, setFolderToDelete] = useState<{ name: string; folderKey: string; files: ProjectFile[] } | null>(null)
+  const [fileToRename, setFileToRename] = useState<ProjectFile | null>(null)
+  const [newFileName, setNewFileName] = useState('')
 
   const costCenterMap = useMemo(() => {
     const map: Record<string, string> = {}
     costCenters.forEach((cc) => {
-      map[cc.id] = cc.name
+      map[`cost_center_${cc.id}`] = cc.name
     })
     return map
   }, [costCenters])
 
   const groups = useMemo(() => {
     const grouped: Record<string, ProjectFile[]> = { __root: [] }
-    files.forEach((file) => {
-      if (file.name === '.keep') return // Hide placeholder marker
-      const ccId = extractCostCenterId(file.path)
-      const key = ccId || '__root'
-      if (!grouped[key]) grouped[key] = []
-      grouped[key].push(file)
-      console.log('[FileList] Grouping file:', { name: file.name, path: file.path, ccId, key })
+
+    // Pre-populate all cost centers as visible folders
+    costCenters.forEach((cc) => {
+      grouped[`cost_center_${cc.id}`] = []
     })
-    console.log('[FileList] Groups:', grouped)
-    return grouped
-  }, [files])
 
-  const handleDelete = useCallback(
-    async (file: ProjectFile) => {
-      if (!confirm(`Delete "${file.name}"?`)) return
-
-      try {
-        await deleteFile(file.id, file.path)
-        onFileDeleted(file.id)
-      } catch (err) {
-        onError(err instanceof Error ? err.message : 'Failed to delete file')
+    // Populate files into groups
+    files.forEach((file) => {
+      const folderKey = extractFolderKey(file.path)
+      if (!grouped[folderKey]) grouped[folderKey] = []
+      if (file.name !== '.keep') {
+        grouped[folderKey].push(file)
       }
-    },
-    [deleteFile, onFileDeleted, onError]
-  )
+    })
+
+    return grouped
+  }, [files, costCenters])
+
+  const handleCreateNewFolder = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newFolderName.trim()) return
+
+    const targetProjectId = projectId || (files[0] ? files[0].project_id : '')
+    if (!targetProjectId) {
+      onError('Unable to determine project for new folder')
+      return
+    }
+
+    try {
+      const result = await createFolder(targetProjectId, newFolderName.trim())
+      if (result) {
+        onFolderCreated?.(result)
+      }
+      setIsNewFolderModalOpen(false)
+      setNewFolderName('')
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to create folder')
+    }
+  }
+
+  const handleConfirmDeleteFile = async () => {
+    if (!fileToDelete) return
+    try {
+      await deleteFile(fileToDelete.id, fileToDelete.path)
+      onFileDeleted(fileToDelete.id)
+      setFileToDelete(null)
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to delete file')
+    }
+  }
+
+  const handleConfirmDeleteFolder = async () => {
+    if (!folderToDelete) return
+    const targetProjectId = projectId || (files[0] ? files[0].project_id : '')
+    if (!targetProjectId) {
+      onError('Unable to determine project for folder deletion')
+      return
+    }
+    try {
+      const deletedIds = await deleteFolder(targetProjectId, folderToDelete.folderKey, folderToDelete.files)
+      deletedIds.forEach((id) => onFileDeleted(id))
+      onFolderDeleted?.(deletedIds)
+      setFolderToDelete(null)
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to delete folder')
+    }
+  }
+
+  const handleConfirmRenameFile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!fileToRename || !newFileName.trim()) return
+
+    try {
+      const updated = await renameFile(fileToRename.id, newFileName.trim())
+      onFileUpdated?.(updated)
+      setFileToRename(null)
+      setNewFileName('')
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Failed to rename file')
+    }
+  }
 
   const handleDownload = useCallback(
     async (file: ProjectFile) => {
       try {
-        console.log('[FileList] Downloading:', file.name)
         setDownloadingId(file.id)
         const url = await getSignedDownloadUrl(file.path)
         const link = document.createElement('a')
@@ -70,11 +159,8 @@ export default function FileList({
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        console.log('[FileList] Download initiated')
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to download file'
-        console.error('[FileList] Download error:', message)
-        onError(message)
+        onError(err instanceof Error ? err.message : 'Failed to download file')
       } finally {
         setDownloadingId(null)
       }
@@ -84,17 +170,12 @@ export default function FileList({
 
   const handlePreview = useCallback(
     async (file: ProjectFile) => {
-      if (!isPreviewable(file.mime_type)) return
-
       try {
-        console.log('[FileList] Generating preview URL for:', file.name)
         setPreviewLoading(true)
         const url = await getSignedPreviewUrl(file.path)
         setPreviewFile({ file, url })
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load preview'
-        console.error('[FileList] Preview error:', message)
-        onError(message)
+        onError(err instanceof Error ? err.message : 'Failed to generate preview')
       } finally {
         setPreviewLoading(false)
       }
@@ -106,14 +187,21 @@ export default function FileList({
     if (!mimeType) return false
     return (
       mimeType.startsWith('image/') ||
-      mimeType === 'application/pdf'
+      mimeType === 'application/pdf' ||
+      mimeType.startsWith('text/')
     )
   }
 
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes}B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  const formatSize = (bytes: number | null | undefined) => {
+    if (!bytes) return '-'
+    const units = ['B', 'KB', 'MB', 'GB']
+    let size = bytes
+    let unitIndex = 0
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024
+      unitIndex++
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`
   }
 
   const formatDate = (dateString: string) => {
@@ -121,113 +209,302 @@ export default function FileList({
       month: 'short',
       day: 'numeric',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     })
   }
 
   if (loading) {
-    return <div className="text-center py-8 text-text-muted">Loading files...</div>
-  }
-
-  const groupEntries = Object.entries(groups)
-  const totalFiles = groupEntries.reduce((acc, [, list]) => acc + list.length, 0)
-
-  if (totalFiles === 0) {
     return (
-      <div className="text-center py-8 text-text-muted">
-        <p>No files uploaded yet</p>
+      <div className="p-8 text-center text-text-muted text-xs flex items-center justify-center gap-2">
+        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <span>Loading files...</span>
       </div>
     )
   }
 
-  return (
-    <>
-      <div className="space-y-4">
-        {groupEntries.map(([groupKey, groupFiles]) => {
-          // Skip empty groups
-          if (groupFiles.length === 0) return null
-          
-          return (
-            <div key={groupKey} className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase tracking-wide">
-                <span className="material-symbols-outlined text-sm text-primary">folder</span>
-                {groupKey === '__root' ? 'Project Root' : (costCenterMap[groupKey] || `Cost Center ${groupKey.slice(0, 8)}...`)}
-                <span className="text-[11px] text-text-muted/80">({groupFiles.length})</span>
-              </div>
+  const getFolderLabel = (key: string) => {
+    if (key === '__root') return 'General Project Files'
+    if (key.startsWith('cost_center_')) {
+      return costCenterMap[key] ? `PO / Cost Center: ${costCenterMap[key]}` : 'Cost Center'
+    }
+    if (key.startsWith('folder_')) {
+      return key.replace('folder_', '').replace(/_/g, ' ')
+    }
+    return key
+  }
 
-            {groupFiles.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between p-4 rounded-lg border border-border-dark bg-card-dark hover:bg-card-dark/80 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    {getFileIcon(file.mime_type)}
+  const groupEntries = Object.entries(groups).filter(
+    ([key, groupFiles]) =>
+      key.startsWith('cost_center_') ||
+      key.startsWith('folder_') ||
+      (key === '__root' && groupFiles.length > 0)
+  )
+
+  return (
+    <div className="space-y-4">
+      {/* File Categories / Folders Header */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            Folder Directory ({groupEntries.length})
+          </h4>
+          {canCreateFolder && (
+            <button
+              type="button"
+              onClick={() => setIsNewFolderModalOpen(true)}
+              className="px-2.5 py-1 rounded-lg bg-background-dark hover:bg-primary/20 hover:text-primary text-text-muted border border-border-dark text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-sm text-primary">create_new_folder</span>
+              New Folder
+            </button>
+          )}
+        </div>
+
+        {groupEntries.map(([groupKey, groupFiles]) => {
+          const folderLabel = getFolderLabel(groupKey)
+          const isCostCenter = groupKey.startsWith('cost_center_')
+          const isCustom = groupKey.startsWith('folder_')
+
+          return (
+            <div key={groupKey} className="space-y-2 bg-background-dark/30 rounded-xl p-3 border border-border-dark/60">
+              {/* Folder Header */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                  <div
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                      isCostCenter
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : isCustom
+                        ? 'bg-teal-500/20 text-teal-400'
+                        : 'bg-primary/20 text-primary'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {isCostCenter ? 'account_tree' : isCustom ? 'folder_special' : 'folder'}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{file.name}</p>
-                    <p className="text-xs text-text-muted">
-                      {formatSize(file.size_bytes)} • {formatDate(file.created_at)}
-                    </p>
-                  </div>
+                  <span>{folderLabel}</span>
+                  <span className="text-[11px] font-normal text-text-muted">
+                    ({groupFiles.length} {groupFiles.length === 1 ? 'file' : 'files'})
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                  {isPreviewable(file.mime_type) && (
+                <div className="flex items-center gap-2">
+                  {onSelectFolderForUpload && (
                     <button
-                      onClick={() => handlePreview(file)}
-                      disabled={previewLoading}
-                      className="p-2 hover:bg-border-dark rounded-lg transition-colors disabled:opacity-50"
-                      title="Preview"
+                      type="button"
+                      onClick={() => onSelectFolderForUpload(groupKey)}
+                      className="text-[11px] text-text-muted hover:text-primary flex items-center gap-1 transition-colors"
+                      title={`Upload directly into ${folderLabel}`}
                     >
-                      {previewLoading ? (
-                        <svg className="h-5 w-5 animate-spin text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      ) : (
-                        <svg className="h-5 w-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      <span className="material-symbols-outlined text-xs">upload_file</span>
+                      Upload here
                     </button>
                   )}
-
-                  <button
-                    onClick={() => handleDownload(file)}
-                    disabled={downloadingId === file.id}
-                    className="p-2 hover:bg-border-dark rounded-lg transition-colors disabled:opacity-50"
-                    title="Download"
-                  >
-                    {downloadingId === file.id ? (
-                      <svg className="h-5 w-5 animate-spin text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(file)}
-                    disabled={deleting}
-                    className="p-2 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                    title="Delete"
-                  >
-                    <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1 1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  {isCustom && canDeleteFile && (
+                    <button
+                      type="button"
+                      onClick={() => setFolderToDelete({ name: folderLabel, folderKey: groupKey, files: groupFiles })}
+                      className="p-1 hover:bg-red-500/20 rounded-lg text-text-muted hover:text-red-400 transition-colors flex items-center justify-center"
+                      title={`Delete folder "${folderLabel}" and all files`}
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )})}
+
+              {/* Files in this group */}
+              {groupFiles.length === 0 ? (
+                <div className="p-3 border border-dashed border-border-dark/40 rounded-lg text-center bg-card-dark/40">
+                  <p className="text-[11px] text-text-muted/60">No files in this folder yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {groupFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border-dark bg-card-dark hover:bg-card-dark/80 transition-colors shadow-sm"
+                    >
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className="flex-shrink-0">{getFileIcon(file.mime_type)}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-white truncate" title={file.name}>
+                            {file.name}
+                          </p>
+                          <p className="text-[10px] text-text-muted mt-0.5">
+                            {formatSize(file.size_bytes)} | {formatDate(file.created_at)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+                        {isPreviewable(file.mime_type) && (
+                          <button
+                            type="button"
+                            onClick={() => handlePreview(file)}
+                            disabled={previewLoading}
+                            className="p-1.5 hover:bg-border-dark rounded-lg text-text-muted hover:text-white transition-colors"
+                            title="Preview file inline"
+                          >
+                            <span className="material-symbols-outlined text-base">visibility</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(file)}
+                          disabled={downloadingId === file.id}
+                          className="p-1.5 hover:bg-border-dark rounded-lg text-text-muted hover:text-white transition-colors"
+                          title="Download file"
+                        >
+                          <span className="material-symbols-outlined text-base">download</span>
+                        </button>
+
+                        {canRenameFile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFileToRename(file)
+                              setNewFileName(file.name)
+                            }}
+                            disabled={renaming}
+                            className="p-1.5 hover:bg-border-dark rounded-lg text-text-muted hover:text-primary transition-colors"
+                            title="Rename file / photo"
+                          >
+                            <span className="material-symbols-outlined text-base">drive_file_rename_outline</span>
+                          </button>
+                        )}
+
+                        {canDeleteFile && (
+                          <button
+                            type="button"
+                            onClick={() => setFileToDelete(file)}
+                            disabled={deleting}
+                            className="p-1.5 hover:bg-red-500/20 rounded-lg text-text-muted hover:text-red-400 transition-colors"
+                            title="Delete file"
+                          >
+                            <span className="material-symbols-outlined text-base">delete</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
+      {/* New Custom Folder Modal */}
+      {isNewFolderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-card-dark border border-border-dark rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 animate-scaleUp">
+            <div className="flex items-center justify-between border-b border-border-dark pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-base">create_new_folder</span>
+                Create Custom Folder
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsNewFolderModalOpen(false)}
+                className="text-text-muted hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewFolder} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-text-muted">Folder Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. As-Builts, Site Photos, Compliance..."
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  className="w-full px-3 py-2 bg-background-dark border border-border-dark rounded-lg text-xs text-white placeholder-text-muted/50 focus:outline-none focus:border-primary"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-dark/60">
+                <button
+                  type="button"
+                  onClick={() => setIsNewFolderModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-border-dark text-xs text-text-muted hover:text-white hover:bg-background-dark transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingFolder || !newFolderName.trim()}
+                  className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/80 text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-sm"
+                >
+                  {isCreatingFolder ? 'Creating...' : 'Create Folder'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Rename File Modal */}
+      {fileToRename && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-card-dark border border-border-dark rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 animate-scaleUp">
+            <div className="flex items-center justify-between border-b border-border-dark pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-base">drive_file_rename_outline</span>
+                Rename File / Photo
+              </h3>
+              <button
+                type="button"
+                onClick={() => setFileToRename(null)}
+                className="text-text-muted hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmRenameFile} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-text-muted">Display Name</label>
+                <input
+                  type="text"
+                  value={newFileName}
+                  onChange={(e) => setNewFileName(e.target.value)}
+                  placeholder="Enter new file name..."
+                  autoFocus
+                  required
+                  disabled={renaming}
+                  className="w-full px-3 py-2 bg-background-dark border border-border-dark focus:border-primary rounded-xl text-xs text-white placeholder-text-muted/50 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-dark/60">
+                <button
+                  type="button"
+                  onClick={() => setFileToRename(null)}
+                  disabled={renaming}
+                  className="px-3 py-1.5 rounded-lg border border-border-dark text-xs text-text-muted hover:text-white hover:bg-background-dark transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={renaming || !newFileName.trim()}
+                  className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/80 text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-sm"
+                >
+                  {renaming ? 'Saving...' : 'Save Name'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
       {previewFile && (
         <FilePreviewModal
           file={previewFile.file}
@@ -235,7 +512,47 @@ export default function FileList({
           onClose={() => setPreviewFile(null)}
         />
       )}
-    </>
+
+      {/* Native Confirm Dialog: Delete File */}
+      <ConfirmDialog
+        isOpen={Boolean(fileToDelete)}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={handleConfirmDeleteFile}
+        title="Delete Document File?"
+        message={
+          fileToDelete ? (
+            <p>
+              Are you sure you want to delete <strong className="text-white">"{fileToDelete.name}"</strong>? This will permanently remove it from cloud storage.
+            </p>
+          ) : (
+            ''
+          )
+        }
+        confirmText="Delete File"
+        variant="danger"
+        icon="delete"
+      />
+
+      {/* Native Confirm Dialog: Delete Folder */}
+      <ConfirmDialog
+        isOpen={Boolean(folderToDelete)}
+        onClose={() => setFolderToDelete(null)}
+        onConfirm={handleConfirmDeleteFolder}
+        title="Delete Folder and Contents?"
+        message={
+          folderToDelete ? (
+            <p>
+              Are you sure you want to delete the folder <strong className="text-white">"{folderToDelete.name}"</strong> and all <strong className="text-amber-400">{folderToDelete.files.length} file(s)</strong> inside it? This action cannot be undone.
+            </p>
+          ) : (
+            ''
+          )
+        }
+        confirmText="Delete Folder"
+        variant="danger"
+        icon="folder_delete"
+      />
+    </div>
   )
 }
 
@@ -249,40 +566,40 @@ function FilePreviewModal({
   onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-card-dark rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-card-dark rounded-2xl border border-border-dark max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl animate-scaleUp">
+        {/* Modal Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-dark">
-          <h2 className="text-lg font-semibold text-white truncate">{file.name}</h2>
+          <div className="flex items-center gap-2 min-w-0">
+            {getFileIcon(file.mime_type)}
+            <h3 className="text-sm font-semibold text-white truncate">{file.name}</h3>
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 hover:bg-border-dark rounded transition-colors"
+            className="p-1 hover:bg-border-dark rounded-lg text-text-muted hover:text-white transition-colors"
           >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4">
+        {/* Modal Body */}
+        <div className="flex-1 p-4 overflow-auto flex items-center justify-center">
           {file.mime_type?.startsWith('image/') ? (
             <img
               src={previewUrl}
               alt={file.name}
-              className="w-full h-auto max-h-[70vh] object-contain"
-              onError={(e) => {
-                console.error('[FileList] Preview image failed to load:', e)
-              }}
+              className="w-full h-auto max-h-[75vh] object-contain rounded-lg shadow-md"
             />
           ) : file.mime_type === 'application/pdf' ? (
             <iframe
               src={previewUrl}
-              className="w-full h-[70vh]"
+              className="w-full h-[75vh] rounded-lg border border-border-dark"
               title={file.name}
-              onError={(e) => {
-                console.error('[FileList] Preview PDF failed to load:', e)
-              }}
             />
-          ) : null}
+          ) : (
+            <p className="text-text-muted text-xs">Preview not supported for this file format.</p>
+          )}
         </div>
       </div>
     </div>
@@ -291,42 +608,26 @@ function FilePreviewModal({
 
 function getFileIcon(mimeType: string | null | undefined) {
   if (!mimeType) {
-    return (
-      <svg className="h-6 w-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    )
+    return <span className="material-symbols-outlined text-text-muted text-xl">draft</span>
   }
-
   if (mimeType.startsWith('image/')) {
-    return (
-      <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    )
+    return <span className="material-symbols-outlined text-primary text-xl">image</span>
   }
-
   if (mimeType === 'application/pdf') {
-    return (
-      <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
-      </svg>
-    )
+    return <span className="material-symbols-outlined text-red-400 text-xl">picture_as_pdf</span>
   }
-
-  return (
-    <svg className="h-6 w-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-    </svg>
-  )
+  return <span className="material-symbols-outlined text-text-muted text-xl">description</span>
 }
 
-function extractCostCenterId(path: string): string | null {
+function extractFolderKey(path: string): string {
   const segments = path.split('/')
-  if (segments.length < 2) return null
-  const costCenterSegment = segments[1]
-  if (costCenterSegment.startsWith('cost_center_')) {
-    return costCenterSegment.replace('cost_center_', '')
+  if (segments.length < 2) return '__root'
+  const folderSegment = segments[1]
+  if (folderSegment.startsWith('cost_center_')) {
+    return folderSegment
   }
-  return null
+  if (folderSegment.startsWith('folder_')) {
+    return folderSegment
+  }
+  return '__root'
 }

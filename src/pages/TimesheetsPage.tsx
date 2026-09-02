@@ -1,31 +1,66 @@
 import { useState } from 'react'
-import { useTimesheets, useDeleteTimesheet, useSubmitTimesheet, useApproveTimesheet, useBulkCreateTimesheets } from '@/hooks/useTimesheets'
+import {
+  useTimesheets,
+  useDeleteTimesheet,
+  useSubmitTimesheet,
+  useApproveTimesheet,
+  useBulkCreateTimesheets,
+  useUpdateTimesheet,
+  useDuplicateTimesheet,
+  useUnapproveTimesheet,
+} from '@/hooks/useTimesheets'
 import { useProjects } from '@/hooks/useProjects'
 import { useActivityTypes } from '@/hooks/useActivityTypes'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCostCenters } from '@/hooks/useCostCenters'
 import { useUsers } from '@/hooks/useUsers'
 import type { Timesheet, BulkTimesheetFormData, TimesheetFilters } from '@/types'
+import TimesheetMetrics from '@/components/TimesheetMetrics'
 import TimesheetTable from '@/components/TimesheetTable'
-import TimesheetCard from '@/components/TimesheetCard'
+import WeeklyTimesheetGrid from '@/components/WeeklyTimesheetGrid'
+import DayTimesheetTimeline from '@/components/timesheets/DayTimesheetTimeline'
 import TimesheetFiltersComponent from '@/components/TimesheetFilters'
 import TimesheetModal from '@/components/TimesheetModal'
 import ApprovalModal from '@/components/ApprovalModal'
+import DocumentScannerModal from '@/components/DocumentScannerModal'
 import Button from '@/components/ui/Button'
+import Toast from '@/components/ui/Toast'
 
 export default function TimesheetsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<TimesheetFilters>({})
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
+  const [viewMode, setViewMode] = useState<'day' | 'weekly' | 'table' | 'approvals'>('day')
+  const [dayDate, setDayDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [selected, setSelected] = useState<Timesheet | undefined>()
   const [isApprovalOpen, setIsApprovalOpen] = useState(false)
+  const [modalInitialDate, setModalInitialDate] = useState<string | undefined>()
+  const [modalInitialProjectId, setModalInitialProjectId] = useState<string | undefined>()
+  const [modalInitialUserId, setModalInitialUserId] = useState<string | undefined>()
+  const [modalInitialStartTime, setModalInitialStartTime] = useState<string | undefined>()
   const [sort, setSort] = useState<{ key: 'entry_date' | 'hours' | 'status'; direction: 'asc' | 'desc' }>()
-  const [view, setView] = useState<'all' | 'approvals'>('all')
+
   const { user } = useAuth()
   const isManager = user?.role === 'manager' || user?.role === 'admin'
 
-  const effectiveFilters: TimesheetFilters = { ...filters, ...(view === 'approvals' ? { status: ['submitted'] as ('draft' | 'submitted' | 'approved' | 'invoiced')[] } : {}) }
-  const { data: timesheets, isLoading, pageCount, refresh: refreshTimesheets } = useTimesheets(effectiveFilters, currentPage, sort)
+  const effectiveFilters: TimesheetFilters = {
+    ...filters,
+    ...(viewMode === 'approvals'
+      ? { status: ['submitted'] as ('draft' | 'submitted' | 'approved' | 'invoiced')[] }
+      : {}),
+  }
+
+  const pageSize = viewMode === 'day' || viewMode === 'weekly' ? 100 : 25
+
+  const { data: timesheets, isLoading, pageCount, refresh: refreshTimesheets } = useTimesheets(
+    effectiveFilters,
+    currentPage,
+    sort,
+    pageSize
+  )
   const { data: projects } = useProjects(undefined, 1)
   const { data: activityTypes } = useActivityTypes()
   const { data: costCenters } = useCostCenters()
@@ -34,206 +69,399 @@ export default function TimesheetsPage() {
   const { mutate: deleteTimesheet, isPending: isDeleting } = useDeleteTimesheet()
   const { mutate: submitTimesheet, isPending: isSubmitting } = useSubmitTimesheet()
   const { mutate: approveTimesheet, isPending: isApproving } = useApproveTimesheet()
+  const { mutate: unapproveTimesheet } = useUnapproveTimesheet()
   const { mutate: bulkCreateTimesheets, isPending: isBulkCreating } = useBulkCreateTimesheets()
+  const { mutate: updateTimesheet } = useUpdateTimesheet()
+  const { duplicate: duplicateTimesheet } = useDuplicateTimesheet()
 
-  const handleAdd = () => {
+  const activeFilterCount =
+    (filters.startDate ? 1 : 0) +
+    (filters.endDate ? 1 : 0) +
+    (filters.projectId ? 1 : 0) +
+    (filters.userId ? 1 : 0) +
+    (filters.status && filters.status.length > 0 ? 1 : 0)
+
+  const handleAdd = (
+    initialDate?: string,
+    initialProjectId?: string,
+    initialUserId?: string,
+    initialStartTime?: string
+  ) => {
     setSelected(undefined)
+    setModalInitialDate(initialDate)
+    setModalInitialProjectId(initialProjectId)
+    setModalInitialUserId(initialUserId)
+    setModalInitialStartTime(initialStartTime)
     setIsModalOpen(true)
   }
 
   const handleEdit = (t: Timesheet) => {
     setSelected(t)
+    setModalInitialDate(t.entry_date)
+    setModalInitialProjectId(t.project_id)
+    setModalInitialUserId(t.user_id)
+    setModalInitialStartTime(t.start_time || undefined)
     setIsModalOpen(true)
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete draft timesheet?')) {
-      console.log('TimesheetsPage: Deleting timesheet', id)
-      await deleteTimesheet(id)
-      console.log('TimesheetsPage: Calling refreshTimesheets after delete')
-      await refreshTimesheets()
-    }
+    await deleteTimesheet(id)
+    await refreshTimesheets()
   }
 
   const handleSubmitDraft = async (id: string) => {
-    if (confirm('Submit this timesheet for approval?')) {
-      console.log('TimesheetsPage: Submitting timesheet', id)
-      await submitTimesheet(id)
-      console.log('TimesheetsPage: Calling refreshTimesheets after submit')
-      await refreshTimesheets()
-    }
+    await submitTimesheet(id)
+    await refreshTimesheets()
   }
 
   const handleApprove = async (id: string) => {
-    console.log('TimesheetsPage: Approving timesheet', id)
     await approveTimesheet(id)
-    console.log('TimesheetsPage: Calling refreshTimesheets after approve')
+    await refreshTimesheets()
+  }
+
+  const handleUnapprove = async (id: string) => {
+    await unapproveTimesheet(id)
+    await refreshTimesheets()
+  }
+
+  const handleBatchSubmit = async (ids: string[]) => {
+    await Promise.all(ids.map(id => submitTimesheet(id)))
+    await refreshTimesheets()
+  }
+
+  const handleBatchApprove = async (ids: string[]) => {
+    await Promise.all(ids.map(id => approveTimesheet(id)))
+    await refreshTimesheets()
+  }
+
+  const handleBatchDelete = async (ids: string[]) => {
+    await Promise.all(ids.map(id => deleteTimesheet(id)))
     await refreshTimesheets()
   }
 
   const handleModalSaveDraft = async (data: BulkTimesheetFormData) => {
-    console.log('TimesheetsPage: handleModalSaveDraft called with:', data)
-    try {
-      console.log('TimesheetsPage: Creating bulk timesheets')
+    if (selected) {
+      // Update existing record
+      const entry = data.entries[0]
+      await updateTimesheet(selected.id, {
+        project_id: data.project_id,
+        cost_center_id: data.cost_center_id,
+        entry_date: data.entry_date,
+        activity_type_id: entry?.activity_type_id,
+        user_id: entry?.user_id,
+        hours: entry?.hours,
+        start_time: entry?.start_time,
+        end_time: entry?.end_time,
+        break_minutes: entry?.break_minutes,
+        notes: entry?.notes,
+      })
+    } else {
       await bulkCreateTimesheets(data)
-      
-      // Refresh data after mutation
-      console.log('TimesheetsPage: Calling refreshTimesheets')
-      await refreshTimesheets()
-      
-      setIsModalOpen(false)
-      setSelected(undefined)
-      console.log('TimesheetsPage: Modal closed and data refreshed')
-    } catch (error) {
-      console.error('TimesheetsPage: Error saving timesheet:', error)
     }
+    await refreshTimesheets()
+    setIsModalOpen(false)
+    setSelected(undefined)
   }
 
   const handleModalSubmitApproval = async (data: BulkTimesheetFormData) => {
-    console.log('TimesheetsPage: handleModalSubmitApproval called with:', data)
-    try {
-      console.log('TimesheetsPage: Creating bulk timesheets and submitting')
+    if (selected) {
+      // Update existing record and submit
+      const entry = data.entries[0]
+      await updateTimesheet(selected.id, {
+        project_id: data.project_id,
+        cost_center_id: data.cost_center_id,
+        entry_date: data.entry_date,
+        activity_type_id: entry?.activity_type_id,
+        user_id: entry?.user_id,
+        hours: entry?.hours,
+        start_time: entry?.start_time,
+        end_time: entry?.end_time,
+        break_minutes: entry?.break_minutes,
+        notes: entry?.notes,
+      })
+      if (selected.status === 'draft') {
+        await submitTimesheet(selected.id)
+      }
+    } else {
       const created = await bulkCreateTimesheets(data)
       if (created && created.length > 0) {
-        console.log('TimesheetsPage: Submitting', created.length, 'timesheets')
-        for (const ts of created) {
-          await submitTimesheet(ts.id)
+        for (const t of created) {
+          await submitTimesheet(t.id)
         }
       }
-      
-      // Refresh data after mutations
-      console.log('TimesheetsPage: Calling refreshTimesheets')
-      await refreshTimesheets()
-      
-      setIsModalOpen(false)
-      setSelected(undefined)
-      console.log('TimesheetsPage: Modal closed and data refreshed')
-    } catch (error) {
-      console.error('TimesheetsPage: Error submitting timesheet:', error)
     }
+    await refreshTimesheets()
+    setIsModalOpen(false)
+    setSelected(undefined)
   }
 
-  const onSort = (_key: 'entry_date' | 'hours' | 'status') => {
+  const handleUpdateTimesheet = async (
+    id: string,
+    updates: { user_id?: string; start_time?: string; end_time?: string; hours?: number }
+  ) => {
+    await updateTimesheet(id, updates)
+    await refreshTimesheets()
+  }
+
+  const handleDuplicateTimesheet = async (
+    timesheetId: string,
+    targetUserId: string,
+    customStartTime?: string,
+    customEndTime?: string
+  ) => {
+    await duplicateTimesheet(timesheetId, targetUserId, dayDate, customStartTime, customEndTime)
+    await refreshTimesheets()
+  }
+
+  const onSort = (key: 'entry_date' | 'hours' | 'status') => {
     setSort((prev) => {
-      if (!prev || prev.key !== _key) return { key: _key, direction: 'desc' }
-      return { key: _key, direction: prev.direction === 'desc' ? 'asc' : 'desc' }
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, direction: 'asc' }
     })
   }
 
   const disabled = isDeleting || isSubmitting || isApproving || isBulkCreating
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className="space-y-6 pb-12">
+      {/* 1. Header & View Mode Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-2">
-            <span className="material-symbols-outlined text-4xl text-primary">schedule</span>
-            Timesheets
-          </h1>
-          <p className="text-text-muted">Log work and manage approvals</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Timesheet Intelligence</h1>
+          <p className="text-xs text-text-muted mt-1">
+            Real-time technician labor scheduling, hourly timeline allocation, and automated approval pipelines.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {isManager && (
-            <div className="flex gap-1 bg-card-dark border border-border-dark rounded-lg p-1">
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* View Mode Switcher */}
+          <div className="flex items-center bg-card-dark p-1 rounded-xl border border-border-dark shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode('day')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === 'day'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+              title="Hourly Schedule Timeline (X: Time, Y: Tech)"
+            >
+              <span className="material-symbols-outlined text-base">view_timeline</span>
+              <span>Day Timeline</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('weekly')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === 'weekly'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+              title="Weekly Calendar Matrix"
+            >
+              <span className="material-symbols-outlined text-base">calendar_view_week</span>
+              <span>Weekly Grid</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === 'table'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+              title="Audit Table View"
+            >
+              <span className="material-symbols-outlined text-base">view_list</span>
+              <span>Table</span>
+            </button>
+
+            {isManager && (
               <button
-                onClick={() => { setView('all'); setCurrentPage(1) }}
-                className={`px-3 py-2 rounded transition-colors flex items-center gap-1 ${
-                  view === 'all' ? 'bg-primary text-white' : 'text-text-muted hover:text-white'
+                type="button"
+                onClick={() => {
+                  setViewMode('approvals')
+                  setCurrentPage(1)
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'approvals'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-text-muted hover:text-white'
                 }`}
-                title="All Timesheets"
+                title="Pending Approvals Workspace"
               >
-                <span className="material-symbols-outlined text-xl">list_alt</span>
-                <span className="hidden sm:inline text-sm font-medium">All</span>
+                <span className="material-symbols-outlined text-base">task_alt</span>
+                <span>Approvals</span>
               </button>
-              <button
-                onClick={() => { setView('approvals'); setCurrentPage(1) }}
-                className={`px-3 py-2 rounded transition-colors flex items-center gap-1 ${
-                  view === 'approvals' ? 'bg-primary text-white' : 'text-text-muted hover:text-white'
-                }`}
-                title="Pending Approvals"
-              >
-                <span className="material-symbols-outlined text-xl">task_alt</span>
-                <span className="hidden sm:inline text-sm font-medium">Approvals</span>
-              </button>
-            </div>
-          )}
-          <Button onClick={handleAdd} disabled={disabled}>
-            <span className="material-symbols-outlined">add</span>
-            <span className="hidden sm:inline">Add Timesheet</span>
+            )}
+          </div>
+
+          {/* Toggle Filter Toolbar */}
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm ${
+              showFilters || activeFilterCount > 0
+                ? 'bg-primary/20 border-primary text-primary'
+                : 'bg-card-dark border-border-dark text-text-muted hover:text-white'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">filter_list</span>
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Scanner Button */}
+          <Button variant="secondary" onClick={() => setIsScannerOpen(true)} disabled={disabled}>
+            <span className="material-symbols-outlined text-base">document_scanner</span>
+            <span className="hidden sm:inline">Scan Receipt</span>
+          </Button>
+
+          {/* Add Timesheet Button */}
+          <Button onClick={() => handleAdd()} disabled={disabled}>
+            <span className="material-symbols-outlined text-base">add</span>
+            <span>Add Timesheet</span>
           </Button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Filters */}
-        <div>
-          <TimesheetFiltersComponent onChange={setFilters} onClear={() => setFilters({})} />
-          {isManager && (
-            <div className="mt-4 bg-card-dark border border-border-dark rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">task_alt</span>
-                <span className="text-white font-medium">Approvals View</span>
+      {/* 2. Top Summary KPI Metrics */}
+      <TimesheetMetrics timesheets={timesheets} isManager={isManager} />
+
+      {/* 3. Collapsible Filter Toolbar */}
+      {showFilters && (
+        <TimesheetFiltersComponent
+          onChange={(newFilters) => {
+            setFilters(newFilters)
+            setCurrentPage(1)
+          }}
+          onClear={() => {
+            setFilters({})
+            setCurrentPage(1)
+          }}
+          onClose={() => setShowFilters(false)}
+        />
+      )}
+
+      {/* 4. Active View Display */}
+      {viewMode === 'day' && (
+        <DayTimesheetTimeline
+          date={dayDate}
+          onDateChange={setDayDate}
+          timesheets={timesheets}
+          projects={projects || []}
+          users={users || []}
+          isLoading={isLoading}
+          isAdmin={isManager}
+          onAddEntry={(d, uId, startTime) => handleAdd(d, undefined, uId, startTime)}
+          onEditEntry={handleEdit}
+          onUpdateTimesheet={handleUpdateTimesheet}
+          onDuplicateTimesheet={handleDuplicateTimesheet}
+          onUnapproveTimesheet={handleUnapprove}
+          onDeleteTimesheet={handleDelete}
+        />
+      )}
+
+      {viewMode === 'weekly' && (
+        <WeeklyTimesheetGrid
+          timesheets={timesheets}
+          projects={projects || []}
+          isLoading={isLoading}
+          onAddEntry={(date, pId) => handleAdd(date, pId)}
+          onEditEntry={handleEdit}
+        />
+      )}
+
+      {viewMode === 'table' && (
+        <TimesheetTable
+          items={timesheets}
+          isLoading={isLoading}
+          onEdit={handleEdit}
+          onSubmit={handleSubmitDraft}
+          onApprove={handleApprove}
+          onUnapprove={handleUnapprove}
+          onDelete={handleDelete}
+          onBatchSubmit={handleBatchSubmit}
+          onBatchApprove={handleBatchApprove}
+          onBatchDelete={handleBatchDelete}
+          currentPage={currentPage}
+          pageCount={pageCount}
+          onPageChange={setCurrentPage}
+          onSort={onSort}
+          sort={sort}
+          isManager={isManager}
+        />
+      )}
+
+      {viewMode === 'approvals' && (
+        <div className="space-y-4">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                <span className="material-symbols-outlined text-lg">fact_check</span>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setView('all'); setCurrentPage(1) }}
-                  className={`px-3 py-2 rounded transition-colors ${view === 'all' ? 'bg-primary text-white' : 'text-text-muted hover:text-white bg-nav-hover'}`}
-                >All</button>
-                <button
-                  onClick={() => { setView('approvals'); setCurrentPage(1) }}
-                  className={`px-3 py-2 rounded transition-colors ${view === 'approvals' ? 'bg-primary text-white' : 'text-text-muted hover:text-white bg-nav-hover'}`}
-                >Pending</button>
+              <div>
+                <h3 className="text-sm font-semibold text-white">Manager Approvals Queue</h3>
+                <p className="text-xs text-text-muted">
+                  Review submitted technician entries. Batch approve selected or inspect details before payroll sync.
+                </p>
               </div>
             </div>
-          )}
-        </div>
-        {/* Table / Cards */}
-        <div className="lg:col-span-3">
-          <div className="hidden md:block bg-card-dark rounded-lg border border-border-dark overflow-hidden">
-            <TimesheetTable
-              items={timesheets}
-              isLoading={isLoading}
-              onEdit={handleEdit}
-              onSubmit={handleSubmitDraft}
-              onApprove={(id) => handleApprove(id)}
-              onDelete={handleDelete}
-              currentPage={currentPage}
-              pageCount={pageCount}
-              onPageChange={setCurrentPage}
-              onSort={onSort}
-              sort={sort}
-              isManager={isManager}
-            />
           </div>
-          <div className="md:hidden space-y-3">
-            {timesheets.map((t) => (
-              <TimesheetCard
-                key={t.id}
-                item={t}
-                onEdit={handleEdit}
-                onSubmit={handleSubmitDraft}
-                onApprove={(id) => handleApprove(id)}
-                onDelete={handleDelete}
-                isManager={isManager}
-              />
-            ))}
-          </div>
+
+          <TimesheetTable
+            items={timesheets}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onSubmit={handleSubmitDraft}
+            onApprove={handleApprove}
+            onUnapprove={handleUnapprove}
+            onDelete={handleDelete}
+            onBatchSubmit={handleBatchSubmit}
+            onBatchApprove={handleBatchApprove}
+            onBatchDelete={handleBatchDelete}
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPageChange={setCurrentPage}
+            onSort={onSort}
+            sort={sort}
+            isManager={true}
+          />
         </div>
-      </div>
+      )}
 
       {/* Modals */}
       <TimesheetModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+          setModalInitialDate(undefined)
+          setModalInitialProjectId(undefined)
+          setModalInitialUserId(undefined)
+          setModalInitialStartTime(undefined)
+        }}
         onSaveDraft={handleModalSaveDraft}
         onSubmitForApproval={handleModalSubmitApproval}
-        projects={projects}
-        costCenters={costCenters}
-        activityTypes={activityTypes}
+        projects={projects || []}
+        costCenters={costCenters || []}
+        activityTypes={activityTypes || []}
         users={users || []}
         isPending={isBulkCreating}
+        initialDate={modalInitialDate}
+        initialProjectId={modalInitialProjectId}
+        initialUserId={modalInitialUserId}
+        initialStartTime={modalInitialStartTime}
+        timesheet={selected}
+        isAdmin={isManager}
+        onUnapprove={handleUnapprove}
       />
 
       <ApprovalModal
@@ -242,6 +470,23 @@ export default function TimesheetsPage() {
         timesheet={selected}
         onApprove={async (id) => handleApprove(id)}
       />
+
+      <DocumentScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onApply={(data) => {
+          setToast({ type: 'info', message: `Scanned receipt from ${data.vendor} ($${data.totalAmount.toFixed(2)}) ready for attachment!` })
+          setIsModalOpen(true)
+        }}
+      />
+
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   )
 }

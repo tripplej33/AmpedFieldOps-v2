@@ -61,3 +61,6 @@ dist/
 
 # Local uploads
 uploads/
+
+# Scratch and deployment scripts
+scratch/

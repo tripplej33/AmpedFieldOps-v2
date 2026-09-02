@@ -1,68 +1,117 @@
-# AmpedFieldOps V2 🚀
+# AmpedFieldOps V2 ⚡
 
-> Complete rewrite of field operations management system built with React 18, TypeScript, Tailwind CSS, and Supabase.
-
-## 🎯 Project Status
-
-**Phase 7: Backend & Xero Integration** ✅ **COMPLETE**  
-**Current Phase:** Phase 8 (Polish & Hardening)  
-**Version:** 2.1.0
+> Comprehensive Field Operations, Timesheets, Job Management & Fleet System built for electrical contractors, trade teams, and field service operations. Powered by React 18, TypeScript, Tailwind CSS, Node.js, and Supabase.
 
 ---
 
-## 🏗️ Tech Stack
+## 🎯 System Capabilities
+
+- **📅 Interactive Timesheets & Day Timeline**:
+  - Full Day Timeline with technician vs. hour matrix and drag-and-drop time editing.
+  - Weekly matrix overview with bulk submission, unapproving, and batch deletion workflows.
+  - Start & Stop time tracking with automatic break deduction.
+- **📍 GPS Pinning & Travel Billing Engine**:
+  - Automatic technician geolocation capture with road-factor adjusted Haversine distance calculations.
+  - Automated travel time and client mileage reimbursement calculator.
+- **📁 Document & Photo Management**:
+  - Project File Explorer with custom folder hierarchy and cost-center partitioning.
+  - Device camera photo capture with pre-upload preview and customizable "Save File As" labeling.
+  - In-place renaming for files, drawings, compliance certificates, and site photos.
+  - Built-in PDF and image previewers with signed URL generation.
+- **🏗️ Projects & Cost Centers**:
+  - Full project lifecycle management (Pending, Active, On Hold, Completed, Invoiced, Archived).
+  - Cost Center budget allocation, spend tracking, and labor burn analytics.
+  - Interactive Kanban and tabular list views with global search integration.
+- **👥 Role-Based Access Control (RBAC) & Invitations**:
+  - Configurable system and custom roles (Administrator, Project Manager, Field Technician, Apprentice, Office Admin, Subcontractor).
+  - Granular permissions (including `files.rename`, `timesheets.delete`, `projects.assign_members`, `safety.manage`, etc.).
+  - Secure email user invitations and profile credential management.
+- **📋 Procurement, Van Stock & Snags**:
+  - Purchase Orders with multi-item receipt tracking and direct cost-center allocation.
+  - Van stock inventory management and direct material logging to jobs.
+  - Visual snag list tracking with status progression and photo attachments.
+- **🚨 Site Safety, Check Sheets & Emergency Evacuation**:
+  - Digital Site Attendance kiosk with QR sign-in/out and real-time roll-call evacuation lists.
+  - Vehicle pre-start safety check sheets with defect escalation workflows.
+- **🔄 Xero Cloud Synchronization**:
+  - Bi-directional sync for Contacts, Inventory Items, and Invoices.
+  - Background queue processing with BullMQ and Redis.
+
+---
+
+## 🏗️ Architecture & Tech Stack
 
 ### Frontend
-- **Runtime:** Node.js 20+
-- **Framework:** React 18 + TypeScript
-- **Build Tool:** Vite 7
-- **Styling:** Tailwind CSS 3.4
-- **State Management:** React Context + Hooks
-- **Forms:** react-hook-form + zod
-- **Routing:** react-router-dom v6
-- **Database:** Supabase
-- **Icons:** Material Symbols (web font)
-- **Fonts:** Google Fonts (Space Grotesk)
+- **Framework:** React 18 + TypeScript + Vite 7
+- **Styling:** Tailwind CSS 3.4 (custom dark theme tokens) + Material Symbols
+- **State & Context:** React Context + custom domain hooks (`useProjects`, `useTimesheets`, `useFiles`, `useGeolocation`, `usePermissions`, etc.)
+- **Forms & Validation:** `react-hook-form` + `zod`
+- **Routing:** `react-router-dom` v6 with client-side hydration & protected guards
 
-- **Integrated Xero Sync:** Bi-directional sync for Contacts, Items, and Invoices
-- **Financial Intelligence:** Categorized revenue tracking (Draft, Pending, Overdue, Paid)
-- **Background Jobs:** BullMQ + Redis for resilient data synchronization
-- **Navigation Fixes:** Stable session persistence after page refresh
+### Backend & Infrastructure
+- **Database & Storage:** Supabase PostgreSQL with Row Level Security (RLS) + Supabase Storage (`project-files`)
+- **API Server:** Node.js + Express + TypeScript
+- **Cache & Queues:** Redis + BullMQ
+- **Reverse Proxy:** Nginx with SPA history fallback & gzip compression
+- **Deployment:** Docker & Docker Compose on Proxmox LXC VPS
+
+---
+
+## 📱 Mobile Applications (Android & iOS)
+
+AmpedFieldOps is built to run as a native mobile app via **Capacitor**, sharing 100% of the web UI while utilizing native device hardware (High-Res Camera, Background GPS, Biometrics, and Push Notifications).
+
+### Mobile Setup with Capacitor
+
+```bash
+# 1. Install Capacitor dependencies
+npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
+npm install @capacitor/camera @capacitor/geolocation @capacitor/push-notifications @capacitor/preferences
+
+# 2. Initialize Capacitor project
+npx cap init AmpedFieldOps com.amped.fieldops --web-dir dist
+
+# 3. Build web assets and generate native projects
+npm run build
+npx cap add android
+npx cap add ios
+
+# 4. Open native IDEs
+npx cap open android   # Launches Android Studio to build APK / AAB
+npx cap open ios       # Launches Xcode on macOS to build IPA / TestFlight
+```
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+ installed
-- Supabase account with project created
+- Node.js 20+
+- Supabase project or local Supabase instance
 - Git
 
-### Installation
+### Installation & Local Development
 
 ```bash
-# Clone the repository
-cd /root/AmpedFieldOps-v2
+# 1. Clone the repository
+git clone https://github.com/tripplej33/AmpedFieldOps-v2.git
+cd AmpedFieldOps-v2
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Configure environment variables
+# 3. Configure environment variables
 cp .env.example .env
-# Edit .env with your Supabase credentials
+# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 
-# Start development server
+# 4. Run database migrations (if using local Supabase CLI)
+node run-migrations.js
+
+# 5. Start development server
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
-
-### Build for Production
-
-```bash
-npm run build
-npm run preview
-```
+The web app will run locally at `http://localhost:5173`.
 
 ---
 
@@ -72,348 +121,57 @@ npm run preview
 AmpedFieldOps-v2/
 ├── src/
 │   ├── components/
-│   │   ├── layout/          # Layout components (Sidebar, Header, Layout)
-│   │   ├── ui/              # Reusable UI components (Button, Input, Card, etc.)
-│   │   ├── ProtectedRoute.tsx
-│   │   └── ErrorBoundary.tsx
-│   │
+│   │   ├── files/           # FileUploader, FileList, ProjectFilesView, TimesheetFileUploader
+│   │   ├── timesheets/      # DayTimesheetTimeline, WeeklyTimesheetGrid, TimesheetModal
+│   │   ├── snags/           # ProjectSnagsList
+│   │   ├── fleet/           # VehicleCheckSheets, FleetManagement
+│   │   ├── safety/          # SiteAttendanceKiosk, EvacuationModal
+│   │   ├── procurement/     # PurchaseOrderModal, GoodsReceipt
+│   │   ├── settings/        # RoleModal, UserInviteModal, ProfileSettings
+│   │   ├── search/          # GlobalSearchModal
+│   │   ├── layout/          # Sidebar, Header, NotificationDropdown, Layout
+│   │   └── ui/              # Button, Input, Modal, ConfirmDialog, Toast, Spinner, Badge
 │   ├── contexts/
-│   │   └── AuthContext.tsx  # Authentication state management
-│   │
-│   ├── pages/
-│   │   ├── Login.tsx        # Authentication page
-│   │   └── Dashboard.tsx    # Main dashboard
-│   │
-│   ├── lib/
-│   │   └── supabase.ts      # Supabase client configuration
-│   │
-│   ├── types/
-│   │   └── index.ts         # TypeScript type definitions
-│   │
-│   ├── App.tsx              # Main app with routing
-│   ├── main.tsx             # Entry point
-│   └── index.css            # Global styles + Tailwind
-│
-├── .project/                # Project documentation
-│   ├── manifest.json        # Feature specifications
-│   └── memory/              # Phase briefs and progress tracking
-│
-├── tailwind.config.js       # Tailwind configuration with custom theme
-├── vite.config.ts           # Vite configuration
-├── tsconfig.json            # TypeScript configuration
-└── package.json             # Dependencies and scripts
+│   │   └── AuthContext.tsx  # Authentication & cached profile hydration
+│   ├── hooks/               # Domain hooks (useFiles, useGeolocation, usePermissions, etc.)
+│   ├── lib/                 # Supabase client, OCR service, crypto, validators
+│   ├── pages/               # Main application pages
+│   └── types/               # TypeScript interfaces & permission definitions
+├── backend/                 # Node/Express API & Xero sync workers
+├── supabase/
+│   └── migrations/          # Version-controlled PostgreSQL migrations & RLS policies
+├── Dockerfile.frontend      # Multi-stage production Nginx container
+├── docker-compose.yml       # Production stack orchestration
+├── nginx.conf               # Nginx reverse proxy configuration
+└── package.json
 ```
 
 ---
 
-## 🎨 Design System
+## 🔐 Roles & Permission Matrix
 
-### Color Palette
-```
-Primary:        #127da1 (Teal)
-Background:     #121417 (Dark Gray)
-Card:           #1c2426 (Card Dark)
-Accent:         #f59e0b (Amber)
-Border:         #3c4d53 (Border Dark)
-Text Muted:     #9db2b8 (Gray Blue)
-```
-
-### Typography
-- **Font Family:** Space Grotesk (300, 400, 500, 600, 700)
-- **Display:** Text gradient effect available via `.text-gradient`
-
-### Components Library
-
-#### UI Components (8 core)
-1. **Button** - 4 variants (primary, secondary, ghost, danger) + loading state
-2. **Input** - Form input with label, error, and validation styles
-3. **Card** - Content wrapper with header/content/footer sections
-4. **Modal** - Dialog with backdrop blur and ESC key handler
-5. **Badge** - Status indicators (5 color variants)
-6. **Select** - Dropdown compatible with react-hook-form
-7. **Spinner** - Loading indicator (3 sizes: sm, md, lg)
-8. **StatCard** - Metric card with icon, value, and trend badge
-
-#### Layout Components
-- **Layout** - Main wrapper with responsive sidebar
-- **Sidebar** - Collapsible navigation with role-based filtering
-- **Header** - Fixed glass-morphism header with search
+| Role | Timesheets | Projects & Cost Centers | Purchase Orders & Materials | Snags & Safety | File Explorer |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Administrator** | Full / Delete | Full / Assign | Full / Approve | Full | View, Upload, Rename, Delete |
+| **Project Manager** | View All / Approve | Create & Edit | Create & Approve | Full | View, Upload, Rename |
+| **Field Technician**| Log & Submit Own | View Assigned | Log Van Materials | Manage Snags & Sign-in | View & Upload Photos |
+| **Apprentice** | Log & Submit Own | View Assigned | View Materials | Site Sign-in | View |
+| **Office Admin** | View All / Payroll | View All | POs & Financials | View Reports | View & Upload |
+| **Subcontractor** | - | Assigned Snags | - | Site Sign-in | View Documents |
 
 ---
 
-## 🔐 Authentication
-
-### Features
-- Email/password authentication via Supabase
-- Session persistence (auto-refresh)
-- Protected routes with role-based access control
-- User profile loading from database
-
-### User Roles
-- **admin** - Full access to all modules
-- **manager** - Client/project management + timesheet approval
-- **technician** - Timesheet submission + view own projects
-- **viewer** - Read-only dashboard access
-
-### Usage
-
-```tsx
-import { useAuth } from '@/contexts/AuthContext'
-
-function MyComponent() {
-  const { user, loading, login, logout } = useAuth()
-  
-  // Access current user
-  console.log(user?.role) // 'admin' | 'manager' | 'technician' | 'viewer'
-  
-  // Login
-  await login({ email, password })
-  
-  // Logout
-  await logout()
-}
-```
-
----
-
-## 🛣️ Routing
-
-### Public Routes
-- `/login` - Authentication page
-
-### Protected Routes (require authentication)
-- `/dashboard` - Operations dashboard (all roles)
-- `/clients` - Client management (admin, manager only)
-- `/projects` - Project management (all roles)
-- `/timesheets` - Timesheet tracking (all roles)
-- `/financials` - Financial overview (admin, manager only)
-- `/files` - File management (all roles)
-- `/settings` - System settings (admin only)
-
----
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-- [ ] Login with valid Supabase credentials
-- [ ] Session persistence after page refresh
-- [ ] Protected route redirects for unauthenticated users
-- [ ] Role-based navigation filtering
-- [ ] Sidebar collapse/expand (desktop)
-- [ ] Mobile drawer open/close
-- [ ] Responsive layout (mobile/tablet/desktop)
-- [ ] All UI components render correctly
-
-### Before Testing
-**IMPORTANT:** Set up Supabase database first:
-
-```sql
--- Create users table
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'manager', 'technician', 'viewer')),
-  full_name TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can read their own profile
-CREATE POLICY "Users can read own profile"
-  ON users FOR SELECT
-  USING (auth.uid() = id);
-```
-
----
-
-## 📝 Environment Variables
-
-```env
-# Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-
-# Optional: Backend API (Phase 7+)
-# VITE_API_URL=http://localhost:3001
-
-# Environment
-VITE_ENV=development
-```
-
----
-
-## 🚦 Phase Roadmap
-
-### ✅ Phase 1: Foundation (2 days) - COMPLETE
-- React 18 + TypeScript + Vite setup
-- Tailwind CSS with custom design tokens
-- Supabase client configuration
-- Authentication context & login flow
-- Layout components (Sidebar, Header)
-- 8 core UI components
-- Protected route guards
-- Error boundary
-
-### 🔜 Phase 2: Clients Module (2 days)
-- Full CRUD for clients
-- Table with filters and search
-- Form modal with validation
-- Two-way sync with Xero Contacts
-
-### 📅 Phase 3: Projects Module (2 days)
-- Projects with Kanban + table views
-- Multi-step wizard for project creation
-- Status management (Pending, Active, On Hold, Completed, Invoiced, Archived)
-- Cost Centers per project
-
-### 📅 Phase 4: Timesheets Module (1 day)
-- Timesheet tracking with states: Draft → Submitted → Approved → Invoiced
-- Service type selector
-- Submit/approve workflow
-
-### 📅 Phase 5: Dashboard & Activity Types (1 day)
-- Real-time metrics and stat cards
-- Activity feed
-- Activity Types management (CRUD)
-- Map to Xero Products/Services
-
-### 📅 Phase 6: Polish & Files (1 day)
-- File management (Supabase Storage)
-- Project-scoped file browser
-- UX hardening
-
-### ✅ Phase 7: Backend & Xero (Days 9-10) - COMPLETE
-- Express endpoints for Xero sync
-- Admin operations
-- Invoice retrieval and status mapping
-- Master "Sync Everything" sequential job
-- Categorized Financials UI with tabbed filtering
-
-### 🔜 Phase 8: Polish & Hardening (Current)
-- Performance optimization
-- UX refinements
-- Automated testing suite
-- Deployment automation
-
----
-
-## 🛠️ Development Commands
+## 🛠️ Build & Verification
 
 ```bash
-# Development
-npm run dev         # Start dev server (hot reload)
+# Type check and build bundle
+npm run build
 
-# Build
-npm run build       # TypeScript compile + Vite build
-npm run preview     # Preview production build
-
-# Linting
-npm run lint        # Run ESLint
+# Preview build locally
+npm run preview
 ```
-
----
-
-## 📚 Code Examples
-
-### Creating a Form with Validation
-
-```tsx
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import Input from '@/components/ui/Input'
-import Button from '@/components/ui/Button'
-
-const schema = z.object({
-  email: z.string().email('Invalid email'),
-  name: z.string().min(2, 'Name too short'),
-})
-
-type FormData = z.infer<typeof schema>
-
-function MyForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  })
-
-  const onSubmit = (data: FormData) => {
-    console.log(data)
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Input label="Email" error={errors.email?.message} {...register('email')} />
-      <Input label="Name" error={errors.name?.message} {...register('name')} />
-      <Button type="submit">Submit</Button>
-    </form>
-  )
-}
-```
-
-### Using Supabase Client
-
-```tsx
-import { supabase } from '@/lib/supabase'
-
-// Fetch data
-const { data, error } = await supabase
-  .from('clients')
-  .select('*')
-  .eq('is_active', true)
-
-// Insert data
-const { data, error } = await supabase
-  .from('clients')
-  .insert({ name: 'Acme Corp', email: 'contact@acme.com' })
-
-// Real-time subscription
-const subscription = supabase
-  .channel('clients-changes')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, (payload) => {
-    console.log('Change received!', payload)
-  })
-  .subscribe()
-```
-
----
-
-## 🐛 Known Issues
-
-- **IDE Path Alias Warnings:** VSCode may show errors for `@/` imports until TypeScript server reloads. These are false positives - build succeeds.
-- **Material Symbols:** Icons require internet connection (loaded from CDN). For offline, download font files.
-
----
-
-## 📖 Documentation
-
-- [Phase 1 Mission Brief](.project/memory/phase1_mission_brief.md)
-- [Phase 1 Complete Report](.project/memory/phase1_complete.md)
-- [Project Manifest](.project/manifest.json)
-- [Implementation Plan](V2_Implementation_Plan.md)
-
----
-
-## 🤝 Contributing
-
-This is a managed project with phased implementation. Contact the PM agent before making changes.
 
 ---
 
 ## 📄 License
-
-ISC
-
----
-
-## 🙏 Acknowledgments
-
-- **Design System:** Custom dark theme with teal accents
-- **Icons:** Material Symbols by Google
-- **Fonts:** Space Grotesk by Florian Karsten
-
----
-
-**Built with ❤️ by the AmpedFieldOps Team**
+Private repository. All rights reserved by Amped Field Operations.

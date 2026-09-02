@@ -19,7 +19,7 @@ export default function Button({
   const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
   
   const variants = {
-    primary: 'bg-primary hover:bg-[#0f6a8a] text-white shadow-sm hover:shadow-md',
+    primary: 'bg-primary hover:opacity-90 text-white shadow-sm hover:shadow-md',
     secondary: 'bg-card-dark hover:bg-nav-hover text-white border border-border-dark',
     ghost: 'bg-transparent hover:bg-nav-hover text-text-muted hover:text-white',
     danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow-md',
@@ -34,9 +34,7 @@ export default function Button({
       {...props}
     >
       {loading && (
-        <span className="material-symbols-outlined animate-spin text-lg">
-          progress_activity
-        </span>
+        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />
       )}
       {children}
     </button>

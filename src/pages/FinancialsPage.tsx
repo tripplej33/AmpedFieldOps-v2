@@ -139,7 +139,12 @@ export default function FinancialsPage() {
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">Financials</h1>
         <p className="text-text-muted">Unified revenue tracking across all Xero invoices</p>
-        {error && <p className="text-red-400 text-sm mt-2">⚠️ {error}</p>}
+        {error && (
+          <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">warning</span>
+            {error}
+          </p>
+        )}
       </div>
 
       {/* Stats Grid */}

@@ -11,17 +11,8 @@ export interface DashboardStats {
   revenueTodayTrend: number
 }
 
-export interface ActivityFeedItem {
-  id: string
-  userId: string
-  userName: string
-  action: 'timesheet_submitted' | 'timesheet_approved' | 'job_created' | 'job_updated' | 'project_updated'
-  resourceType: 'timesheet' | 'job' | 'project'
-  resourceId: string
-  resourceName: string
-  details: Record<string, unknown>
-  createdAt: string
-}
+import type { ActivityFeedItem } from '@/types'
+export type { ActivityFeedItem }
 
 export interface InvoicePipelineItem {
   status: 'draft' | 'sent' | 'paid' | 'overdue'
