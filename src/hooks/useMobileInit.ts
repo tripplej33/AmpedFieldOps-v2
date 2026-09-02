@@ -6,7 +6,7 @@ import { App as CapApp } from '@capacitor/app'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 /**
- * Initializes native mobile capabilities (Dark Status Bar, Splash Screen, Android Hardware Back Button).
+ * Initializes native mobile capabilities (Dark Status Bar, Splash Screen, Android Hardware Back Button, and Org URL redirection).
  */
 export function useMobileInit() {
   const navigate = useNavigate()
@@ -22,7 +22,16 @@ export function useMobileInit() {
     // 2. Hide splash screen gracefully once React has mounted
     SplashScreen.hide().catch(() => {})
 
-    // 3. Handle Android hardware back button
+    // 3. If running inside local app container and user has a configured Organization URL, connect directly
+    if (window.location.hostname === 'localhost') {
+      const savedOrgUrl = localStorage.getItem('amped_org_url')
+      if (savedOrgUrl && (savedOrgUrl.startsWith('https://') || savedOrgUrl.startsWith('http://'))) {
+        window.location.href = savedOrgUrl
+        return
+      }
+    }
+
+    // 4. Handle Android hardware back button
     const backListener = CapApp.addListener('backButton', ({ canGoBack }) => {
       if (
         location.pathname === '/dashboard' ||

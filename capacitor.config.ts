@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.amped.fieldops',
   appName: 'AmpedFieldOps',
   webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+    allowNavigation: ['*'],
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 1500,
