@@ -61,8 +61,8 @@ export default function SafetyDocumentModal({
   const [currentDoc, setCurrentDoc] = useState<SafetyDocument | null>(document || null)
 
   // Project & Cost Center selection state
-  const [availableProjects, setAvailableProjects] = useState<{ id: string; name: string; project_number?: string }[]>([])
-  const [availableCostCenters, setAvailableCostCenters] = useState<{ id: string; name: string; code?: string; project_id?: string }[]>([])
+  const [availableProjects, setAvailableProjects] = useState<{ id: string; name: string; address?: string | null; city?: string | null }[]>([])
+  const [availableCostCenters, setAvailableCostCenters] = useState<{ id: string; name: string; customer_po_number?: string | null; project_id?: string }[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string>(propProjectId || document?.project_id || '')
   const [selectedCostCenterId, setSelectedCostCenterId] = useState<string>(propCostCenterId || document?.cost_center_id || '')
 
@@ -95,7 +95,7 @@ export default function SafetyDocumentModal({
     if (isOpen) {
       supabase
         .from('projects')
-        .select('id, name, project_number')
+        .select('id, name, address, city')
         .order('name', { ascending: true })
         .then(({ data }) => setAvailableProjects(data || []))
 
@@ -112,14 +112,14 @@ export default function SafetyDocumentModal({
     if (selectedProjectId) {
       supabase
         .from('cost_centers')
-        .select('id, name, code, project_id')
+        .select('id, name, customer_po_number, project_id')
         .eq('project_id', selectedProjectId)
         .order('name', { ascending: true })
         .then(({ data }) => setAvailableCostCenters(data || []))
     } else {
       supabase
         .from('cost_centers')
-        .select('id, name, code, project_id')
+        .select('id, name, customer_po_number, project_id')
         .order('name', { ascending: true })
         .then(({ data }) => setAvailableCostCenters(data || []))
     }
@@ -487,7 +487,7 @@ export default function SafetyDocumentModal({
                 <option value="">Company-Wide / General Operations (No Project)</option>
                 {availableProjects.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} {p.project_number ? `(#${p.project_number})` : ''}
+                    {p.name} {p.city ? `(${p.city})` : ''}
                   </option>
                 ))}
               </select>
@@ -507,7 +507,7 @@ export default function SafetyDocumentModal({
                 <option value="">General Project Cost Center</option>
                 {availableCostCenters.map((cc) => (
                   <option key={cc.id} value={cc.id}>
-                    {cc.name} {cc.code ? `(${cc.code})` : ''}
+                    {cc.name} {cc.customer_po_number ? `(PO: ${cc.customer_po_number})` : ''}
                   </option>
                 ))}
               </select>

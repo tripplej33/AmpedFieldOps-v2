@@ -35,7 +35,7 @@ export default function PublicCrewSignPage() {
         .select(`
           *,
           template:safety_templates(*),
-          project:projects(id, name, project_number, client_name, site_address_street, site_address_city),
+          project:projects(id, name, address, suburb, city),
           signatures:safety_signatures(*)
         `)
         .eq('id', documentId)

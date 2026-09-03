@@ -46,11 +46,11 @@ export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blo
       { content: 'Project:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       document.project?.name || 'General Operations',
       { content: 'Client:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
-      document.project?.client_name || 'N/A',
+      document.project?.client?.name || 'N/A',
     ],
     [
       { content: 'Site Address:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
-      [document.project?.site_address_street, document.project?.site_address_city].filter(Boolean).join(', ') || 'N/A',
+      [document.project?.address, document.project?.suburb, document.project?.city].filter(Boolean).join(', ') || 'N/A',
       { content: 'Date & Time:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       new Date(document.created_at).toLocaleString(),
     ],

@@ -112,15 +112,15 @@ export interface SafetyDocument {
   project?: {
     id: string
     name: string
-    project_number?: string
-    client_name?: string
-    site_address_street?: string
-    site_address_city?: string
+    address?: string | null
+    suburb?: string | null
+    city?: string | null
+    client?: { name: string } | null
   }
   cost_center?: {
     id: string
     name: string
-    code?: string
+    customer_po_number?: string | null
   }
   signatures?: SafetySignature[]
 }

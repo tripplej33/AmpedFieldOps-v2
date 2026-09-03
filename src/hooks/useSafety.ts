@@ -99,8 +99,8 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
         .select(`
           *,
           template:safety_templates(*),
-          project:projects(id, name, project_number, client_name, site_address_street, site_address_city),
-          cost_center:cost_centers(id, name, code),
+          project:projects(id, name, address, suburb, city, client:clients(name)),
+          cost_center:cost_centers(id, name, customer_po_number),
           signatures:safety_signatures(*)
         `)
         .order('created_at', { ascending: false })
@@ -154,8 +154,8 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
       .select(`
         *,
         template:safety_templates(*),
-        project:projects(id, name, project_number, client_name, site_address_street, site_address_city),
-        cost_center:cost_centers(id, name, code),
+        project:projects(id, name, address, suburb, city, client:clients(name)),
+        cost_center:cost_centers(id, name, customer_po_number),
         signatures:safety_signatures(*)
       `)
       .single()
@@ -186,8 +186,8 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
       .select(`
         *,
         template:safety_templates(*),
-        project:projects(id, name, project_number, client_name, site_address_street, site_address_city),
-        cost_center:cost_centers(id, name, code),
+        project:projects(id, name, address, suburb, city, client:clients(name)),
+        cost_center:cost_centers(id, name, customer_po_number),
         signatures:safety_signatures(*)
       `)
       .single()

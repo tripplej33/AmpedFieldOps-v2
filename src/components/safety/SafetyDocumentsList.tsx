@@ -38,7 +38,7 @@ export default function SafetyDocumentsList({
       const q = searchQuery.toLowerCase()
       const titleMatch = doc.title.toLowerCase().includes(q)
       const projMatch = doc.project?.name?.toLowerCase().includes(q)
-      const clientMatch = doc.project?.client_name?.toLowerCase().includes(q)
+      const clientMatch = doc.project?.client?.name?.toLowerCase().includes(q)
       if (!titleMatch && !projMatch && !clientMatch) return false
     }
     return true
