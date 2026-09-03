@@ -16,9 +16,20 @@ export default function CrewQRSignModal({ isOpen, onClose, document }: CrewQRSig
   const [qrUrl, setQrUrl] = useState('')
 
   useEffect(() => {
-    if (isOpen && document) {
+    if (isOpen && document?.id) {
       // Build public crew sign-on URL
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://admin.ampedlogix.com'
+      const savedOrg = typeof window !== 'undefined' ? localStorage.getItem('amped_org_url') : null
+      let origin = 'https://admin.ampedlogix.com'
+      if (savedOrg && savedOrg.startsWith('http')) {
+        origin = savedOrg.replace(/\/+$/, '')
+      } else if (
+        typeof window !== 'undefined' &&
+        window.location.origin &&
+        !window.location.origin.includes('localhost') &&
+        !window.location.origin.includes('capacitor')
+      ) {
+        origin = window.location.origin
+      }
       const signUrl = `${origin}/safety-sign/${document.id}`
       setQrUrl(signUrl)
 

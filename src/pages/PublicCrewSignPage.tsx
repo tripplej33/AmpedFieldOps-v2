@@ -162,25 +162,52 @@ export default function PublicCrewSignPage() {
       setError(null)
 
       const signatureData = canvasRef.current.toDataURL('image/png')
+      const locationPayload = capturedGeo || (coordinates ? {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        accuracy: coordinates.accuracy,
+      } : null)
 
-      const { error: insertErr } = await supabase.from('safety_signatures').insert([
-        {
-          document_id: documentId,
-          signer_name: signerName.trim(),
-          signer_role: signerRole.trim(),
-          signature_data: signatureData,
-          sign_type: 'qr_code',
-          status: 'signed',
-          signed_at: new Date().toISOString(),
-          geo_location: capturedGeo || (coordinates ? {
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-            accuracy: coordinates.accuracy,
-          } : null),
-        },
-      ])
+      // Check if there is an existing pending signature for this signer's name
+      const existingPending = (document?.signatures || []).find(
+        (s) => s.status === 'pending' && s.signer_name.trim().toLowerCase() === signerName.trim().toLowerCase()
+      )
 
-      if (insertErr) throw insertErr
+      if (existingPending) {
+        const { error: updErr } = await supabase
+          .from('safety_signatures')
+          .update({
+            signature_data: signatureData,
+            status: 'signed',
+            signed_at: new Date().toISOString(),
+            geo_location: locationPayload,
+          })
+          .eq('id', existingPending.id)
+
+        if (updErr) throw updErr
+      } else {
+        const { error: insertErr } = await supabase.from('safety_signatures').insert([
+          {
+            document_id: documentId,
+            signer_name: signerName.trim(),
+            signer_role: signerRole.trim(),
+            signature_data: signatureData,
+            sign_type: 'qr_code',
+            status: 'signed',
+            signed_at: new Date().toISOString(),
+            geo_location: locationPayload,
+          },
+        ])
+
+        if (insertErr) throw insertErr
+      }
+
+      // Update doc status to pending_signatures if it was draft
+      await supabase
+        .from('safety_documents')
+        .update({ status: 'pending_signatures', updated_at: new Date().toISOString() })
+        .eq('id', documentId)
+        .eq('status', 'draft')
 
       setSubmitted(true)
     } catch (err) {

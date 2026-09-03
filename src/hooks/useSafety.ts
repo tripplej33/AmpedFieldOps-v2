@@ -293,7 +293,7 @@ export function useSafetySignatures(documentId?: string) {
         .from('safety_signatures')
         .select('*')
         .eq('document_id', documentId)
-        .order('signed_at', { ascending: true })
+        .order('created_at', { ascending: true })
 
       if (err) throw err
       setSignatures(data || [])
@@ -311,6 +311,98 @@ export function useSafetySignatures(documentId?: string) {
     }
   }, [documentId, fetchSignatures])
 
+  const assignUserToSign = async (user: {
+    id: string
+    full_name: string
+    role?: string
+  }) => {
+    if (!documentId) throw new Error('Document ID is required to assign user')
+
+    const { data, error: err } = await supabase
+      .from('safety_signatures')
+      .insert([
+        {
+          document_id: documentId,
+          user_id: user.id,
+          signer_name: user.full_name,
+          signer_role: user.role || 'Technician',
+          signature_data: '',
+          sign_type: 'remote',
+          status: 'pending',
+        },
+      ])
+      .select()
+      .single()
+
+    if (err) throw err
+    setSignatures((prev) => [...prev, data])
+
+    await supabase
+      .from('safety_documents')
+      .update({ status: 'pending_signatures', updated_at: new Date().toISOString() })
+      .eq('id', documentId)
+      .eq('status', 'draft')
+
+    return data
+  }
+
+  const addPendingCrewMember = async (crew: {
+    signer_name: string
+    signer_role: string
+  }) => {
+    if (!documentId) throw new Error('Document ID is required to add crew member')
+
+    const { data, error: err } = await supabase
+      .from('safety_signatures')
+      .insert([
+        {
+          document_id: documentId,
+          signer_name: crew.signer_name,
+          signer_role: crew.signer_role || 'Technician',
+          signature_data: '',
+          sign_type: 'on_the_spot',
+          status: 'pending',
+        },
+      ])
+      .select()
+      .single()
+
+    if (err) throw err
+    setSignatures((prev) => [...prev, data])
+
+    await supabase
+      .from('safety_documents')
+      .update({ status: 'pending_signatures', updated_at: new Date().toISOString() })
+      .eq('id', documentId)
+      .eq('status', 'draft')
+
+    return data
+  }
+
+  const signPendingSignature = async (
+    signatureId: string,
+    payload: {
+      signature_data: string
+      geo_location?: { latitude: number; longitude: number; accuracy?: number } | null
+    }
+  ) => {
+    const { data, error: err } = await supabase
+      .from('safety_signatures')
+      .update({
+        signature_data: payload.signature_data,
+        geo_location: payload.geo_location,
+        status: 'signed',
+        signed_at: new Date().toISOString(),
+      })
+      .eq('id', signatureId)
+      .select()
+      .single()
+
+    if (err) throw err
+    setSignatures((prev) => prev.map((s) => (s.id === signatureId ? data : s)))
+    return data
+  }
+
   const addSignature = async (payload: {
     signer_name: string
     signer_role: string
@@ -320,6 +412,21 @@ export function useSafetySignatures(documentId?: string) {
     geo_location?: { latitude: number; longitude: number; accuracy?: number } | null
   }) => {
     if (!documentId) throw new Error('Document ID is required to add signature')
+
+    // Check if there is an existing pending signature for this signer/user
+    const existingPending = signatures.find(
+      (s) =>
+        s.status === 'pending' &&
+        ((payload.user_id && s.user_id === payload.user_id) ||
+          s.signer_name.toLowerCase() === payload.signer_name.toLowerCase())
+    )
+
+    if (existingPending) {
+      return await signPendingSignature(existingPending.id, {
+        signature_data: payload.signature_data,
+        geo_location: payload.geo_location,
+      })
+    }
 
     const { data, error: err } = await supabase
       .from('safety_signatures')
@@ -363,6 +470,9 @@ export function useSafetySignatures(documentId?: string) {
     error,
     refresh: fetchSignatures,
     addSignature,
+    assignUserToSign,
+    addPendingCrewMember,
+    signPendingSignature,
     deleteSignature,
   }
 }

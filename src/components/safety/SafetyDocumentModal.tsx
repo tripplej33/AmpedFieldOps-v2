@@ -7,6 +7,7 @@ import CrewQRSignModal from './CrewQRSignModal'
 import EmailSafetyDocModal from './EmailSafetyDocModal'
 import { generateSafetyPdf } from '@/lib/pdf/safetyPdfGenerator'
 import { useSafetySignatures } from '@/hooks/useSafety'
+import { supabase } from '@/lib/supabase'
 import type { SafetyDocument, SafetyTemplate, SafetyCategory } from '@/types/safety'
 
 interface SafetyDocumentModalProps {
@@ -40,9 +41,9 @@ export default function SafetyDocumentModal({
   onClose,
   document,
   templates,
-  projectId,
-  costCenterId,
-  projectName = 'Project Site',
+  projectId: propProjectId,
+  costCenterId: propCostCenterId,
+  projectName: propProjectName,
   onSaveDocument,
   onArchivePdf,
 }: SafetyDocumentModalProps) {
@@ -52,11 +53,26 @@ export default function SafetyDocumentModal({
   const [saving, setSaving] = useState(false)
   const [compilingPdf, setCompilingPdf] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [savedDocId, setSavedDocId] = useState<string | null>(null)
   const [currentDoc, setCurrentDoc] = useState<SafetyDocument | null>(null)
 
+  // Project & Cost Center selection state
+  const [availableProjects, setAvailableProjects] = useState<{ id: string; name: string; project_number?: string }[]>([])
+  const [availableCostCenters, setAvailableCostCenters] = useState<{ id: string; name: string; code?: string; project_id?: string }[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(propProjectId || '')
+  const [selectedCostCenterId, setSelectedCostCenterId] = useState<string>(propCostCenterId || '')
+
+  // Available Users to assign
+  const [availableUsers, setAvailableUsers] = useState<{ id: string; full_name: string; email: string; role?: string }[]>([])
+  const [selectedUserToAssign, setSelectedUserToAssign] = useState<string>('')
+  const [guestName, setGuestName] = useState('')
+  const [guestRole, setGuestRole] = useState('Subcontractor')
+  const [isAddingGuest, setIsAddingGuest] = useState(false)
+
   // Sub-modal states
   const [isSignCanvasOpen, setIsSignCanvasOpen] = useState(false)
+  const [activeSignerForCanvas, setActiveSignerForCanvas] = useState<{ name: string; role: string; signatureId?: string } | null>(null)
   const [isQROpen, setIsQROpen] = useState(false)
   const [isEmailOpen, setIsEmailOpen] = useState(false)
 
@@ -64,9 +80,49 @@ export default function SafetyDocumentModal({
   const {
     signatures,
     addSignature,
+    assignUserToSign,
+    addPendingCrewMember,
+    signPendingSignature,
     deleteSignature,
     refresh: refreshSignatures,
   } = useSafetySignatures(savedDocId || document?.id)
+
+  // Load Projects, Cost Centers, and Team Users
+  useEffect(() => {
+    if (isOpen) {
+      // 1. Fetch Projects
+      supabase
+        .from('projects')
+        .select('id, name, project_number')
+        .order('name', { ascending: true })
+        .then(({ data }) => setAvailableProjects(data || []))
+
+      // 2. Fetch Users
+      supabase
+        .from('users')
+        .select('id, full_name, email, role')
+        .order('full_name', { ascending: true })
+        .then(({ data }) => setAvailableUsers(data || []))
+    }
+  }, [isOpen])
+
+  // Load Cost Centers when Project changes
+  useEffect(() => {
+    if (selectedProjectId) {
+      supabase
+        .from('cost_centers')
+        .select('id, name, code, project_id')
+        .eq('project_id', selectedProjectId)
+        .order('name', { ascending: true })
+        .then(({ data }) => setAvailableCostCenters(data || []))
+    } else {
+      supabase
+        .from('cost_centers')
+        .select('id, name, code, project_id')
+        .order('name', { ascending: true })
+        .then(({ data }) => setAvailableCostCenters(data || []))
+    }
+  }, [selectedProjectId])
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +131,8 @@ export default function SafetyDocumentModal({
         setSavedDocId(document.id)
         setTitle(document.title)
         setFormData(document.form_data || {})
+        setSelectedProjectId(document.project_id || '')
+        setSelectedCostCenterId(document.cost_center_id || '')
         const tpl = templates.find((t) => t.id === document.template_id) || document.template || null
         setSelectedTemplate(tpl)
       } else {
@@ -83,17 +141,23 @@ export default function SafetyDocumentModal({
         setSavedDocId(null)
         const defaultTpl = templates[0] || null
         setSelectedTemplate(defaultTpl)
-        setTitle(defaultTpl ? `${defaultTpl.title} - ${projectName}` : '')
+        const initialProj = propProjectId || ''
+        setSelectedProjectId(initialProj)
+        setSelectedCostCenterId(propCostCenterId || '')
+        const pName = propProjectName || (initialProj ? availableProjects.find(p => p.id === initialProj)?.name : '') || 'Site Ops'
+        setTitle(defaultTpl ? `${defaultTpl.title} - ${pName}` : '')
         setFormData({})
       }
       setError(null)
+      setToastMessage(null)
     }
-  }, [isOpen, document, templates, projectName])
+  }, [isOpen, document, templates, propProjectId, propCostCenterId, propProjectName, availableProjects])
 
   // Select Template Handler
   const handleSelectTemplate = (tpl: SafetyTemplate) => {
     setSelectedTemplate(tpl)
-    setTitle(`${tpl.title} - ${projectName}`)
+    const pName = availableProjects.find(p => p.id === selectedProjectId)?.name || propProjectName || 'Site Ops'
+    setTitle(`${tpl.title} - ${pName}`)
     setFormData({})
   }
 
@@ -101,7 +165,6 @@ export default function SafetyDocumentModal({
   const handleSectionChange = useCallback((sectionId: string, value: any) => {
     setFormData((prev) => {
       const updated = { ...prev, [sectionId]: value }
-      // Auto-save draft locally
       try {
         localStorage.setItem('amped_safety_draft', JSON.stringify(updated))
       } catch {}
@@ -109,11 +172,11 @@ export default function SafetyDocumentModal({
     })
   }, [])
 
-  // Save Draft
+  // Save Draft Helper
   const handleSaveDraft = async () => {
     if (!title.trim()) {
       setError('Document title is required')
-      return
+      return null
     }
 
     try {
@@ -122,21 +185,94 @@ export default function SafetyDocumentModal({
       const saved = await onSaveDocument({
         id: savedDocId || undefined,
         template_id: selectedTemplate?.id || null,
-        project_id: projectId || undefined,
-        cost_center_id: costCenterId || undefined,
+        project_id: selectedProjectId || null,
+        cost_center_id: selectedCostCenterId || null,
         title: title.trim(),
         category: selectedTemplate?.category || 'custom',
         form_data: formData,
       })
+
       setSavedDocId(saved.id)
       setCurrentDoc(saved)
+      setToastMessage('Draft saved successfully')
+      setTimeout(() => setToastMessage(null), 2500)
       return saved
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save document')
-      throw err
+      console.error('[SafetyDocumentModal] Error saving draft:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save document draft')
+      return null
     } finally {
       setSaving(false)
     }
+  }
+
+  // Ensure document is created/saved before opening sub-actions
+  const ensureDocSaved = async () => {
+    if (savedDocId && currentDoc) return currentDoc
+    return await handleSaveDraft()
+  }
+
+  // Assign Registered User to Roster
+  const handleAssignUser = async () => {
+    if (!selectedUserToAssign) return
+    const targetUser = availableUsers.find((u) => u.id === selectedUserToAssign)
+    if (!targetUser) return
+
+    const active = await ensureDocSaved()
+    if (!active) return
+
+    try {
+      await assignUserToSign({
+        id: targetUser.id,
+        full_name: targetUser.full_name,
+        role: targetUser.role,
+      })
+      setSelectedUserToAssign('')
+      setToastMessage(`Assigned ${targetUser.full_name} to sign-off roster`)
+      setTimeout(() => setToastMessage(null), 2500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to assign user')
+    }
+  }
+
+  // Add Guest / Subcontractor to Roster
+  const handleAddGuest = async () => {
+    if (!guestName.trim()) return
+    const active = await ensureDocSaved()
+    if (!active) return
+
+    try {
+      await addPendingCrewMember({
+        signer_name: guestName.trim(),
+        signer_role: guestRole.trim(),
+      })
+      setGuestName('')
+      setIsAddingGuest(false)
+      setToastMessage(`Added ${guestName} to sign-off roster`)
+      setTimeout(() => setToastMessage(null), 2500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add crew member')
+    }
+  }
+
+  // Open Canvas for specific roster member or general signature
+  const handleOpenSignCanvas = async (signer?: { name: string; role: string; signatureId?: string }) => {
+    const active = await ensureDocSaved()
+    if (!active) return
+
+    if (signer) {
+      setActiveSignerForCanvas(signer)
+    } else {
+      setActiveSignerForCanvas(null)
+    }
+    setIsSignCanvasOpen(true)
+  }
+
+  // Open Touchless QR Modal
+  const handleOpenQR = async () => {
+    const active = await ensureDocSaved()
+    if (!active) return
+    setIsQROpen(true)
   }
 
   // Handle On-The-Spot Canvas Signature Save
@@ -146,32 +282,28 @@ export default function SafetyDocumentModal({
     signature_data: string
     geo_location?: { latitude: number; longitude: number; accuracy?: number } | null
   }) => {
-    let docId = savedDocId
-    if (!docId) {
-      const saved = await handleSaveDraft()
-      if (!saved) return
-      docId = saved.id
+    if (activeSignerForCanvas?.signatureId) {
+      // Sign specific pending signature
+      await signPendingSignature(activeSignerForCanvas.signatureId, {
+        signature_data: sigData.signature_data,
+        geo_location: sigData.geo_location,
+      })
+    } else {
+      // Add or complete general signature
+      await addSignature({
+        ...sigData,
+        sign_type: 'on_the_spot',
+      })
     }
 
-    await addSignature({
-      ...sigData,
-      sign_type: 'on_the_spot',
-    })
-
     await refreshSignatures()
+    setToastMessage('Signature successfully recorded!')
+    setTimeout(() => setToastMessage(null), 2500)
   }
 
   // Compile Final Audit PDF & Archive to Storage
   const handleCompileAndComplete = async () => {
-    let activeDoc = currentDoc
-    if (!activeDoc || !savedDocId) {
-      const saved = await handleSaveDraft()
-      if (saved) activeDoc = saved
-    } else {
-      const saved = await handleSaveDraft()
-      if (saved) activeDoc = saved
-    }
-
+    const activeDoc = await ensureDocSaved()
     if (!activeDoc) return
 
     try {
@@ -193,8 +325,8 @@ export default function SafetyDocumentModal({
         activeDoc.id,
         blob,
         filename,
-        projectId,
-        costCenterId
+        selectedProjectId || undefined,
+        selectedCostCenterId || undefined
       )
 
       setCurrentDoc({ ...updatedDoc, signatures })
@@ -212,6 +344,8 @@ export default function SafetyDocumentModal({
   }
 
   const isCompleted = currentDoc?.status === 'completed'
+  const signedCount = signatures.filter((s) => s.status === 'signed').length
+  const pendingCount = signatures.filter((s) => s.status === 'pending').length
 
   return (
     <Modal
@@ -225,6 +359,13 @@ export default function SafetyDocumentModal({
           <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
             <span className="material-symbols-outlined text-base">error</span>
             <span>{error}</span>
+          </div>
+        )}
+
+        {toastMessage && (
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 flex items-center gap-2 animate-fadeIn">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            <span>{toastMessage}</span>
           </div>
         )}
 
@@ -268,7 +409,7 @@ export default function SafetyDocumentModal({
           </div>
         )}
 
-        {/* Document Title Header */}
+        {/* STEP 2: Document Context & Project / Cost Center Linkage */}
         <div className="p-4 rounded-2xl bg-card-dark border border-border-dark space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-2 space-y-1">
@@ -303,9 +444,62 @@ export default function SafetyDocumentModal({
               </div>
             </div>
           </div>
+
+          {/* Project and Cost Center Selectors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border-dark/60">
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-white/90 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-primary text-sm">work</span>
+                Assign to Project
+              </label>
+              <select
+                value={selectedProjectId}
+                disabled={isCompleted}
+                onChange={(e) => {
+                  const newProjId = e.target.value
+                  setSelectedProjectId(newProjId)
+                  setSelectedCostCenterId('')
+                  if (newProjId) {
+                    const p = availableProjects.find((p) => p.id === newProjId)
+                    if (p && (!title || title.includes(' - '))) {
+                      setTitle(`${selectedTemplate?.title || 'Safety Document'} - ${p.name}`)
+                    }
+                  }
+                }}
+                className="w-full px-3 py-2 bg-background-dark border border-border-dark focus:border-primary rounded-xl text-xs text-white focus:outline-none font-medium"
+              >
+                <option value="">Company-Wide / General Operations (No Project)</option>
+                {availableProjects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} {p.project_number ? `(#${p.project_number})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-white/90 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-text-muted text-sm">account_tree</span>
+                Cost Center / Task (Optional)
+              </label>
+              <select
+                value={selectedCostCenterId}
+                disabled={isCompleted}
+                onChange={(e) => setSelectedCostCenterId(e.target.value)}
+                className="w-full px-3 py-2 bg-background-dark border border-border-dark focus:border-primary rounded-xl text-xs text-white focus:outline-none"
+              >
+                <option value="">General Project Cost Center</option>
+                {availableCostCenters.map((cc) => (
+                  <option key={cc.id} value={cc.id}>
+                    {cc.name} {cc.code ? `(${cc.code})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* STEP 2: Schema-Driven Form Renderer */}
+        {/* STEP 3: Schema-Driven Form Renderer */}
         {selectedTemplate?.schema && (
           <SafetyFormRenderer
             schema={selectedTemplate.schema}
@@ -315,7 +509,7 @@ export default function SafetyDocumentModal({
           />
         )}
 
-        {/* STEP 3: Multi-Sign Crew Sign-Off Section */}
+        {/* STEP 4: Worker & Crew Sign-Off Register (Signers & Assignees) */}
         <div className="p-5 rounded-2xl bg-card-dark border border-border-dark space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
@@ -324,16 +518,16 @@ export default function SafetyDocumentModal({
                 Worker & Crew Sign-Off Register
               </h4>
               <p className="text-[11px] text-text-muted mt-0.5">
-                All technicians, apprentices, and subcontractors working on site must sign prior to work.
+                Assign crew members, dispatch remote sign-offs, or pass around device to sign on site.
               </p>
             </div>
 
             {!isCompleted && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => setIsQROpen(true)}
+                  onClick={handleOpenQR}
                   className="text-xs py-1.5 flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-sm text-cyan-400">qr_code_2</span>
@@ -343,7 +537,7 @@ export default function SafetyDocumentModal({
                 <Button
                   type="button"
                   variant="primary"
-                  onClick={() => setIsSignCanvasOpen(true)}
+                  onClick={() => handleOpenSignCanvas()}
                   className="text-xs py-1.5 flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-sm">gesture</span>
@@ -353,66 +547,192 @@ export default function SafetyDocumentModal({
             )}
           </div>
 
-          {/* Signatures Roster */}
+          {/* Assign Team Members & Guest Workers Toolbar */}
+          {!isCompleted && (
+            <div className="p-3.5 rounded-xl bg-background-dark/80 border border-border-dark/80 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-primary text-sm">person_add</span>
+                  Assign Required Signer / Team Member:
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddingGuest(!isAddingGuest)}
+                  className="text-[11px] text-primary hover:underline font-semibold flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-xs">
+                    {isAddingGuest ? 'close' : 'add'}
+                  </span>
+                  {isAddingGuest ? 'Cancel Guest Form' : '+ Add Subcontractor / Guest to Roster'}
+                </button>
+              </div>
+
+              {/* Assign Registered User Selection */}
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <select
+                  value={selectedUserToAssign}
+                  onChange={(e) => setSelectedUserToAssign(e.target.value)}
+                  className="flex-1 px-3 py-1.5 bg-card-dark border border-border-dark rounded-xl text-xs text-white focus:outline-none"
+                >
+                  <option value="">-- Select Registered Team Member to Assign --</option>
+                  {availableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name} ({u.role || 'Technician'}) - {u.email}
+                    </option>
+                  ))}
+                </select>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleAssignUser}
+                  disabled={!selectedUserToAssign}
+                  className="shrink-0 text-xs py-1.5"
+                >
+                  Assign to Document
+                </Button>
+              </div>
+
+              {/* Guest / Subcontractor Form */}
+              {isAddingGuest && (
+                <div className="pt-2 border-t border-border-dark/60 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Worker / Subcontractor Name"
+                    className="px-3 py-1.5 bg-card-dark border border-border-dark rounded-xl text-xs text-white placeholder-text-muted/50 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={guestRole}
+                    onChange={(e) => setGuestRole(e.target.value)}
+                    placeholder="Role (e.g. Apprentice, Subcontractor)"
+                    className="px-3 py-1.5 bg-card-dark border border-border-dark rounded-xl text-xs text-white placeholder-text-muted/50 focus:outline-none"
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleAddGuest}
+                    disabled={!guestName.trim()}
+                    className="text-xs py-1.5"
+                  >
+                    Add to Roster
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Signatures Roster List */}
           {signatures.length === 0 ? (
             <div className="p-6 text-center rounded-xl border border-dashed border-border-dark bg-background-dark/40 text-text-muted text-xs">
               <span className="material-symbols-outlined text-3xl block mb-1 text-text-muted/40">
                 how_to_reg
               </span>
-              No signatures recorded yet. Tap "Sign On The Spot" or "Touchless QR Sign" to add crew members.
+              No signers added yet. Assign team members above or tap "Sign On The Spot" / "Touchless QR Sign".
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {signatures.map((sig) => (
-                <div
-                  key={sig.id}
-                  className="p-3.5 rounded-xl bg-background-dark/90 border border-border-dark flex flex-col justify-between space-y-2 relative group"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-bold text-white leading-tight">{sig.signer_name}</p>
-                      <p className="text-[10px] text-primary font-semibold leading-tight mt-0.5">
-                        {sig.signer_role}
-                      </p>
-                    </div>
-                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-card-dark text-text-muted border border-border-dark">
-                      {sig.sign_type}
-                    </span>
-                  </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-text-muted px-1">
+                <span>Signatures: {signedCount} Completed, {pendingCount} Pending</span>
+              </div>
 
-                  {/* Rendered Signature Canvas Stroke */}
-                  {sig.signature_data && (
-                    <div className="bg-[#0e1114] rounded-lg p-1.5 border border-border-dark/60 flex items-center justify-center h-14">
-                      <img
-                        src={sig.signature_data}
-                        alt="Signature"
-                        className="max-h-full max-w-full object-contain filter invert"
-                      />
-                    </div>
-                  )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {signatures.map((sig) => {
+                  const isSigPending = sig.status === 'pending'
 
-                  <div className="flex items-center justify-between text-[10px] text-text-muted pt-1 border-t border-border-dark/60">
-                    <span>{new Date(sig.signed_at || sig.created_at).toLocaleDateString()}</span>
-                    {sig.geo_location && (
-                      <span className="text-emerald-400 flex items-center gap-0.5">
-                        <span className="material-symbols-outlined text-[10px]">place</span>
-                        GPS Stamped
-                      </span>
-                    )}
-                  </div>
-
-                  {!isCompleted && (
-                    <button
-                      type="button"
-                      onClick={() => deleteSignature(sig.id)}
-                      className="absolute top-2 right-2 text-text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                      title="Remove signature"
+                  return (
+                    <div
+                      key={sig.id}
+                      className={`p-3.5 rounded-xl border flex flex-col justify-between space-y-2 relative group transition-all ${
+                        isSigPending
+                          ? 'bg-amber-500/5 border-amber-500/30'
+                          : 'bg-background-dark/90 border-border-dark'
+                      }`}
                     >
-                      <span className="material-symbols-outlined text-sm">close</span>
-                    </button>
-                  )}
-                </div>
-              ))}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-bold text-white leading-tight">{sig.signer_name}</p>
+                          <p className="text-[10px] text-primary font-semibold leading-tight mt-0.5">
+                            {sig.signer_role}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold border ${
+                            isSigPending
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                              : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                          }`}
+                        >
+                          {isSigPending ? 'PENDING' : 'SIGNED'}
+                        </span>
+                      </div>
+
+                      {/* Signature Preview or Sign Now Button */}
+                      {isSigPending ? (
+                        <div className="p-3 rounded-lg bg-card-dark/80 border border-border-dark/60 text-center space-y-2">
+                          <p className="text-[11px] text-text-muted">Awaiting digital signature</p>
+                          {!isCompleted && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenSignCanvas({
+                                  name: sig.signer_name,
+                                  role: sig.signer_role,
+                                  signatureId: sig.id,
+                                })
+                              }
+                              className="w-full px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                            >
+                              <span className="material-symbols-outlined text-sm">draw</span>
+                              <span>Sign Now</span>
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        sig.signature_data && (
+                          <div className="bg-[#0e1114] rounded-lg p-1.5 border border-border-dark/60 flex items-center justify-center h-14">
+                            <img
+                              src={sig.signature_data}
+                              alt="Signature"
+                              className="max-h-full max-w-full object-contain filter invert"
+                            />
+                          </div>
+                        )
+                      )}
+
+                      <div className="flex items-center justify-between text-[10px] text-text-muted pt-1 border-t border-border-dark/60">
+                        <span>
+                          {sig.signed_at
+                            ? new Date(sig.signed_at).toLocaleDateString()
+                            : 'Not yet signed'}
+                        </span>
+                        {sig.geo_location ? (
+                          <span className="text-emerald-400 flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[10px]">place</span>
+                            GPS Stamped
+                          </span>
+                        ) : (
+                          <span className="text-text-muted/60">{sig.sign_type}</span>
+                        )}
+                      </div>
+
+                      {!isCompleted && (
+                        <button
+                          type="button"
+                          onClick={() => deleteSignature(sig.id)}
+                          className="absolute top-2 right-2 text-text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          title="Remove from roster"
+                        >
+                          <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -464,7 +784,7 @@ export default function SafetyDocumentModal({
               variant="primary"
               onClick={handleCompileAndComplete}
               loading={compilingPdf || saving}
-              disabled={signatures.length === 0}
+              disabled={signedCount === 0}
               className="flex items-center gap-1.5 shadow-lg shadow-primary/20"
             >
               <span className="material-symbols-outlined text-sm">verified</span>
@@ -477,9 +797,14 @@ export default function SafetyDocumentModal({
       {/* Sub-Modals */}
       <SignatureCanvasModal
         isOpen={isSignCanvasOpen}
-        onClose={() => setIsSignCanvasOpen(false)}
+        onClose={() => {
+          setIsSignCanvasOpen(false)
+          setActiveSignerForCanvas(null)
+        }}
+        defaultName={activeSignerForCanvas?.name}
+        defaultRole={activeSignerForCanvas?.role}
         onSaveSignature={handleSaveSignature}
-        title={`Sign ${title}`}
+        title={activeSignerForCanvas ? `Sign for ${activeSignerForCanvas.name}` : `Sign ${title}`}
       />
 
       {currentDoc && (
