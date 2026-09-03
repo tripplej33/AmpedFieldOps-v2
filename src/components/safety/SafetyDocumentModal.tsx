@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import SafetyFormRenderer from './SafetyFormRenderer'
@@ -47,6 +47,10 @@ export default function SafetyDocumentModal({
   onSaveDocument,
   onArchivePdf,
 }: SafetyDocumentModalProps) {
+  // Stable document UUID guaranteed from mount
+  const activeDocId = useMemo(() => document?.id || crypto.randomUUID(), [document?.id])
+  const [isPersistedInDb, setIsPersistedInDb] = useState<boolean>(Boolean(document?.id))
+
   const [selectedTemplate, setSelectedTemplate] = useState<SafetyTemplate | null>(null)
   const [title, setTitle] = useState('')
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -54,14 +58,13 @@ export default function SafetyDocumentModal({
   const [compilingPdf, setCompilingPdf] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [savedDocId, setSavedDocId] = useState<string | null>(null)
-  const [currentDoc, setCurrentDoc] = useState<SafetyDocument | null>(null)
+  const [currentDoc, setCurrentDoc] = useState<SafetyDocument | null>(document || null)
 
   // Project & Cost Center selection state
   const [availableProjects, setAvailableProjects] = useState<{ id: string; name: string; project_number?: string }[]>([])
   const [availableCostCenters, setAvailableCostCenters] = useState<{ id: string; name: string; code?: string; project_id?: string }[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(propProjectId || '')
-  const [selectedCostCenterId, setSelectedCostCenterId] = useState<string>(propCostCenterId || '')
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(propProjectId || document?.project_id || '')
+  const [selectedCostCenterId, setSelectedCostCenterId] = useState<string>(propCostCenterId || document?.cost_center_id || '')
 
   // Available Users to assign
   const [availableUsers, setAvailableUsers] = useState<{ id: string; full_name: string; email: string; role?: string }[]>([])
@@ -76,7 +79,7 @@ export default function SafetyDocumentModal({
   const [isQROpen, setIsQROpen] = useState(false)
   const [isEmailOpen, setIsEmailOpen] = useState(false)
 
-  // Signatures hook for active document
+  // Signatures hook using guaranteed activeDocId
   const {
     signatures,
     addSignature,
@@ -85,19 +88,17 @@ export default function SafetyDocumentModal({
     signPendingSignature,
     deleteSignature,
     refresh: refreshSignatures,
-  } = useSafetySignatures(savedDocId || document?.id)
+  } = useSafetySignatures(activeDocId)
 
   // Load Projects, Cost Centers, and Team Users
   useEffect(() => {
     if (isOpen) {
-      // 1. Fetch Projects
       supabase
         .from('projects')
         .select('id, name, project_number')
         .order('name', { ascending: true })
         .then(({ data }) => setAvailableProjects(data || []))
 
-      // 2. Fetch Users
       supabase
         .from('users')
         .select('id, full_name, email, role')
@@ -128,7 +129,7 @@ export default function SafetyDocumentModal({
     if (isOpen) {
       if (document) {
         setCurrentDoc(document)
-        setSavedDocId(document.id)
+        setIsPersistedInDb(true)
         setTitle(document.title)
         setFormData(document.form_data || {})
         setSelectedProjectId(document.project_id || '')
@@ -138,7 +139,7 @@ export default function SafetyDocumentModal({
       } else {
         // New Document
         setCurrentDoc(null)
-        setSavedDocId(null)
+        setIsPersistedInDb(false)
         const defaultTpl = templates[0] || null
         setSelectedTemplate(defaultTpl)
         const initialProj = propProjectId || ''
@@ -172,9 +173,14 @@ export default function SafetyDocumentModal({
     })
   }, [])
 
-  // Save Draft Helper
-  const handleSaveDraft = async () => {
-    if (!title.trim()) {
+  // Save Draft Helper (Guaranteed ID)
+  const ensureDocSaved = async () => {
+    if (isPersistedInDb && currentDoc) {
+      return currentDoc
+    }
+
+    const finalTitle = (title || selectedTemplate?.title || 'Safety Compliance Document').trim()
+    if (!finalTitle) {
       setError('Document title is required')
       return null
     }
@@ -182,34 +188,35 @@ export default function SafetyDocumentModal({
     try {
       setSaving(true)
       setError(null)
+
       const saved = await onSaveDocument({
-        id: savedDocId || undefined,
+        id: activeDocId,
         template_id: selectedTemplate?.id || null,
         project_id: selectedProjectId || null,
         cost_center_id: selectedCostCenterId || null,
-        title: title.trim(),
+        title: finalTitle,
         category: selectedTemplate?.category || 'custom',
         form_data: formData,
       })
 
-      setSavedDocId(saved.id)
+      setIsPersistedInDb(true)
       setCurrentDoc(saved)
-      setToastMessage('Draft saved successfully')
-      setTimeout(() => setToastMessage(null), 2500)
       return saved
     } catch (err) {
-      console.error('[SafetyDocumentModal] Error saving draft:', err)
-      setError(err instanceof Error ? err.message : 'Failed to save document draft')
+      console.error('[SafetyDocumentModal] Error saving document:', err)
+      setError(err instanceof Error ? err.message : 'Failed to save document')
       return null
     } finally {
       setSaving(false)
     }
   }
 
-  // Ensure document is created/saved before opening sub-actions
-  const ensureDocSaved = async () => {
-    if (savedDocId && currentDoc) return currentDoc
-    return await handleSaveDraft()
+  const handleManualSaveDraft = async () => {
+    const saved = await ensureDocSaved()
+    if (saved) {
+      setToastMessage('Draft saved successfully')
+      setTimeout(() => setToastMessage(null), 2500)
+    }
   }
 
   // Assign Registered User to Roster
@@ -275,7 +282,7 @@ export default function SafetyDocumentModal({
     setIsQROpen(true)
   }
 
-  // Handle On-The-Spot Canvas Signature Save
+  // Handle Canvas Signature Save
   const handleSaveSignature = async (sigData: {
     signer_name: string
     signer_role: string
@@ -283,13 +290,11 @@ export default function SafetyDocumentModal({
     geo_location?: { latitude: number; longitude: number; accuracy?: number } | null
   }) => {
     if (activeSignerForCanvas?.signatureId) {
-      // Sign specific pending signature
       await signPendingSignature(activeSignerForCanvas.signatureId, {
         signature_data: sigData.signature_data,
         geo_location: sigData.geo_location,
       })
     } else {
-      // Add or complete general signature
       await addSignature({
         ...sigData,
         sign_type: 'on_the_spot',
@@ -297,7 +302,7 @@ export default function SafetyDocumentModal({
     }
 
     await refreshSignatures()
-    setToastMessage('Signature successfully recorded!')
+    setToastMessage('Signature recorded successfully!')
     setTimeout(() => setToastMessage(null), 2500)
   }
 
@@ -310,7 +315,6 @@ export default function SafetyDocumentModal({
       setCompilingPdf(true)
       setError(null)
 
-      // Attach latest signatures and template
       const fullDocForPdf: SafetyDocument = {
         ...activeDoc,
         template: selectedTemplate || undefined,
@@ -330,11 +334,7 @@ export default function SafetyDocumentModal({
       )
 
       setCurrentDoc({ ...updatedDoc, signatures })
-
-      // 3. Clear local storage draft
       localStorage.removeItem('amped_safety_draft')
-
-      // 4. Prompt email / share
       setIsEmailOpen(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to compile and archive PDF')
@@ -346,6 +346,22 @@ export default function SafetyDocumentModal({
   const isCompleted = currentDoc?.status === 'completed'
   const signedCount = signatures.filter((s) => s.status === 'signed').length
   const pendingCount = signatures.filter((s) => s.status === 'pending').length
+
+  const modalDocumentForSubComponents: SafetyDocument = currentDoc || {
+    id: activeDocId,
+    title: (title || selectedTemplate?.title || 'Safety Document').trim(),
+    category: selectedTemplate?.category || 'custom',
+    status: 'draft',
+    form_data: formData,
+    project_id: selectedProjectId || null,
+    cost_center_id: selectedCostCenterId || null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    project: availableProjects.find((p) => p.id === selectedProjectId)
+      ? { id: selectedProjectId, name: availableProjects.find((p) => p.id === selectedProjectId)!.name }
+      : undefined,
+    signatures,
+  }
 
   return (
     <Modal
@@ -772,7 +788,7 @@ export default function SafetyDocumentModal({
             {!isCompleted && (
               <Button
                 variant="secondary"
-                onClick={handleSaveDraft}
+                onClick={handleManualSaveDraft}
                 loading={saving}
                 disabled={compilingPdf}
               >
@@ -807,21 +823,17 @@ export default function SafetyDocumentModal({
         title={activeSignerForCanvas ? `Sign for ${activeSignerForCanvas.name}` : `Sign ${title}`}
       />
 
-      {currentDoc && (
-        <>
-          <CrewQRSignModal
-            isOpen={isQROpen}
-            onClose={() => setIsQROpen(false)}
-            document={{ ...currentDoc, signatures }}
-          />
+      <CrewQRSignModal
+        isOpen={isQROpen}
+        onClose={() => setIsQROpen(false)}
+        document={modalDocumentForSubComponents}
+      />
 
-          <EmailSafetyDocModal
-            isOpen={isEmailOpen}
-            onClose={() => setIsEmailOpen(false)}
-            document={{ ...currentDoc, signatures }}
-          />
-        </>
-      )}
+      <EmailSafetyDocModal
+        isOpen={isEmailOpen}
+        onClose={() => setIsEmailOpen(false)}
+        document={modalDocumentForSubComponents}
+      />
     </Modal>
   )
 }

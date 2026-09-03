@@ -127,6 +127,7 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
   }, [fetchDocuments])
 
   const createDocument = async (payload: {
+    id?: string
     template_id?: string | null
     project_id?: string | null
     cost_center_id?: string | null
@@ -134,11 +135,18 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
     category: SafetyCategory
     form_data: Record<string, any>
   }) => {
+    const docId = payload.id || crypto.randomUUID()
     const { data, error: err } = await supabase
       .from('safety_documents')
       .insert([
         {
-          ...payload,
+          id: docId,
+          template_id: payload.template_id,
+          project_id: payload.project_id,
+          cost_center_id: payload.cost_center_id,
+          title: payload.title,
+          category: payload.category,
+          form_data: payload.form_data || {},
           status: 'draft',
           created_by: user?.id,
         },
@@ -153,7 +161,7 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
       .single()
 
     if (err) throw err
-    setDocuments((prev) => [data, ...prev])
+    setDocuments((prev) => [data, ...prev.filter((d) => d.id !== docId)])
     return data
   }
 
@@ -165,6 +173,10 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
       form_data?: Record<string, any>
       storage_path?: string | null
       pdf_url?: string | null
+      project_id?: string | null
+      cost_center_id?: string | null
+      template_id?: string | null
+      category?: SafetyCategory
     }
   ) => {
     const { data, error: err } = await supabase
