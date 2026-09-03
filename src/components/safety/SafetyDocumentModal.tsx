@@ -311,7 +311,7 @@ export default function SafetyDocumentModal({
 
   // Compile Final Audit PDF & Archive to Storage
   const handleCompileAndComplete = async () => {
-    const activeDoc = await ensureDocSaved()
+    const activeDoc = await saveCurrentDraft(true)
     if (!activeDoc) return
 
     try {
@@ -320,7 +320,8 @@ export default function SafetyDocumentModal({
 
       const fullDocForPdf: SafetyDocument = {
         ...activeDoc,
-        template: selectedTemplate || undefined,
+        form_data: formData,
+        template: selectedTemplate || activeDoc.template || undefined,
         signatures: signatures || [],
       }
 
@@ -338,8 +339,11 @@ export default function SafetyDocumentModal({
 
       setCurrentDoc({ ...updatedDoc, signatures })
       localStorage.removeItem('amped_safety_draft')
+      setToastMessage('PDF generated and archived successfully!')
+      setTimeout(() => setToastMessage(null), 3000)
       setIsEmailOpen(true)
     } catch (err) {
+      console.error('[SafetyDocumentModal] Error compiling PDF:', err)
       setError(err instanceof Error ? err.message : 'Failed to compile and archive PDF')
     } finally {
       setCompilingPdf(false)

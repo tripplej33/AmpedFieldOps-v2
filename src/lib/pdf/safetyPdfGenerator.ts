@@ -185,22 +185,69 @@ export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blo
           margin: { left: margin, right: margin },
         })
         currentY = (doc as any).lastAutoTable.finalY + 12
-      } else if (section.fields) {
-        // Standard fields
-        const fieldRows = section.fields.map((f) => [
-          { content: `${f.label}:`, styles: { fontStyle: 'bold' as const, cellWidth: 140 } },
-          formData[f.id] !== undefined ? String(formData[f.id]) : 'N/A',
-        ])
+      } else if (section.fields && section.fields.length > 0) {
+        // Standard fields (support nested sectionData as well as root keys)
+        const sectionData = typeof formData[section.id] === 'object' && formData[section.id] !== null
+          ? formData[section.id]
+          : {}
+
+        const fieldRows = section.fields.map((f) => {
+          const rawVal = sectionData[f.id] !== undefined
+            ? sectionData[f.id]
+            : (formData[f.id] !== undefined ? formData[f.id] : '')
+
+          const displayVal = rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== ''
+            ? String(rawVal).trim()
+            : 'Not Specified'
+
+          return [
+            { content: `${f.label}:`, styles: { fontStyle: 'bold' as const, cellWidth: 150, textColor: [17, 24, 39] as [number, number, number] } },
+            { content: displayVal, styles: { textColor: [31, 41, 55] as [number, number, number] } },
+          ]
+        })
 
         autoTable(doc, {
           startY: currentY,
           body: fieldRows,
+          theme: 'striped',
+          styles: { fontSize: 8, cellPadding: 4 },
+          margin: { left: margin, right: margin },
+        })
+        currentY = (doc as any).lastAutoTable.finalY + 12
+      } else if (typeof formData[section.id] === 'string' && formData[section.id].trim() !== '') {
+        autoTable(doc, {
+          startY: currentY,
+          body: [[formData[section.id].trim()]],
           theme: 'plain',
-          styles: { fontSize: 8, cellPadding: 3, textColor: [31, 41, 55] },
+          styles: { fontSize: 8, cellPadding: 4, textColor: [31, 41, 55] as [number, number, number] },
           margin: { left: margin, right: margin },
         })
         currentY = (doc as any).lastAutoTable.finalY + 12
       }
+    }
+
+    // Optional General Notes
+    if (formData['notes'] && typeof formData['notes'] === 'string' && formData['notes'].trim() !== '') {
+      if (currentY > 720) {
+        doc.addPage()
+        currentY = margin
+      }
+      doc.setFillColor(243, 244, 246)
+      doc.rect(margin, currentY, pageWidth - margin * 2, 20, 'F')
+      doc.setTextColor(31, 41, 55)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('General Notes & Observations', margin + 6, currentY + 14)
+      currentY += 26
+
+      autoTable(doc, {
+        startY: currentY,
+        body: [[formData['notes'].trim()]],
+        theme: 'plain',
+        styles: { fontSize: 8, cellPadding: 4, textColor: [31, 41, 55] as [number, number, number] },
+        margin: { left: margin, right: margin },
+      })
+      currentY = (doc as any).lastAutoTable.finalY + 12
     }
   }
 
