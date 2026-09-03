@@ -14,7 +14,6 @@ export default function SafetyHubPage() {
     documents,
     loading: docsLoading,
     createDocument,
-    updateDocument,
     deleteDocument,
     archiveDocumentPdf,
   } = useSafetyDocuments()
@@ -46,11 +45,7 @@ export default function SafetyHubPage() {
   }
 
   const handleSaveDocData = async (docData: any) => {
-    if (docData.id) {
-      return await updateDocument(docData.id, docData)
-    } else {
-      return await createDocument(docData)
-    }
+    return await createDocument(docData)
   }
 
   const handleSaveTemplateData = async (tplData: any) => {

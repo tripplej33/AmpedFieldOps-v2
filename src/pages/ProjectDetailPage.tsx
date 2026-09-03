@@ -112,7 +112,6 @@ export default function ProjectDetailPage() {
     documents: safetyDocs,
     loading: safetyDocsLoading,
     createDocument: createSafetyDoc,
-    updateDocument: updateSafetyDoc,
     deleteDocument: deleteSafetyDoc,
     archiveDocumentPdf,
   } = useSafetyDocuments(id)
@@ -1208,11 +1207,7 @@ export default function ProjectDetailPage() {
         projectId={id}
         projectName={project?.name || 'Project Site'}
         onSaveDocument={async (docData) => {
-          if (docData.id) {
-            return await updateSafetyDoc(docData.id, docData)
-          } else {
-            return await createSafetyDoc(docData)
-          }
+          return await createSafetyDoc(docData)
         }}
         onArchivePdf={archiveDocumentPdf}
       />

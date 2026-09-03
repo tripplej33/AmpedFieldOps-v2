@@ -134,11 +134,12 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
     title: string
     category: SafetyCategory
     form_data: Record<string, any>
+    status?: SafetyDocStatus
   }) => {
     const docId = payload.id || crypto.randomUUID()
     const { data, error: err } = await supabase
       .from('safety_documents')
-      .insert([
+      .upsert([
         {
           id: docId,
           template_id: payload.template_id,
@@ -147,10 +148,11 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
           title: payload.title,
           category: payload.category,
           form_data: payload.form_data || {},
-          status: 'draft',
+          status: payload.status || 'draft',
           created_by: user?.id,
+          updated_at: new Date().toISOString(),
         },
-      ])
+      ], { onConflict: 'id' })
       .select(`
         *,
         template:safety_templates(*),
@@ -218,25 +220,26 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
     targetCostCenterId?: string
   ) => {
     const cleanFileName = pdfFileName.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const timestamp = Date.now()
     let storagePath = ''
 
     if (targetProjectId) {
-      storagePath = `projects/${targetProjectId}/safety-documents/${Date.now()}_${cleanFileName}`
+      storagePath = `project_${targetProjectId}/folder_Safety_Documents/${timestamp}-${cleanFileName}`
     } else if (targetCostCenterId) {
-      storagePath = `cost-centers/${targetCostCenterId}/safety-documents/${Date.now()}_${cleanFileName}`
+      storagePath = `cost_center_${targetCostCenterId}/safety-documents/${timestamp}-${cleanFileName}`
     } else {
-      storagePath = `general/safety-documents/${Date.now()}_${cleanFileName}`
+      storagePath = `general/safety-documents/${timestamp}-${cleanFileName}`
     }
 
-    // 1. Upload to Supabase storage bucket 'documents' (or fallback to 'files')
-    let bucketName = 'documents'
+    // 1. Upload to Supabase storage bucket 'project-files' (fallback to 'safety-documents')
+    let bucketName = 'project-files'
     let uploadRes = await supabase.storage.from(bucketName).upload(storagePath, pdfBlob, {
       contentType: 'application/pdf',
       upsert: true,
     })
 
     if (uploadRes.error && uploadRes.error.message?.includes('not found')) {
-      bucketName = 'files'
+      bucketName = 'safety-documents'
       uploadRes = await supabase.storage.from(bucketName).upload(storagePath, pdfBlob, {
         contentType: 'application/pdf',
         upsert: true,
@@ -247,28 +250,31 @@ export function useSafetyDocuments(projectId?: string, costCenterId?: string) {
       throw uploadRes.error
     }
 
-    const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(storagePath)
-    const publicPdfUrl = publicUrlData?.publicUrl || null
+    // 2. Generate long-lived signed URL (1 year)
+    const { data: signData } = await supabase.storage
+      .from(bucketName)
+      .createSignedUrl(storagePath, 60 * 60 * 24 * 365)
 
-    // 2. Update safety document status to 'completed' with storage link
+    const publicPdfUrl = signData?.signedUrl || supabase.storage.from(bucketName).getPublicUrl(storagePath).data?.publicUrl || null
+
+    // 3. Update safety document status to 'completed' with storage link
     const updatedDoc = await updateDocument(documentId, {
       status: 'completed',
       storage_path: storagePath,
       pdf_url: publicPdfUrl,
     })
 
-    // 3. Register entry in project_files table under dedicated "Safety Documents" folder
+    // 4. Register entry in project_files table under dedicated "Safety Documents" folder
     if (targetProjectId) {
       try {
         await supabase.from('project_files').insert([
           {
             project_id: targetProjectId,
             name: cleanFileName,
-            file_type: 'application/pdf',
-            file_size: pdfBlob.size,
-            storage_path: storagePath,
-            custom_folder: 'Safety Documents',
-            created_by: user?.id,
+            mime_type: 'application/pdf',
+            size_bytes: pdfBlob.size,
+            path: storagePath,
+            uploaded_by: user?.id || null,
           },
         ])
       } catch (e) {

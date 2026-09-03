@@ -174,11 +174,7 @@ export default function SafetyDocumentModal({
   }, [])
 
   // Save Draft Helper (Guaranteed ID)
-  const ensureDocSaved = async () => {
-    if (isPersistedInDb && currentDoc) {
-      return currentDoc
-    }
-
+  const saveCurrentDraft = async (silent: boolean = false) => {
     const finalTitle = (title || selectedTemplate?.title || 'Safety Compliance Document').trim()
     if (!finalTitle) {
       setError('Document title is required')
@@ -201,6 +197,10 @@ export default function SafetyDocumentModal({
 
       setIsPersistedInDb(true)
       setCurrentDoc(saved)
+      if (!silent) {
+        setToastMessage('Draft saved successfully')
+        setTimeout(() => setToastMessage(null), 2500)
+      }
       return saved
     } catch (err) {
       console.error('[SafetyDocumentModal] Error saving document:', err)
@@ -211,12 +211,15 @@ export default function SafetyDocumentModal({
     }
   }
 
-  const handleManualSaveDraft = async () => {
-    const saved = await ensureDocSaved()
-    if (saved) {
-      setToastMessage('Draft saved successfully')
-      setTimeout(() => setToastMessage(null), 2500)
+  const ensureDocSaved = async () => {
+    if (isPersistedInDb && currentDoc) {
+      return currentDoc
     }
+    return await saveCurrentDraft(true)
+  }
+
+  const handleManualSaveDraft = async () => {
+    await saveCurrentDraft(false)
   }
 
   // Assign Registered User to Roster
