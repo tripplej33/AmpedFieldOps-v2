@@ -41,6 +41,7 @@ import ProjectSnagsList from '@/components/snags/ProjectSnagsList'
 import SiteSafetySection from '@/components/safety/SiteSafetySection'
 import SafetyDocumentsList from '@/components/safety/SafetyDocumentsList'
 import SafetyDocumentModal from '@/components/safety/SafetyDocumentModal'
+import ProjectComplianceSection from '@/components/compliance/ProjectComplianceSection'
 import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
 import type { SafetyDocument } from '@/types/safety'
 import Toast from '@/components/ui/Toast'
@@ -63,7 +64,7 @@ export default function ProjectDetailPage() {
   const isManager = user?.role === 'manager' || user?.role === 'admin'
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'materials' | 'purchase_orders' | 'contacts' | 'safety' | 'snags' | 'timesheets' | 'files' | 'financials'
+    'overview' | 'materials' | 'purchase_orders' | 'contacts' | 'safety' | 'testing' | 'snags' | 'timesheets' | 'files' | 'financials'
   >('overview')
 
   const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -535,6 +536,15 @@ export default function ProjectDetailPage() {
           Site Safety & Sign-In ({onSiteCount} on site)
         </button>
         <button
+          onClick={() => setActiveTab('testing')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+            activeTab === 'testing' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          }`}
+        >
+          <span className="material-symbols-outlined text-base">verified</span>
+          Testing & CoC/ESC
+        </button>
+        <button
           onClick={() => setActiveTab('snags')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
             activeTab === 'snags' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
@@ -843,6 +853,14 @@ export default function ProjectDetailPage() {
             />
           )}
         </div>
+      )}
+
+      {/* TAB: ELECTRICAL TESTING & COMPLIANCE (AS/NZS 3000, CoC/ESC, SWITCHBOARDS) */}
+      {activeTab === 'testing' && (
+        <ProjectComplianceSection
+          projectId={id || ''}
+          onToast={(type, message) => setToast({ type, message })}
+        />
       )}
 
       {/* TAB 6: QC & SNAG LISTS */}
