@@ -39,6 +39,10 @@ import ProjectContactsList from '@/components/contacts/ProjectContactsList'
 import ProjectMaterialsList from '@/components/materials/ProjectMaterialsList'
 import ProjectSnagsList from '@/components/snags/ProjectSnagsList'
 import SiteSafetySection from '@/components/safety/SiteSafetySection'
+import SafetyDocumentsList from '@/components/safety/SafetyDocumentsList'
+import SafetyDocumentModal from '@/components/safety/SafetyDocumentModal'
+import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
+import type { SafetyDocument } from '@/types/safety'
 import Toast from '@/components/ui/Toast'
 import type {
   ProjectFormData,
@@ -99,6 +103,20 @@ export default function ProjectDetailPage() {
   // Site Safety & Attendance hook
   const { attendances, loading: attendancesLoading, refresh: refreshAttendances } = useSiteAttendance(id)
   const { signIn: siteSignIn, signOut: siteSignOut, toggleAccountedFor } = useSiteSignIn()
+
+  // Safety Documents & Compliance hooks
+  const [safetySubTab, setSafetySubTab] = useState<'documents' | 'attendance'>('documents')
+  const [isSafetyDocModalOpen, setIsSafetyDocModalOpen] = useState(false)
+  const [selectedSafetyDoc, setSelectedSafetyDoc] = useState<SafetyDocument | null>(null)
+  const {
+    documents: safetyDocs,
+    loading: safetyDocsLoading,
+    createDocument: createSafetyDoc,
+    updateDocument: updateSafetyDoc,
+    deleteDocument: deleteSafetyDoc,
+    archiveDocumentPdf,
+  } = useSafetyDocuments(id)
+  const { templates: safetyTemplates } = useSafetyTemplates()
 
   const { mutate: bulkCreateTimesheets, isPending: isBulkCreating } = useBulkCreateTimesheets()
   const { mutate: submitTimesheet } = useSubmitTimesheet()
@@ -762,17 +780,69 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* TAB 5: SITE SAFETY & SIGN-IN (NEW) */}
+      {/* TAB 5: SITE SAFETY & SWMS (ENHANCED) */}
       {activeTab === 'safety' && (
         <div className="space-y-4">
-          <SiteSafetySection
-            attendances={attendances}
-            loading={attendancesLoading}
-            project={project}
-            onSignIn={handleSiteSignIn}
-            onSignOut={handleSiteSignOut}
-            onToggleAccounted={toggleAccountedFor}
-          />
+          {/* Sub-tab segment selector */}
+          <div className="flex items-center gap-2 border-b border-border-dark pb-2">
+            <button
+              type="button"
+              onClick={() => setSafetySubTab('documents')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                safetySubTab === 'documents'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-card-dark text-text-muted hover:text-white border border-border-dark'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">shield_with_heart</span>
+              <span>Safety Documents & SWMS</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-background-dark/80 text-text-muted">
+                {safetyDocs.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSafetySubTab('attendance')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                safetySubTab === 'attendance'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-card-dark text-text-muted hover:text-white border border-border-dark'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">groups</span>
+              <span>Site Attendance & Muster</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-background-dark/80 text-text-muted">
+                {attendances.filter((a) => a.status === 'on_site').length} On Site
+              </span>
+            </button>
+          </div>
+
+          {safetySubTab === 'documents' ? (
+            <SafetyDocumentsList
+              documents={safetyDocs}
+              loading={safetyDocsLoading}
+              onOpenDocument={(doc) => {
+                setSelectedSafetyDoc(doc)
+                setIsSafetyDocModalOpen(true)
+              }}
+              onDeleteDocument={deleteSafetyDoc}
+              onCreateNew={() => {
+                setSelectedSafetyDoc(null)
+                setIsSafetyDocModalOpen(true)
+              }}
+              hideProjectColumn
+            />
+          ) : (
+            <SiteSafetySection
+              attendances={attendances}
+              loading={attendancesLoading}
+              project={project}
+              onSignIn={handleSiteSignIn}
+              onSignOut={handleSiteSignOut}
+              onToggleAccounted={toggleAccountedFor}
+            />
+          )}
         </div>
       )}
 
@@ -1127,6 +1197,24 @@ export default function ProjectDetailPage() {
         confirmText="Unapprove & Unlock"
         variant="warning"
         icon="lock_open"
+      />
+
+      {/* Project Safety Document Modal */}
+      <SafetyDocumentModal
+        isOpen={isSafetyDocModalOpen}
+        onClose={() => setIsSafetyDocModalOpen(false)}
+        document={selectedSafetyDoc}
+        templates={safetyTemplates}
+        projectId={id}
+        projectName={project?.name || 'Project Site'}
+        onSaveDocument={async (docData) => {
+          if (docData.id) {
+            return await updateSafetyDoc(docData.id, docData)
+          } else {
+            return await createSafetyDoc(docData)
+          }
+        }}
+        onArchivePdf={archiveDocumentPdf}
       />
 
       {/* Toast Notification */}

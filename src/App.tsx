@@ -23,6 +23,8 @@ import SettingsPage from './pages/SettingsPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import SafetyHubPage from './pages/SafetyHubPage'
+import PublicCrewSignPage from './pages/PublicCrewSignPage'
 import { useMobileInit } from './hooks/useMobileInit'
 
 const ProjectRedirect = () => {
@@ -73,6 +75,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/accept-invite" element={<AcceptInvitePage />} />
             <Route path="/site-kiosk/:projectId" element={<SiteKioskPage />} />
+            <Route path="/safety-sign/:documentId" element={<PublicCrewSignPage />} />
 
             {/* Direct top-level shortcuts & non-prefixed route aliases */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
@@ -85,6 +88,7 @@ function App() {
             <Route path="/van-stock" element={<Navigate to="/app/van-stock" replace />} />
             <Route path="/fleet" element={<Navigate to="/app/fleet" replace />} />
             <Route path="/files" element={<Navigate to="/app/files" replace />} />
+            <Route path="/safety" element={<Navigate to="/app/safety" replace />} />
             <Route path="/financials" element={<Navigate to="/app/financials" replace />} />
             <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
             <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
@@ -162,7 +166,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="projects/:id/files" element={<Navigate to="/app/files" replace />} />
+              {/* Safety & Compliance Hub */}
+              <Route
+                path="safety"
+                element={
+                  <ProtectedRoute>
+                    <SafetyHubPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Timesheets */}
               <Route path="timesheets" element={<TimesheetsPage />} />
