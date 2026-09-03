@@ -25,6 +25,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SafetyHubPage from './pages/SafetyHubPage'
 import PublicCrewSignPage from './pages/PublicCrewSignPage'
+import SchedulePage from './pages/SchedulePage'
 import { useMobileInit } from './hooks/useMobileInit'
 
 const ProjectRedirect = () => {
@@ -81,6 +82,7 @@ function App() {
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/projects" element={<Navigate to="/app/projects" replace />} />
             <Route path="/projects/:id" element={<ProjectRedirect />} />
+            <Route path="/schedule" element={<Navigate to="/app/schedule" replace />} />
             <Route path="/timesheets" element={<Navigate to="/app/timesheets" replace />} />
             <Route path="/clients" element={<Navigate to="/app/clients" replace />} />
             <Route path="/clients/:id" element={<ClientRedirect />} />
@@ -126,6 +128,9 @@ function App() {
               {/* Projects Hub & 360 Detail */}
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectDetailPage />} />
+
+              {/* Job Scheduling & Resource Dispatch */}
+              <Route path="schedule" element={<SchedulePage />} />
 
               {/* Purchase Orders & Procurement */}
               <Route

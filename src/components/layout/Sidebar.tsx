@@ -10,6 +10,7 @@ const navigationItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/app/dashboard' },
   { id: 'clients', label: 'Clients', icon: 'groups', path: '/app/clients', roles: ['admin', 'manager'] },
   { id: 'projects', label: 'Projects', icon: 'work', path: '/app/projects' },
+  { id: 'schedule', label: 'Schedule & Dispatch', icon: 'calendar_month', path: '/app/schedule' },
   { id: 'purchase-orders', label: 'Purchase Orders', icon: 'shopping_cart', path: '/app/purchase-orders', roles: ['admin', 'manager'] },
   { id: 'van-stock', label: 'Van Stock & Materials', icon: 'local_shipping', path: '/app/van-stock' },
   { id: 'fleet', label: 'Fleet & Vehicles', icon: 'directions_car', path: '/app/fleet' },
