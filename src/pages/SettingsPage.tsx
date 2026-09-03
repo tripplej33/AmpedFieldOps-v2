@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRoles, useSaveRole } from '@/hooks/useRoles'
 import { useUserInvitations, useCreateInvitation } from '@/hooks/useUserInvitations'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -13,19 +12,9 @@ import ActivityTypesSection from '@/components/settings/ActivityTypesSection'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 import type { User, InviteUserFormData, RoleFormData } from '@/types'
-
-interface CompanySettings {
-  companyName: string
-  nzbn: string
-  taxRate: number
-  currency: string
-  timezone: string
-  supportEmail: string
-  phone: string
-}
+import { useCompanyProfile, CompanyProfile } from '@/hooks/useCompanyProfile'
 
 export default function SettingsPage() {
-  const { user } = useAuth()
   const { isAdmin, hasPermission } = usePermissions()
 
   const [activeTab, setActiveTab] = useState<'team' | 'roles' | 'company' | 'activity_types' | 'xero'>('team')
@@ -43,27 +32,21 @@ export default function SettingsPage() {
   const { createInvitation, revokeInvitation, resendInvitation, isPending: isInviting } = useCreateInvitation()
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
-  // Company profile state
-  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
-    const saved = localStorage.getItem('amped_company_settings')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch {
-        // fallback
-      }
-    }
-    return {
-      companyName: 'Amped Electrical & Field Operations Ltd',
-      nzbn: '9429050012345',
-      taxRate: 15,
-      currency: 'NZD ($)',
-      timezone: 'Pacific/Auckland (UTC+12:00)',
-      supportEmail: 'duncan@ampedlogix.com',
-      phone: '+64 21 000 0000',
-    }
-  })
-  const [isSavingCompany, setIsSavingCompany] = useState(false)
+  // Company profile state & hook
+  const {
+    profile: companyProfile,
+    saveProfile: saveCompanyProfile,
+    uploadLogo: uploadCompanyLogo,
+    removeLogo: removeCompanyLogo,
+    saving: isSavingCompany,
+  } = useCompanyProfile()
+
+  const [companySettings, setCompanySettings] = useState<CompanyProfile>(companyProfile)
+
+  useEffect(() => {
+    setCompanySettings(companyProfile)
+  }, [companyProfile])
+
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
 
   // Fetch Active Users
@@ -150,16 +133,33 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSaveCompanySettings = (e: React.FormEvent) => {
+  const handleSaveCompanySettings = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSavingCompany(true)
     try {
-      localStorage.setItem('amped_company_settings', JSON.stringify(companySettings))
-      setToast({ type: 'success', message: 'Company profile saved' })
+      await saveCompanyProfile(companySettings)
+      setToast({ type: 'success', message: 'Company profile saved successfully' })
     } catch {
-      setToast({ type: 'error', message: 'Failed to save settings' })
-    } finally {
-      setIsSavingCompany(false)
+      setToast({ type: 'error', message: 'Failed to save company settings' })
+    }
+  }
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      await uploadCompanyLogo(file)
+      setToast({ type: 'success', message: 'Company logo uploaded and updated' })
+    } catch (err) {
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to upload logo' })
+    }
+  }
+
+  const handleRemoveLogo = async () => {
+    try {
+      await removeCompanyLogo()
+      setToast({ type: 'info', message: 'Company logo removed' })
+    } catch {
+      setToast({ type: 'error', message: 'Failed to remove logo' })
     }
   }
 
@@ -178,125 +178,102 @@ export default function SettingsPage() {
             Manage field team members, invitations, dynamic permissions, labor rates, and Xero accounting sync
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          {user?.role && (
-            <span className="px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider">
-              {user.role} mode
-            </span>
-          )}
-        </div>
       </div>
 
-      {/* 5-Tab Navigation Header */}
-      <div className="flex gap-2 border-b border-border-dark pb-2 overflow-x-auto">
+      {/* Settings Navigation Tabs */}
+      <div className="flex border-b border-border-dark gap-2 overflow-x-auto pb-px">
         <button
           onClick={() => setActiveTab('team')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'team'
-              ? 'bg-primary text-white font-semibold'
-              : 'text-text-muted hover:text-white hover:bg-card-dark'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-muted hover:text-white'
           }`}
         >
           <span className="material-symbols-outlined text-base">group</span>
-          Team & Invitations ({usersList.length})
+          Active Team ({usersList.length})
         </button>
 
         <button
           onClick={() => setActiveTab('roles')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'roles'
-              ? 'bg-primary text-white font-semibold'
-              : 'text-text-muted hover:text-white hover:bg-card-dark'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-muted hover:text-white'
           }`}
         >
           <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-          Roles & Permissions ({roles.length})
+          Roles & Permissions
         </button>
 
         <button
           onClick={() => setActiveTab('company')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'company'
-              ? 'bg-primary text-white font-semibold'
-              : 'text-text-muted hover:text-white hover:bg-card-dark'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-muted hover:text-white'
           }`}
         >
-          <span className="material-symbols-outlined text-base">business</span>
-          Company Profile
+          <span className="material-symbols-outlined text-base">domain</span>
+          Company Profile & Branding
         </button>
 
         <button
           onClick={() => setActiveTab('activity_types')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'activity_types'
-              ? 'bg-primary text-white font-semibold'
-              : 'text-text-muted hover:text-white hover:bg-card-dark'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-muted hover:text-white'
           }`}
         >
-          <span className="material-symbols-outlined text-base">receipt_long</span>
-          Activity Rates
+          <span className="material-symbols-outlined text-base">category</span>
+          Activity Types & Rates
         </button>
 
         {canAccessXero && (
           <button
             onClick={() => setActiveTab('xero')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'xero'
-                ? 'bg-primary text-white font-semibold'
-                : 'text-text-muted hover:text-white hover:bg-card-dark'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-muted hover:text-white'
             }`}
           >
             <span className="material-symbols-outlined text-base">sync_alt</span>
-            Xero Integration (Admin)
+            Xero Accounting Sync
           </button>
         )}
       </div>
 
-      {/* TAB 1: TEAM MEMBERS & INVITATIONS */}
+      {/* TAB 1: TEAM MEMBERS */}
       {activeTab === 'team' && (
         <div className="space-y-6">
-          <div className="bg-card-dark border border-border-dark rounded-xl p-5 shadow-lg shadow-black/20 space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-base">badge</span>
-                  Active Field Technicians & Office Staff
-                </h2>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Manage active users, email addresses, and assign role privileges
-                </p>
-              </div>
-
-              <Button onClick={() => setIsInviteModalOpen(true)}>
-                <span className="material-symbols-outlined text-base">person_add</span>
-                Invite Team Member
-              </Button>
-            </div>
-
-            <UsersList
-              users={usersList}
-              roles={roles}
-              loading={loadingUsers}
-              onUpdateRole={handleUpdateRole}
-            />
+          <div className="flex justify-end">
+            <Button onClick={() => setIsInviteModalOpen(true)} className="flex items-center gap-1.5 text-xs">
+              <span className="material-symbols-outlined text-sm">person_add</span>
+              Invite Team Member
+            </Button>
           </div>
 
-          {/* Pending Invitations Section */}
-          <div className="bg-card-dark border border-border-dark rounded-xl p-5 shadow-lg shadow-black/20 space-y-4">
-            <InvitationsList
-              invitations={invitations}
-              loading={loadingInvitations}
-              onRevoke={handleRevokeInvitation}
-              onResend={handleResendInvitation}
-            />
-          </div>
+          <UsersList
+            users={usersList}
+            loading={loadingUsers}
+            roles={roles}
+            onUpdateRole={handleUpdateRole}
+          />
+
+          <InvitationsList
+            invitations={invitations}
+            loading={loadingInvitations}
+            onRevoke={handleRevokeInvitation}
+            onResend={handleResendInvitation}
+          />
         </div>
       )}
 
-      {/* TAB 2: ROLES & PERMISSIONS */}
+      {/* TAB 2: ROLES & RBAC MATRIX */}
       {activeTab === 'roles' && (
-        <div className="space-y-4">
+        <div>
           <RolesList
             roles={roles}
             loading={loadingRoles}
@@ -312,11 +289,58 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-base">domain</span>
-              Company & Regional Configuration
+              Company Branding & Regional Configuration
             </h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Default billing rules, business registration, and regional tax formats
+              Set company identity, official logo for safety PDFs and documents, and default business rules
             </p>
+          </div>
+
+          {/* Company Logo Upload & Preview Card */}
+          <div className="p-4 rounded-xl bg-background-dark border border-border-dark space-y-3">
+            <label className="block text-text-muted font-medium text-xs">Company Logo (For PDFs & Branding)</label>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="w-20 h-20 rounded-xl bg-surface-dark border border-border-dark flex items-center justify-center p-2 overflow-hidden shadow-inner">
+                {companySettings.logoUrl ? (
+                  <img
+                    src={companySettings.logoUrl}
+                    alt="Company Logo"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-3xl text-text-muted">image</span>
+                )}
+              </div>
+
+              <div className="space-y-1.5 flex-1 min-w-[200px]">
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-black font-semibold text-xs transition-colors">
+                    <span className="material-symbols-outlined text-sm">upload</span>
+                    {companySettings.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onChange={handleLogoFileChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {companySettings.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-dark hover:bg-red-500/20 text-text-muted hover:text-red-400 border border-border-dark text-xs transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  Recommended: PNG or SVG with transparent background (Max 10MB). Automatically embedded on Safety PDFs and audit documents.
+                </p>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSaveCompanySettings} className="space-y-4 text-xs">
@@ -326,7 +350,7 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   required
-                  value={companySettings.companyName}
+                  value={companySettings.companyName || ''}
                   onChange={(e) => setCompanySettings({ ...companySettings, companyName: e.target.value })}
                   className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
                 />
@@ -336,9 +360,20 @@ export default function SettingsPage() {
                 <label className="block text-text-muted font-medium">NZBN / Company Number</label>
                 <input
                   type="text"
-                  value={companySettings.nzbn}
+                  value={companySettings.nzbn || ''}
                   onChange={(e) => setCompanySettings({ ...companySettings, nzbn: e.target.value })}
                   className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white font-mono focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-text-muted font-medium">Physical / Postal Address</label>
+                <input
+                  type="text"
+                  value={companySettings.address || ''}
+                  onChange={(e) => setCompanySettings({ ...companySettings, address: e.target.value })}
+                  placeholder="e.g. Auckland, New Zealand"
+                  className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
                 />
               </div>
 
@@ -347,7 +382,7 @@ export default function SettingsPage() {
                 <input
                   type="number"
                   step="0.5"
-                  value={companySettings.taxRate}
+                  value={companySettings.taxRate || 15}
                   onChange={(e) =>
                     setCompanySettings({ ...companySettings, taxRate: parseFloat(e.target.value) || 0 })
                   }
@@ -359,7 +394,7 @@ export default function SettingsPage() {
                 <label className="block text-text-muted font-medium">Billing Currency</label>
                 <input
                   type="text"
-                  value={companySettings.currency}
+                  value={companySettings.currency || 'NZD ($)'}
                   onChange={(e) => setCompanySettings({ ...companySettings, currency: e.target.value })}
                   className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
                 />
@@ -369,7 +404,7 @@ export default function SettingsPage() {
                 <label className="block text-text-muted font-medium">Support Contact Email</label>
                 <input
                   type="email"
-                  value={companySettings.supportEmail}
+                  value={companySettings.supportEmail || ''}
                   onChange={(e) => setCompanySettings({ ...companySettings, supportEmail: e.target.value })}
                   className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
                 />
@@ -379,8 +414,18 @@ export default function SettingsPage() {
                 <label className="block text-text-muted font-medium">Dispatch Phone</label>
                 <input
                   type="text"
-                  value={companySettings.phone}
+                  value={companySettings.phone || ''}
                   onChange={(e) => setCompanySettings({ ...companySettings, phone: e.target.value })}
+                  className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-text-muted font-medium">Regional Timezone</label>
+                <input
+                  type="text"
+                  value={companySettings.timezone || 'Pacific/Auckland (UTC+12:00)'}
+                  onChange={(e) => setCompanySettings({ ...companySettings, timezone: e.target.value })}
                   className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
                 />
               </div>

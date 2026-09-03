@@ -7,6 +7,7 @@ import CrewQRSignModal from './CrewQRSignModal'
 import EmailSafetyDocModal from './EmailSafetyDocModal'
 import { generateSafetyPdf } from '@/lib/pdf/safetyPdfGenerator'
 import { useSafetySignatures } from '@/hooks/useSafety'
+import { useCompanyProfile } from '@/hooks/useCompanyProfile'
 import { supabase } from '@/lib/supabase'
 import type { SafetyDocument, SafetyTemplate, SafetyCategory } from '@/types/safety'
 
@@ -50,6 +51,7 @@ export default function SafetyDocumentModal({
   // Stable document UUID guaranteed from mount
   const activeDocId = useMemo(() => document?.id || crypto.randomUUID(), [document?.id])
   const [isPersistedInDb, setIsPersistedInDb] = useState<boolean>(Boolean(document?.id))
+  const { profile: companyProfile } = useCompanyProfile()
 
   const [selectedTemplate, setSelectedTemplate] = useState<SafetyTemplate | null>(null)
   const [title, setTitle] = useState('')
@@ -326,7 +328,7 @@ export default function SafetyDocumentModal({
       }
 
       // 1. Generate PDF
-      const { blob, filename } = await generateSafetyPdf(fullDocForPdf)
+      const { blob, filename } = await generateSafetyPdf(fullDocForPdf, companyProfile)
 
       // 2. Archive PDF to Supabase Storage and Project Files
       const { updatedDoc } = await onArchivePdf(

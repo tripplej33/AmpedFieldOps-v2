@@ -1,12 +1,28 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type { SafetyDocument } from '@/types/safety'
+import type { CompanyProfile } from '@/hooks/useCompanyProfile'
 import { calculateRiskRating } from '@/lib/safety/riskMatrix'
 
 /**
  * Generates an audit-ready, high-resolution PDF document for a Safety Document
  */
-export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blob: Blob; filename: string }> {
+export async function generateSafetyPdf(
+  document: SafetyDocument,
+  companyProfile?: CompanyProfile | null
+): Promise<{ blob: Blob; filename: string }> {
+  // Load company profile fallback if not provided
+  let company = companyProfile
+  if (!company) {
+    try {
+      const saved = localStorage.getItem('amped_company_settings')
+      if (saved) company = JSON.parse(saved)
+    } catch {}
+  }
+
+  const companyName = company?.companyName || 'Amped Electrical & Field Operations Ltd'
+  const logoUrl = company?.logoUrl
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'pt',
@@ -18,20 +34,52 @@ export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blo
   let currentY = margin
 
   // 1. Top Header Banner
+  const headerHeight = 68
   doc.setFillColor(18, 20, 23) // Dark #121417
-  doc.rect(0, 0, pageWidth, 60, 'F')
+  doc.rect(0, 0, pageWidth, headerHeight, 'F')
 
+  let titleX = margin
+  if (logoUrl && typeof logoUrl === 'string' && logoUrl.startsWith('data:image/')) {
+    try {
+      doc.addImage(logoUrl, 'PNG', margin, 14, 40, 40)
+      titleX = margin + 48
+    } catch (e) {
+      console.warn('[safetyPdfGenerator] Logo rendering fallback:', e)
+    }
+  }
+
+  // Company Name & Subtitle
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(16)
+  doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  doc.text('AmpedFieldOps • Safety Compliance', margin, 36)
+  doc.text(companyName, titleX, 32)
 
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(156, 163, 175)
-  doc.text(`Ref: ${document.id.slice(0, 8).toUpperCase()} | Status: ${document.status.toUpperCase()}`, pageWidth - margin, 36, { align: 'right' })
+  const subText = company?.nzbn
+    ? `NZBN: ${company.nzbn} • Safety Compliance Record`
+    : 'Safety & Compliance Audit Record'
+  doc.text(subText, titleX, 48)
 
-  currentY = 80
+  // Header Right Side Metadata
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(156, 163, 175)
+  doc.text(
+    `Ref: ${document.id.slice(0, 8).toUpperCase()} | Status: ${document.status.toUpperCase()}`,
+    pageWidth - margin,
+    32,
+    { align: 'right' }
+  )
+
+  const contactStr = [company?.phone, company?.supportEmail].filter(Boolean).join(' • ')
+  if (contactStr) {
+    doc.setFontSize(7.5)
+    doc.text(contactStr, pageWidth - margin, 48, { align: 'right' })
+  }
+
+  currentY = headerHeight + 20
 
   // 2. Document Title
   doc.setTextColor(17, 24, 39)
@@ -43,22 +91,28 @@ export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blo
   // 3. Project & Site Metadata Table
   const projectInfo = [
     [
+      { content: 'Issuing Org:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
+      companyName,
       { content: 'Project:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       document.project?.name || 'General Operations',
-      { content: 'Client:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
-      document.project?.client?.name || 'N/A',
     ],
     [
       { content: 'Site Address:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       [document.project?.address, document.project?.suburb, document.project?.city].filter(Boolean).join(', ') || 'N/A',
-      { content: 'Date & Time:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
-      new Date(document.created_at).toLocaleString(),
+      { content: 'Client:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
+      document.project?.client?.name || 'N/A',
     ],
     [
       { content: 'Category:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       document.category.toUpperCase(),
       { content: 'Cost Center:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
       document.cost_center?.name || 'General',
+    ],
+    [
+      { content: 'Date & Time:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
+      new Date(document.created_at).toLocaleString(),
+      { content: 'Compliance Standard:', styles: { fontStyle: 'bold' as const, fillColor: [243, 244, 246] as [number, number, number] } },
+      'AS/NZS 3000 / ISO 45001',
     ],
   ]
 
@@ -322,7 +376,7 @@ export async function generateSafetyPdf(document: SafetyDocument): Promise<{ blo
     doc.setFontSize(7.5)
     doc.setTextColor(156, 163, 175)
     doc.text(
-      `AmpedFieldOps Compliance Record • ISO 45001 / AS/NZS 3000 Standard • Page ${i} of ${totalPages}`,
+      `${companyName} • Compliance Record • ISO 45001 / AS/NZS 3000 • Page ${i} of ${totalPages}`,
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 15,
       { align: 'center' }
