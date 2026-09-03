@@ -30,11 +30,12 @@ export function useSchedule(filters?: ScheduleFilterOptions) {
         `)
         .order('start_time', { ascending: true })
 
-      if (filters?.startDate) {
-        query = query.gte('start_time', filters.startDate)
-      }
-      if (filters?.endDate) {
-        query = query.lte('end_time', filters.endDate)
+      if (filters?.startDate && filters?.endDate) {
+        query = query.lte('start_time', filters.endDate).gte('end_time', filters.startDate)
+      } else if (filters?.startDate) {
+        query = query.gte('end_time', filters.startDate)
+      } else if (filters?.endDate) {
+        query = query.lte('start_time', filters.endDate)
       }
       if (filters?.technicianId && filters.technicianId !== 'all') {
         query = query.eq('technician_id', filters.technicianId)

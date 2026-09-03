@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { supabase } from '@/lib/supabase'
+import {
+  formatLocalDate,
+  formatLocalTime,
+  createLocalIsoString,
+  getLocalTodayString,
+} from '@/lib/dateUtils'
 import type { JobSchedule, ScheduleStatus, ScheduleCreatePayload, ScheduleUpdatePayload } from '@/types/schedule'
 
 interface ScheduleModalProps {
@@ -108,11 +114,9 @@ export default function ScheduleModal({
       setSelectedTechId(schedule.technician_id || '')
       setAssignedCrewIds(schedule.assigned_crew_ids || [])
       
-      const start = new Date(schedule.start_time)
-      const end = new Date(schedule.end_time)
-      setDate(start.toISOString().slice(0, 10))
-      setStartTime(start.toTimeString().slice(0, 5))
-      setEndTime(end.toTimeString().slice(0, 5))
+      setDate(formatLocalDate(schedule.start_time))
+      setStartTime(formatLocalTime(schedule.start_time) || '08:00')
+      setEndTime(formatLocalTime(schedule.end_time) || '16:30')
       setAllDay(schedule.all_day)
       setStatus(schedule.status)
       setSiteAddress(schedule.site_address || '')
@@ -120,7 +124,7 @@ export default function ScheduleModal({
       setDescription(schedule.description || '')
       setNotes(schedule.notes || '')
     } else {
-      const todayStr = initialDate || new Date().toISOString().slice(0, 10)
+      const todayStr = initialDate || getLocalTodayString()
       setDate(todayStr)
       setStartTime(initialStartTime || '08:00')
       setEndTime(initialEndTime || '16:30')
@@ -174,12 +178,12 @@ export default function ScheduleModal({
       setError(null)
 
       const startIso = allDay
-        ? new Date(`${date}T00:00:00`).toISOString()
-        : new Date(`${date}T${startTime}:00`).toISOString()
+        ? createLocalIsoString(date, '00:00')
+        : createLocalIsoString(date, startTime)
 
       const endIso = allDay
-        ? new Date(`${date}T23:59:59`).toISOString()
-        : new Date(`${date}T${endTime}:00`).toISOString()
+        ? createLocalIsoString(date, '23:59')
+        : createLocalIsoString(date, endTime)
 
       const payload = {
         title: title.trim(),

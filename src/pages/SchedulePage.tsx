@@ -4,6 +4,7 @@ import { useSchedule } from '@/hooks/useSchedule'
 import { useProjects } from '@/hooks/useProjects'
 import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
 import { supabase } from '@/lib/supabase'
+import { getLocalTodayString, getLocalDayBounds } from '@/lib/dateUtils'
 import ScheduleResourceTimeline from '@/components/schedule/ScheduleResourceTimeline'
 import TechnicianDailyAgenda from '@/components/schedule/TechnicianDailyAgenda'
 import UnassignedJobsDrawer from '@/components/schedule/UnassignedJobsDrawer'
@@ -17,7 +18,7 @@ import type { SafetyDocument } from '@/types/safety'
 
 export default function SchedulePage() {
   const { user } = useAuth()
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const todayStr = useMemo(() => getLocalTodayString(), [])
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
   const [viewMode, setViewMode] = useState<'timeline' | 'agenda'>('timeline')
 
@@ -41,7 +42,9 @@ export default function SchedulePage() {
 
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
 
-  // Fetch Schedules for selected date
+  const dayBounds = useMemo(() => getLocalDayBounds(selectedDate), [selectedDate])
+
+  // Fetch Schedules for selected date with local timezone bounds
   const {
     schedules,
     loading: schedulesLoading,
@@ -51,8 +54,8 @@ export default function SchedulePage() {
     updateScheduleStatus,
     linkSafetyDocument,
   } = useSchedule({
-    startDate: `${selectedDate}T00:00:00.000Z`,
-    endDate: `${selectedDate}T23:59:59.999Z`,
+    startDate: dayBounds.startDate,
+    endDate: dayBounds.endDate,
     technicianId: selectedTechFilter,
     projectId: selectedProjectFilter,
     status: selectedStatusFilter,

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { formatLocalDate, formatLocalTime } from '@/lib/dateUtils'
 import type { JobSchedule, ScheduleStatus } from '@/types/schedule'
 
 interface TechnicianUser {
@@ -93,7 +94,7 @@ export default function ScheduleResourceTimeline({
 
   // Calculate current time line position if viewing today
   const now = new Date()
-  const isToday = now.toISOString().slice(0, 10) === date
+  const isToday = formatLocalDate(now) === date
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
   const nowMinutesFromStart = nowMinutes - TIMELINE_START_HOUR * 60
   const nowPercent = Math.max(0, Math.min(100, (nowMinutesFromStart / TOTAL_MINUTES) * 100))
@@ -281,8 +282,7 @@ export default function ScheduleResourceTimeline({
                           <div className="flex items-center justify-between text-[10px] text-text-muted truncate gap-1 mt-0.5">
                             <span className="truncate">{s.project?.name || s.site_address || 'Site Job'}</span>
                             <span className="font-mono shrink-0">
-                              {new Date(s.start_time).toTimeString().slice(0, 5)} -{' '}
-                              {new Date(s.end_time).toTimeString().slice(0, 5)}
+                              {formatLocalTime(s.start_time)} - {formatLocalTime(s.end_time)}
                             </span>
                           </div>
                         </div>

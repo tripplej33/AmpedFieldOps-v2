@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
+import { formatLocalTime } from '@/lib/dateUtils'
 import type { JobSchedule, ScheduleStatus } from '@/types/schedule'
 
 interface TechnicianDailyAgendaProps {
@@ -94,8 +95,8 @@ export default function TechnicianDailyAgenda({
       <div className="space-y-3">
         {schedules.map((schedule, idx) => {
           const cfg = STATUS_BADGE[schedule.status] || STATUS_BADGE.scheduled
-          const startTimeStr = new Date(schedule.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          const endTimeStr = new Date(schedule.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          const startTimeStr = formatLocalTime(schedule.start_time)
+          const endTimeStr = formatLocalTime(schedule.end_time)
 
           return (
             <div
@@ -190,10 +191,10 @@ export default function TechnicianDailyAgenda({
               <div className="pt-2 flex items-center justify-between gap-2 flex-wrap border-t border-border-dark/60">
                 <div className="text-[11px] text-text-muted font-mono">
                   {schedule.actual_start_time && (
-                    <span>On Site: {new Date(schedule.actual_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>On Site: {formatLocalTime(schedule.actual_start_time)}</span>
                   )}
                   {schedule.actual_end_time && (
-                    <span> • Done: {new Date(schedule.actual_end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span> • Done: {formatLocalTime(schedule.actual_end_time)}</span>
                   )}
                 </div>
 
