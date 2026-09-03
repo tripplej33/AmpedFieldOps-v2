@@ -23,6 +23,7 @@ export interface TradeTerminology {
   purchaseOrders: string
   financials: string
   schedule: string
+  compliance?: string
   files: string
 }
 
@@ -35,6 +36,7 @@ export interface ModuleFlags {
   vanStock: boolean
   fleet: boolean
   safety: boolean
+  compliance?: boolean
   timesheets: boolean
   financials: boolean
   files: boolean

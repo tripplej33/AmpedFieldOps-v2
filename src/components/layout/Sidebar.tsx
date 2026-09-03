@@ -46,6 +46,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
     { id: 'van-stock', label: t('vanStock', 'Van Stock & Materials'), icon: 'local_shipping', path: '/app/van-stock', moduleKey: 'vanStock' },
     { id: 'fleet', label: t('fleet', 'Fleet & Vehicles'), icon: 'directions_car', path: '/app/fleet', moduleKey: 'fleet' },
     { id: 'safety', label: t('safety', 'Safety & Permits'), icon: 'shield_with_heart', path: '/app/safety', moduleKey: 'safety' },
+    { id: 'compliance', label: t('compliance', 'Testing & CoC/ESC'), icon: 'verified', path: '/app/compliance', moduleKey: 'compliance' },
     { id: 'timesheets', label: t('timesheets', 'Timesheets'), icon: 'schedule', path: '/app/timesheets', moduleKey: 'timesheets' },
     { id: 'financials', label: t('financials', 'Financials'), icon: 'payments', path: '/app/financials', roles: ['admin', 'manager'], moduleKey: 'financials' },
     { id: 'files', label: t('files', 'Files Hub'), icon: 'folder', path: '/app/files', moduleKey: 'files' },

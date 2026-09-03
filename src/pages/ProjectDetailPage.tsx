@@ -42,6 +42,7 @@ import SiteSafetySection from '@/components/safety/SiteSafetySection'
 import SafetyDocumentsList from '@/components/safety/SafetyDocumentsList'
 import SafetyDocumentModal from '@/components/safety/SafetyDocumentModal'
 import ProjectComplianceSection from '@/components/compliance/ProjectComplianceSection'
+import SitePhotoGallery from '@/components/photos/SitePhotoGallery'
 import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
 import type { SafetyDocument } from '@/types/safety'
 import Toast from '@/components/ui/Toast'
@@ -64,7 +65,7 @@ export default function ProjectDetailPage() {
   const isManager = user?.role === 'manager' || user?.role === 'admin'
 
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'materials' | 'purchase_orders' | 'contacts' | 'safety' | 'testing' | 'snags' | 'timesheets' | 'files' | 'financials'
+    'overview' | 'materials' | 'purchase_orders' | 'contacts' | 'safety' | 'testing' | 'photos' | 'snags' | 'timesheets' | 'files' | 'financials'
   >('overview')
 
   const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -545,6 +546,15 @@ export default function ProjectDetailPage() {
           Testing & CoC/ESC
         </button>
         <button
+          onClick={() => setActiveTab('photos')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+            activeTab === 'photos' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          }`}
+        >
+          <span className="material-symbols-outlined text-base">photo_camera</span>
+          Site Photos & Markups
+        </button>
+        <button
           onClick={() => setActiveTab('snags')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
             activeTab === 'snags' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
@@ -859,6 +869,15 @@ export default function ProjectDetailPage() {
       {activeTab === 'testing' && (
         <ProjectComplianceSection
           projectId={id || ''}
+          onToast={(type, message) => setToast({ type, message })}
+        />
+      )}
+
+      {/* TAB: SITE PHOTOS & MARKUPS */}
+      {activeTab === 'photos' && (
+        <SitePhotoGallery
+          projectId={id || ''}
+          projectName={project?.name}
           onToast={(type, message) => setToast({ type, message })}
         />
       )}
