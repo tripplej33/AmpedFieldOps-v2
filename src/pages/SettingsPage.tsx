@@ -9,6 +9,7 @@ import RolesList from '@/components/settings/RolesList'
 import InviteUserModal from '@/components/settings/InviteUserModal'
 import XeroSettingsSection from '@/components/settings/XeroSettingsSection'
 import ActivityTypesSection from '@/components/settings/ActivityTypesSection'
+import TradeCustomizationSection from '@/components/settings/TradeCustomizationSection'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 import type { User, InviteUserFormData, RoleFormData } from '@/types'
@@ -17,7 +18,7 @@ import { useCompanyProfile, CompanyProfile } from '@/hooks/useCompanyProfile'
 export default function SettingsPage() {
   const { isAdmin, hasPermission } = usePermissions()
 
-  const [activeTab, setActiveTab] = useState<'team' | 'roles' | 'company' | 'activity_types' | 'xero'>('team')
+  const [activeTab, setActiveTab] = useState<'team' | 'roles' | 'company' | 'trade' | 'activity_types' | 'xero'>('team')
 
   // Users state
   const [usersList, setUsersList] = useState<User[]>([])
@@ -216,6 +217,18 @@ export default function SettingsPage() {
         >
           <span className="material-symbols-outlined text-base">domain</span>
           Company Profile & Branding
+        </button>
+
+        <button
+          onClick={() => setActiveTab('trade')}
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'trade'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-text-muted hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-base">tune</span>
+          Trade & Terminology
         </button>
 
         <button
@@ -438,6 +451,13 @@ export default function SettingsPage() {
             </div>
           </form>
         </div>
+      )}
+
+      {/* TAB: TRADE CUSTOMIZATION & TERMINOLOGY */}
+      {activeTab === 'trade' && (
+        <TradeCustomizationSection
+          onSuccessToast={(msg) => setToast({ type: 'success', message: msg })}
+        />
       )}
 
       {/* TAB 4: ACTIVITY TYPES & LABOR RATES */}

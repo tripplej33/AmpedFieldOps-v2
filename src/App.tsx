@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { TerminologyProvider } from './contexts/TerminologyContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/layout/Layout'
@@ -65,8 +66,9 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <MobileInitializer />
-          <Routes>
+          <TerminologyProvider>
+            <MobileInitializer />
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Welcome />} />
             <Route path="/welcome" element={<Welcome />} />
@@ -220,10 +222,11 @@ function App() {
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  )
+        </TerminologyProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </ErrorBoundary>
+)
 }
 
 export default App

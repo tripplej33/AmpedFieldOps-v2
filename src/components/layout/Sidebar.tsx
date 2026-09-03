@@ -1,25 +1,12 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotifications } from '@/hooks/useNotifications'
+import { useTerminology } from '@/hooks/useTerminology'
 import NotificationDropdown from './NotificationDropdown'
 import UserAvatar from '@/components/ui/UserAvatar'
 import { NavItem } from '@/types'
-
-const navigationItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/app/dashboard' },
-  { id: 'clients', label: 'Clients', icon: 'groups', path: '/app/clients', roles: ['admin', 'manager'] },
-  { id: 'projects', label: 'Projects', icon: 'work', path: '/app/projects' },
-  { id: 'schedule', label: 'Schedule & Dispatch', icon: 'calendar_month', path: '/app/schedule' },
-  { id: 'purchase-orders', label: 'Purchase Orders', icon: 'shopping_cart', path: '/app/purchase-orders', roles: ['admin', 'manager'] },
-  { id: 'van-stock', label: 'Van Stock & Materials', icon: 'local_shipping', path: '/app/van-stock' },
-  { id: 'fleet', label: 'Fleet & Vehicles', icon: 'directions_car', path: '/app/fleet' },
-  { id: 'safety', label: 'Safety & Permits', icon: 'shield_with_heart', path: '/app/safety' },
-  { id: 'timesheets', label: 'Timesheets', icon: 'schedule', path: '/app/timesheets' },
-  { id: 'financials', label: 'Financials', icon: 'payments', path: '/app/financials', roles: ['admin', 'manager'] },
-  { id: 'files', label: 'Files Hub', icon: 'folder', path: '/app/files' },
-  { id: 'settings', label: 'Settings & Team', icon: 'settings', path: '/app/settings', roles: ['admin', 'manager'] },
-]
+import type { ModuleKey } from '@/types/trade'
 
 interface SidebarProps {
   isCollapsed: boolean
@@ -32,6 +19,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { t, isModuleEnabled } = useTerminology()
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
   const {
@@ -49,9 +37,33 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
   const isSettingsActive = location.pathname.startsWith('/app/settings')
   const isProfileActive = location.pathname.startsWith('/app/profile')
 
-  const filteredNav = navigationItems.filter(
-    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
-  )
+  const navigationItems = useMemo((): (NavItem & { moduleKey?: ModuleKey })[] => [
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/app/dashboard', moduleKey: 'dashboard' },
+    { id: 'clients', label: t('clients', 'Clients'), icon: 'groups', path: '/app/clients', roles: ['admin', 'manager'], moduleKey: 'clients' },
+    { id: 'projects', label: t('projects', 'Projects'), icon: 'work', path: '/app/projects', moduleKey: 'projects' },
+    { id: 'schedule', label: t('schedule', 'Schedule & Dispatch'), icon: 'calendar_month', path: '/app/schedule', moduleKey: 'schedule' },
+    { id: 'purchase-orders', label: t('purchaseOrders', 'Purchase Orders'), icon: 'shopping_cart', path: '/app/purchase-orders', roles: ['admin', 'manager'], moduleKey: 'purchaseOrders' },
+    { id: 'van-stock', label: t('vanStock', 'Van Stock & Materials'), icon: 'local_shipping', path: '/app/van-stock', moduleKey: 'vanStock' },
+    { id: 'fleet', label: t('fleet', 'Fleet & Vehicles'), icon: 'directions_car', path: '/app/fleet', moduleKey: 'fleet' },
+    { id: 'safety', label: t('safety', 'Safety & Permits'), icon: 'shield_with_heart', path: '/app/safety', moduleKey: 'safety' },
+    { id: 'timesheets', label: t('timesheets', 'Timesheets'), icon: 'schedule', path: '/app/timesheets', moduleKey: 'timesheets' },
+    { id: 'financials', label: t('financials', 'Financials'), icon: 'payments', path: '/app/financials', roles: ['admin', 'manager'], moduleKey: 'financials' },
+    { id: 'files', label: t('files', 'Files Hub'), icon: 'folder', path: '/app/files', moduleKey: 'files' },
+    { id: 'settings', label: 'Settings & Team', icon: 'settings', path: '/app/settings', roles: ['admin', 'manager'] },
+  ], [t])
+
+  const filteredNav = useMemo(() => {
+    return navigationItems.filter((item) => {
+      // 1. Check user role permissions
+      const roleAllowed = !item.roles || (user?.role && item.roles.includes(user.role))
+      if (!roleAllowed) return false
+
+      // 2. Check trade module enabled flag
+      if (item.moduleKey && !isModuleEnabled(item.moduleKey)) return false
+
+      return true
+    })
+  }, [navigationItems, user?.role, isModuleEnabled])
 
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) {

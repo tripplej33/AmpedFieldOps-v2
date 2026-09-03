@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import StatCard from '@/components/ui/StatCard'
 import ActivityFeed from '@/components/ActivityFeed'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTerminology } from '@/hooks/useTerminology'
 import { supabase } from '@/lib/supabase'
 import { ActivityFeedItem } from '@/mocks/dashboardData'
 
@@ -27,6 +28,7 @@ interface ProjectBurnSummary {
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { t } = useTerminology()
   const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats>({
     totalProjects: 0,
@@ -291,21 +293,21 @@ export default function Dashboard() {
       {/* Top 4 KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Active Projects"
+          title={`Active ${t('projects', 'Projects')}`}
           value={`${stats.activeProjects} / ${stats.totalProjects}`}
           icon="work"
           trend={{ value: stats.activeProjects, isPositive: true }}
           subtitle="In progress & scheduled"
         />
         <StatCard
-          title="Total Clients"
+          title={`Total ${t('clients', 'Clients')}`}
           value={stats.totalClients.toString()}
           icon="group"
           trend={{ value: stats.totalClients, isPositive: true }}
-          subtitle="Xero synced contacts"
+          subtitle="Customer & site accounts"
         />
         <StatCard
-          title="Pending Timesheets"
+          title={`Pending ${t('timesheets', 'Timesheets')}`}
           value={stats.pendingTimesheets.toString()}
           icon="schedule"
           trend={{ value: stats.pendingTimesheets, isPositive: stats.pendingTimesheets === 0 }}
@@ -327,21 +329,21 @@ export default function Dashboard() {
           className="h-[38px] flex items-center gap-2 px-3.5 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors text-xs font-semibold shadow-sm"
         >
           <span className="material-symbols-outlined text-base">add_circle</span>
-          Manage Projects
+          Manage {t('projects', 'Projects')}
         </button>
         <button
           onClick={() => navigate('/app/timesheets')}
           className="h-[38px] flex items-center gap-2 px-3.5 bg-background-dark border border-border-dark hover:border-primary/50 text-white rounded-lg transition-colors text-xs font-medium"
         >
           <span className="material-symbols-outlined text-base text-primary">schedule</span>
-          Record Timesheets
+          Record {t('timesheets', 'Timesheets')}
         </button>
         <button
           onClick={() => navigate('/app/clients')}
           className="h-[38px] flex items-center gap-2 px-3.5 bg-background-dark border border-border-dark hover:border-primary/50 text-white rounded-lg transition-colors text-xs font-medium"
         >
           <span className="material-symbols-outlined text-base text-primary">contacts</span>
-          Client Hub
+          {t('clients', 'Clients')} Hub
         </button>
         <button
           onClick={() => fetchDashboardData()}
@@ -359,17 +361,17 @@ export default function Dashboard() {
             <div>
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-base">trending_up</span>
-                Active Project Budget & Labor Burn Tracking
+                Active {t('project', 'Project')} Budget & Labor Burn Tracking
               </h2>
               <p className="text-xs text-text-muted mt-0.5">
-                Comparison of contract budgets vs recorded technician labor cost
+                Comparison of contract budgets vs recorded {t('technician', 'technician').toLowerCase()} labor cost
               </p>
             </div>
             <button
               onClick={() => navigate('/app/projects')}
               className="text-xs text-primary hover:underline font-medium"
             >
-              View All Projects →
+              View All {t('projects', 'Projects')} →
             </button>
           </div>
 
