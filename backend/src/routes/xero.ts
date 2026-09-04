@@ -181,5 +181,23 @@ router.post('/disconnect', async (_req: Request, res: Response) => {
   }
 });
 
+// POST /xero/invoices/create - Push an existing FieldOps invoice to Xero
+router.post('/invoices/create', async (req: Request, res: Response) => {
+  try {
+    const { invoiceId } = req.body;
+    if (!invoiceId) {
+      return res.status(400).json({ error: 'Missing invoiceId parameter' });
+    }
+
+    const { createXeroInvoiceFromRecord } = await import('../services/xero/invoices');
+    const result = await createXeroInvoiceFromRecord(invoiceId);
+
+    return res.json(result);
+  } catch (error: any) {
+    console.error('[XeroCreateInvoice] Error:', error);
+    return res.status(500).json({ error: 'Failed to push invoice to Xero', details: error?.message });
+  }
+});
+
 export { encrypt, decrypt };
 export default router;

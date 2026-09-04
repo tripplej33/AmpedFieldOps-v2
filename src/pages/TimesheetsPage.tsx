@@ -23,6 +23,7 @@ import TimesheetFiltersComponent from '@/components/TimesheetFilters'
 import TimesheetModal from '@/components/TimesheetModal'
 import ApprovalModal from '@/components/ApprovalModal'
 import DocumentScannerModal from '@/components/DocumentScannerModal'
+import GenerateInvoiceModal from '@/components/invoicing/GenerateInvoiceModal'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 
@@ -35,6 +36,7 @@ export default function TimesheetsPage() {
   const [dayDate, setDayDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isScannerOpen, setIsScannerOpen] = useState(false)
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const [selected, setSelected] = useState<Timesheet | undefined>()
   const [isApprovalOpen, setIsApprovalOpen] = useState(false)
   const [modalInitialDate, setModalInitialDate] = useState<string | undefined>()
@@ -325,6 +327,17 @@ export default function TimesheetsPage() {
             <span className="hidden sm:inline">Scan Receipt</span>
           </Button>
 
+          {isManager && (
+            <Button
+              variant="secondary"
+              onClick={() => setIsInvoiceModalOpen(true)}
+              className="text-xs font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-base">receipt_long</span>
+              <span>Generate Invoice</span>
+            </Button>
+          )}
+
           {/* Add Timesheet Button */}
           <Button onClick={() => handleAdd()} disabled={disabled}>
             <span className="material-symbols-outlined text-base">add</span>
@@ -479,6 +492,17 @@ export default function TimesheetsPage() {
           setIsModalOpen(true)
         }}
       />
+
+      {isInvoiceModalOpen && (
+        <GenerateInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          onInvoiceCreated={() => {
+            refreshTimesheets()
+            setToast({ type: 'success', message: 'Invoice generated and timesheets updated!' })
+          }}
+        />
+      )}
 
       {toast && (
         <Toast

@@ -11,6 +11,81 @@ interface TimesheetRecord {
   hours: number;
 }
 
+export async function createXeroInvoiceFromRecord(invoiceId: string): Promise<{ success: boolean; xeroInvoiceId?: string; xeroInvoiceNumber?: string }> {
+  try {
+    const { data: inv, error: invErr } = await supabase
+      .from('invoices')
+      .select(`
+        *,
+        client:clients(id, name, email, xero_contact_id),
+        line_items:invoice_line_items(*)
+      `)
+      .eq('id', invoiceId)
+      .single();
+
+    if (invErr || !inv) throw new Error(invErr?.message || 'Invoice record not found');
+
+    const { tenantId } = await ensureXeroAuth();
+
+    const lineItems = (inv.line_items || []).map((item: any) => ({
+      description: item.description,
+      quantity: Number(item.quantity) || 1,
+      unitAmount: Number(item.unit_price) || 0,
+      itemCode: item.xero_item_code || undefined,
+      accountCode: '200', // Default Sales/Revenue Account in NZ Xero chart of accounts
+    }));
+
+    const resp = await xeroClient.accountingApi.createInvoices(tenantId, {
+      invoices: [
+        {
+          type: Invoice.TypeEnum.ACCREC,
+          status: Invoice.StatusEnum.AUTHORISED,
+          date: inv.issue_date,
+          dueDate: inv.due_date,
+          lineAmountTypes: LineAmountTypes.Exclusive,
+          contact: {
+            contactID: inv.client?.xero_contact_id || undefined,
+            name: inv.client?.name || 'Valued Client',
+          },
+          lineItems: lineItems.length > 0 ? lineItems : [
+            {
+              description: 'Field Service Labor & Materials',
+              quantity: 1,
+              unitAmount: inv.subtotal,
+              accountCode: '200',
+            }
+          ],
+        }
+      ]
+    });
+
+    const createdXero = resp?.body?.invoices?.[0];
+    const xeroInvoiceId = createdXero?.invoiceID || null;
+    const xeroInvoiceNumber = createdXero?.invoiceNumber || inv.invoice_number;
+
+    // Update FieldOps invoice record with live Xero IDs
+    await supabase
+      .from('invoices')
+      .update({
+        xero_invoice_id: xeroInvoiceId,
+        xero_invoice_number: xeroInvoiceNumber,
+        xero_status: 'AUTHORISED',
+        status: 'issued',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', invoiceId);
+
+    return {
+      success: true,
+      xeroInvoiceId: xeroInvoiceId || undefined,
+      xeroInvoiceNumber: xeroInvoiceNumber,
+    };
+  } catch (err: any) {
+    console.error('[createXeroInvoiceFromRecord] Error pushing to Xero:', err);
+    throw err;
+  }
+}
+
 export async function syncInvoices(): Promise<{ processed: number }> {
   const logHandle = await startSync('sync-invoices');
   try {
@@ -79,7 +154,7 @@ export async function syncInvoices(): Promise<{ processed: number }> {
           xero_invoice_id: xeroInvoiceId,
           invoice_number: invoiceNumber,
           total_amount: totalAmount,
-          payment_status: 'Draft',
+          status: 'issued',
           due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
         });
       if (insertErr) throw insertErr;
@@ -87,7 +162,7 @@ export async function syncInvoices(): Promise<{ processed: number }> {
       const timesheetIds = records.map((r) => r.id);
       const { error: updateErr } = await supabase
         .from('timesheets')
-        .update({ invoiced: true, xero_invoice_id: xeroInvoiceId, invoiced_at: new Date().toISOString() })
+        .update({ invoiced: true, invoice_id: null, invoiced_at: new Date().toISOString() })
         .in('id', timesheetIds);
       if (updateErr) throw updateErr;
 

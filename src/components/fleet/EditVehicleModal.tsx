@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useUsers } from '@/hooks/useUsers'
@@ -23,8 +23,12 @@ export default function EditVehicleModal({
   const [rego, setRego] = useState('')
   const [makeModel, setMakeModel] = useState('')
   const [year, setYear] = useState<number>(new Date().getFullYear())
+  const [assetCategory, setAssetCategory] = useState<'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'>('vehicle')
+  const [trackingType, setTrackingType] = useState<'km' | 'hours'>('km')
   const [assignedTechnicianId, setAssignedTechnicianId] = useState('')
   const [currentOdo, setCurrentOdo] = useState<number>(0)
+  const [currentHours, setCurrentHours] = useState<number>(0)
+  const [hourlyChargeRate, setHourlyChargeRate] = useState<number>(0)
   const [wofDate, setWofDate] = useState('')
   const [regoDate, setRegoDate] = useState('')
   const [rucDueKm, setRucDueKm] = useState<number>(0)
@@ -35,8 +39,12 @@ export default function EditVehicleModal({
       setRego(vehicle.registration_number || '')
       setMakeModel(vehicle.make_model || '')
       setYear(vehicle.year || new Date().getFullYear())
+      setAssetCategory(vehicle.asset_category || 'vehicle')
+      setTrackingType(vehicle.usage_tracking_type || 'km')
       setAssignedTechnicianId(vehicle.assigned_technician_id || '')
       setCurrentOdo(vehicle.current_odometer_km || 0)
+      setCurrentHours(vehicle.current_hours || 0)
+      setHourlyChargeRate(vehicle.hourly_charge_rate || 0)
       setWofDate(vehicle.wof_expiry_date ? vehicle.wof_expiry_date.slice(0, 10) : '')
       setRegoDate(vehicle.rego_expiry_date ? vehicle.rego_expiry_date.slice(0, 10) : '')
       setRucDueKm(vehicle.ruc_due_km || 0)
@@ -54,8 +62,12 @@ export default function EditVehicleModal({
       registration_number: rego.trim().toUpperCase(),
       make_model: makeModel.trim(),
       year: Number(year) || undefined,
+      asset_category: assetCategory,
+      usage_tracking_type: trackingType,
       assigned_technician_id: assignedTechnicianId || undefined,
       current_odometer_km: Number(currentOdo) || 0,
+      current_hours: Number(currentHours) || 0,
+      hourly_charge_rate: Number(hourlyChargeRate) || 0,
       wof_expiry_date: wofDate || undefined,
       rego_expiry_date: regoDate || undefined,
       ruc_due_km: Number(rucDueKm) || undefined,
@@ -66,138 +78,180 @@ export default function EditVehicleModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Manage Vehicle: ${vehicle.registration_number}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Fleet / Plant Asset">
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        {/* Asset Category Selector */}
+        <div className="flex bg-surface-dark border border-border-dark rounded-xl p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              setAssetCategory('vehicle')
+              setTrackingType('km')
+            }}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              assetCategory === 'vehicle' ? 'bg-primary text-black' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            🚐 Van / Ute
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAssetCategory('heavy_machinery')
+              setTrackingType('hours')
+            }}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              assetCategory === 'heavy_machinery' ? 'bg-primary text-black' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            🚜 Digger / Plant
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAssetCategory('equipment')
+              setTrackingType('hours')
+            }}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              assetCategory === 'equipment' ? 'bg-primary text-black' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            💦 Pressure Washer
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAssetCategory('trailer')
+              setTrackingType('km')
+            }}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              assetCategory === 'trailer' ? 'bg-primary text-black' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            🚛 Trailer
+          </button>
+        </div>
+
         {/* Rego & Make/Model */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1">
-            <label className="block font-medium text-text-muted">
-              License Plate / Rego <span className="text-primary">*</span>
-            </label>
+            <label className="text-text-muted font-medium">Plate / Asset Tag *</label>
             <input
               type="text"
-              required
-              placeholder="e.g. AMPED01"
               value={rego}
               onChange={(e) => setRego(e.target.value)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white font-mono font-bold uppercase focus:outline-none focus:border-primary"
+              className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white font-mono uppercase"
+              required
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block font-medium text-text-muted">
-              Make & Model <span className="text-primary">*</span>
-            </label>
+            <label className="text-text-muted font-medium">Make & Model / Machine *</label>
             <input
               type="text"
-              required
-              placeholder="e.g. Toyota HiAce LWB 2.8TD"
               value={makeModel}
               onChange={(e) => setMakeModel(e.target.value)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
+              className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white"
+              required
             />
           </div>
         </div>
 
-        {/* Assigned Technician & Status */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {/* Year, Assigned Tech, Charge Rate */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div className="space-y-1">
-            <label className="block font-medium text-primary font-bold">
-              Assigned Field Technician
-            </label>
-            <select
-              value={assignedTechnicianId}
-              onChange={(e) => setAssignedTechnicianId(e.target.value)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-primary/40 rounded-lg text-white font-semibold focus:outline-none focus:border-primary"
-            >
-              <option value="">Unassigned (Fleet Pool Van)</option>
-              {(users || []).map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name || u.email} ({u.role})
-                </option>
-              ))}
-            </select>
-            <p className="text-[10px] text-text-muted">
-              Locks van stock and restock POs to this technician
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block font-medium text-text-muted">Operational Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
-            >
-              <option value="active">Active (On Road)</option>
-              <option value="maintenance">In Workshop / Maintenance</option>
-              <option value="decommissioned">Decommissioned</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Year & Current Odo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="block font-medium text-text-muted">Manufacture Year</label>
+            <label className="text-text-muted font-medium">Year</label>
             <input
               type="number"
               value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
+              onChange={(e) => setYear(parseInt(e.target.value, 10))}
+              className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block font-medium text-text-muted">Current Odometer (KM)</label>
+            <label className="text-text-muted font-medium">Assigned Operator</label>
+            <select
+              value={assignedTechnicianId}
+              onChange={(e) => setAssignedTechnicianId(e.target.value)}
+              className="w-full h-9 px-2 bg-card-dark border border-border-dark rounded-xl text-white"
+            >
+              <option value="">-- Unassigned --</option>
+              {(users || []).map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-text-muted font-medium">Charge Rate ($/hr)</label>
             <input
               type="number"
-              value={currentOdo}
-              onChange={(e) => setCurrentOdo(Number(e.target.value))}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white font-mono focus:outline-none focus:border-primary"
+              step="0.01"
+              value={hourlyChargeRate}
+              onChange={(e) => setHourlyChargeRate(parseFloat(e.target.value) || 0)}
+              className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white font-mono"
             />
           </div>
         </div>
 
-        {/* WOF & Rego Expiry Dates */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        {/* Tracking: Hours vs Km */}
+        {trackingType === 'hours' ? (
           <div className="space-y-1">
-            <label className="block font-medium text-text-muted">WOF Expiry</label>
-            <input
-              type="date"
-              value={wofDate}
-              onChange={(e) => setWofDate(e.target.value)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block font-medium text-text-muted">Rego Expiry</label>
-            <input
-              type="date"
-              value={regoDate}
-              onChange={(e) => setRegoDate(e.target.value)}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block font-medium text-text-muted">RUC Due KM</label>
+            <label className="text-text-muted font-medium">Current Engine / Meter Hours</label>
             <input
               type="number"
-              value={rucDueKm}
-              onChange={(e) => setRucDueKm(Number(e.target.value))}
-              className="w-full h-[38px] px-3 bg-background-dark border border-border-dark rounded-lg text-white font-mono focus:outline-none focus:border-primary"
+              step="0.1"
+              value={currentHours}
+              onChange={(e) => setCurrentHours(parseFloat(e.target.value) || 0)}
+              className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white font-mono"
             />
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1">
+              <label className="text-text-muted font-medium">Current Odometer (km)</label>
+              <input
+                type="number"
+                value={currentOdo}
+                onChange={(e) => setCurrentOdo(parseInt(e.target.value, 10) || 0)}
+                className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-text-muted font-medium">RUC Due (km)</label>
+              <input
+                type="number"
+                value={rucDueKm}
+                onChange={(e) => setRucDueKm(parseInt(e.target.value, 10) || 0)}
+                className="w-full h-9 px-3 bg-card-dark border border-border-dark rounded-xl text-white font-mono"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Status */}
+        <div className="space-y-1">
+          <label className="text-text-muted font-medium">Asset Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="w-full h-9 px-2 bg-card-dark border border-border-dark rounded-xl text-white"
+          >
+            <option value="active">Active & Operational</option>
+            <option value="maintenance">In Maintenance / Workshop</option>
+            <option value="decommissioned">Decommissioned / Sold</option>
+          </select>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border-dark">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-dark">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" loading={isPending}>
-            Save Vehicle Changes
+          <Button type="submit" disabled={isPending}>
+            {isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </form>

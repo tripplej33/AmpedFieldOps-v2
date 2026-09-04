@@ -485,13 +485,20 @@ export interface ProjectContactFormData {
   notes?: string
 }
 
-// Fleet & Vehicles
+// Fleet & Vehicles / Plant Equipment
 export interface Vehicle {
   id: string
   registration_number: string
   make_model: string
   year?: number | null
   vin?: string | null
+  asset_category?: 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'
+  usage_tracking_type?: 'km' | 'hours'
+  current_hours?: number | null
+  hourly_charge_rate?: number | null
+  daily_charge_rate?: number | null
+  service_interval_hours?: number | null
+  service_due_hours?: number | null
   assigned_technician_id?: string | null
   wof_expiry_date?: string | null
   rego_expiry_date?: string | null
@@ -510,6 +517,13 @@ export interface VehicleFormData {
   make_model: string
   year?: number
   vin?: string
+  asset_category?: 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'
+  usage_tracking_type?: 'km' | 'hours'
+  current_hours?: number
+  hourly_charge_rate?: number
+  daily_charge_rate?: number
+  service_interval_hours?: number
+  service_due_hours?: number
   assigned_technician_id?: string
   wof_expiry_date?: string
   rego_expiry_date?: string

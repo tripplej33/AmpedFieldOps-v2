@@ -243,6 +243,7 @@ export default function VanStockPage() {
           stock={stock}
           loading={stockLoading}
           onAdjustStock={handleAdjustStock}
+          onRefresh={refreshStock}
         />
       )}
 

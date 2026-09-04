@@ -43,6 +43,8 @@ import SafetyDocumentsList from '@/components/safety/SafetyDocumentsList'
 import SafetyDocumentModal from '@/components/safety/SafetyDocumentModal'
 import ProjectComplianceSection from '@/components/compliance/ProjectComplianceSection'
 import SitePhotoGallery from '@/components/photos/SitePhotoGallery'
+import GenerateInvoiceModal from '@/components/invoicing/GenerateInvoiceModal'
+import GenerateJobReportModal from '@/components/reports/GenerateJobReportModal'
 import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
 import type { SafetyDocument } from '@/types/safety'
 import Toast from '@/components/ui/Toast'
@@ -70,6 +72,8 @@ export default function ProjectDetailPage() {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [isTimesheetModalOpen, setIsTimesheetModalOpen] = useState(false)
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+  const [isJobReportModalOpen, setIsJobReportModalOpen] = useState(false)
   const [isPOModalOpen, setIsPOModalOpen] = useState(false)
   const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false)
   const [projectTimesheets, setProjectTimesheets] = useState<Timesheet[]>([])
@@ -469,10 +473,30 @@ export default function ProjectDetailPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="secondary"
+            onClick={() => setIsJobReportModalOpen(true)}
+            className="text-xs font-bold text-purple-400 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-sm">description</span>
+            Job Report (PDF)
+          </Button>
+
+          {isManager && (
+            <Button
+              variant="secondary"
+              onClick={() => setIsInvoiceModalOpen(true)}
+              className="text-xs font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">receipt_long</span>
+              Create Invoice
+            </Button>
+          )}
+
           <Button variant="secondary" onClick={() => setIsEditProjectModalOpen(true)}>
             <span className="material-symbols-outlined text-sm">edit</span>
-            Edit Project
+            Edit
           </Button>
           <Button variant="secondary" onClick={() => setIsScannerOpen(true)}>
             <span className="material-symbols-outlined">document_scanner</span>
@@ -1248,6 +1272,29 @@ export default function ProjectDetailPage() {
         }}
         onArchivePdf={archiveDocumentPdf}
       />
+
+      {/* Generate Tax Invoice Modal */}
+      {isInvoiceModalOpen && (
+        <GenerateInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          projectId={id}
+          clientId={project?.client_id || undefined}
+          onInvoiceCreated={() => {
+            fetchProjectExtraData()
+            setToast({ type: 'success', message: 'Invoice generated and project billed!' })
+          }}
+        />
+      )}
+
+      {/* Field Service & Job Completion Report Modal */}
+      {isJobReportModalOpen && (
+        <GenerateJobReportModal
+          isOpen={isJobReportModalOpen}
+          onClose={() => setIsJobReportModalOpen(false)}
+          projectId={id}
+        />
+      )}
 
       {/* Toast Notification */}
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}

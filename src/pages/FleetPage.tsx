@@ -4,6 +4,7 @@ import { useVehicleCheckSheets, useSubmitVehicleCheckSheet } from '@/hooks/useVe
 import AddVehicleModal from '@/components/fleet/AddVehicleModal'
 import EditVehicleModal from '@/components/fleet/EditVehicleModal'
 import VehicleCheckSheetModal from '@/components/fleet/VehicleCheckSheetModal'
+import LogPlantUsageModal from '@/components/fleet/LogPlantUsageModal'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 import type { Vehicle, VehicleFormData, VehicleCheckSheetFormData } from '@/types'
@@ -13,6 +14,7 @@ export default function FleetPage() {
   const { create: createVehicle, isPending: isCreatingVehicle } = useCreateVehicle()
   const { update: updateVehicle, isPending: isUpdatingVehicle } = useUpdateVehicle()
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'>('all')
 
   const { checkSheets, loading: sheetsLoading, refresh: refreshSheets } = useVehicleCheckSheets(
     selectedVehicleId || vehicles[0]?.id
@@ -22,9 +24,15 @@ export default function FleetPage() {
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [inspectingVehicle, setInspectingVehicle] = useState<Vehicle | null>(null)
+  const [loggingUsageVehicle, setLoggingUsageVehicle] = useState<Vehicle | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  const activeVehicleId = selectedVehicleId || vehicles[0]?.id
+  const filteredVehicles = vehicles.filter((v) => {
+    if (categoryFilter === 'all') return true
+    return (v.asset_category || 'vehicle') === categoryFilter
+  })
+
+  const activeVehicleId = selectedVehicleId || filteredVehicles[0]?.id || vehicles[0]?.id
   const activeVehicle = vehicles.find((v) => v.id === activeVehicleId)
 
   const handleAddVehicle = async (data: VehicleFormData) => {
@@ -32,9 +40,9 @@ export default function FleetPage() {
       await createVehicle(data)
       await refreshVehicles()
       setIsAddVehicleOpen(false)
-      setToast({ type: 'success', message: `Vehicle ${data.registration_number} registered` })
-    } catch (err) {
-      setToast({ type: 'error', message: 'Failed to register vehicle' })
+      setToast({ type: 'success', message: `Fleet asset ${data.registration_number} registered` })
+    } catch {
+      setToast({ type: 'error', message: 'Failed to register fleet asset' })
     }
   }
 
@@ -43,9 +51,9 @@ export default function FleetPage() {
       await updateVehicle(id, data)
       await refreshVehicles()
       setEditingVehicle(null)
-      setToast({ type: 'success', message: `Vehicle ${data.registration_number || ''} updated successfully` })
-    } catch (err) {
-      setToast({ type: 'error', message: 'Failed to update vehicle' })
+      setToast({ type: 'success', message: `Asset ${data.registration_number || ''} updated successfully` })
+    } catch {
+      setToast({ type: 'error', message: 'Failed to update asset' })
     }
   }
 
@@ -56,7 +64,7 @@ export default function FleetPage() {
       await refreshVehicles()
       setInspectingVehicle(null)
       setToast({ type: 'success', message: 'Inspection check sheet recorded' })
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Failed to record check sheet' })
     }
   }
@@ -104,10 +112,10 @@ export default function FleetPage() {
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-2.5">
             <span className="material-symbols-outlined text-4xl text-primary">directions_car</span>
-            Fleet & Vehicle Compliance Hub
+            Fleet, Heavy Plant & Equipment Hub
           </h1>
           <p className="text-text-muted text-xs mt-1">
-            WOF / Rego expiry tracking, technician van assignments, and monthly safety check sheets
+            Service vans, diggers/excavators, pressure washers, engine hour tracking, and hourly job billing
           </p>
         </div>
 
@@ -120,7 +128,7 @@ export default function FleetPage() {
                 className="h-[38px] text-xs"
               >
                 <span className="material-symbols-outlined text-base">edit</span>
-                Edit / Assign Van
+                Edit Asset
               </Button>
               <Button
                 variant="secondary"
@@ -128,34 +136,62 @@ export default function FleetPage() {
                 className="h-[38px] text-xs"
               >
                 <span className="material-symbols-outlined text-base">checklist</span>
-                Monthly Check Sheet
+                Check Sheet
               </Button>
             </>
           )}
           <Button onClick={() => setIsAddVehicleOpen(true)} className="h-[38px] text-xs">
             <span className="material-symbols-outlined text-base">add_circle</span>
-            Add Vehicle
+            Add Fleet / Plant Asset
           </Button>
         </div>
       </div>
 
+      {/* Category Tabs Bar */}
+      <div className="flex gap-2 border-b border-border-dark pb-2 overflow-x-auto text-xs">
+        {[
+          { key: 'all', label: 'All Fleet & Plant', icon: 'apps' },
+          { key: 'vehicle', label: 'Service Vans & Utes', icon: 'local_shipping' },
+          { key: 'heavy_machinery', label: 'Diggers & Excavators', icon: 'precision_manufacturing' },
+          { key: 'equipment', label: 'Pressure Washers & Equipment', icon: 'water_drop' },
+          { key: 'trailer', label: 'Trailers', icon: 'rv_hookup' },
+        ].map((tab) => {
+          const isActive = categoryFilter === tab.key
+          const count = tab.key === 'all' ? vehicles.length : vehicles.filter((v) => (v.asset_category || 'vehicle') === tab.key).length
+
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setCategoryFilter(tab.key as any)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+                isActive ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+              {tab.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {/* Fleet Vehicles Grid */}
       {vehiclesLoading ? (
-        <div className="text-center py-10 text-xs text-text-muted">Loading fleet vehicles...</div>
-      ) : vehicles.length === 0 ? (
+        <div className="text-center py-10 text-xs text-text-muted animate-pulse">Loading fleet assets...</div>
+      ) : filteredVehicles.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border-dark rounded-xl bg-background-dark/40">
           <span className="material-symbols-outlined text-4xl text-text-muted/40 block mb-2">
-            minor_crash
+            precision_manufacturing
           </span>
-          <p className="text-white text-sm font-medium">No fleet vehicles registered yet</p>
+          <p className="text-white text-sm font-medium">No assets in this category</p>
           <p className="text-xs text-text-muted mt-1">
-            Click "Add Vehicle" to register company vans, utes, and service trucks.
+            Click "Add Fleet / Plant Asset" to register service vehicles, diggers, or pressure washers.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((v) => {
+          {filteredVehicles.map((v) => {
             const isSelected = v.id === activeVehicleId
+            const isPlant = v.asset_category === 'heavy_machinery' || v.asset_category === 'equipment'
             const rucRemaining = (v.ruc_due_km || 0) - (v.current_odometer_km || 0)
 
             return (
@@ -185,7 +221,7 @@ export default function FleetPage() {
                         setEditingVehicle(v)
                       }}
                       className="p-1 rounded hover:bg-background-dark text-text-muted hover:text-white transition-colors"
-                      title="Edit vehicle & assign technician"
+                      title="Edit asset details"
                     >
                       <span className="material-symbols-outlined text-sm">edit</span>
                     </button>
@@ -201,43 +237,68 @@ export default function FleetPage() {
                   </div>
                 </div>
 
-                {/* Technician & Odometer */}
+                {/* Operator / Tech & Usage Reading */}
                 <div className="flex items-center justify-between text-xs text-text-muted pt-1 border-t border-border-dark/40">
                   <div className="flex items-center gap-1.5 truncate">
                     <span className="material-symbols-outlined text-xs text-primary">person</span>
                     <span className="truncate font-semibold text-white">
-                      {v.technician ? v.technician.full_name : 'Pool Van (Unassigned)'}
+                      {v.technician ? v.technician.full_name : 'Pool Asset (Unassigned)'}
                     </span>
                   </div>
                   <span className="font-mono text-white text-xs font-semibold shrink-0">
-                    {Number(v.current_odometer_km).toLocaleString()} KM
+                    {v.usage_tracking_type === 'hours'
+                      ? `${Number(v.current_hours || 0).toLocaleString()} HRS`
+                      : `${Number(v.current_odometer_km || 0).toLocaleString()} KM`}
                   </span>
                 </div>
 
-                {/* Compliance Pills: WOF, Rego & RUC */}
-                <div className="space-y-1.5 pt-1 border-t border-border-dark/40">
-                  <div className="flex items-center justify-between gap-1">
-                    {getCompliancePill(v.wof_expiry_date, 'WOF')}
-                    {getCompliancePill(v.rego_expiry_date, 'Rego')}
-                  </div>
-
-                  {v.ruc_due_km ? (
-                    <div className="flex items-center justify-between text-[11px] text-text-muted bg-background-dark/80 px-2.5 py-1 rounded-lg border border-border-dark/50">
-                      <span>RUC Due at {Number(v.ruc_due_km).toLocaleString()} KM</span>
-                      <span
-                        className={`font-mono font-bold ${
-                          rucRemaining < 1000
-                            ? 'text-red-400'
-                            : rucRemaining < 3000
-                            ? 'text-amber-400'
-                            : 'text-emerald-400'
-                        }`}
-                      >
-                        {rucRemaining > 0 ? `${rucRemaining.toLocaleString()} KM left` : 'Overdue!'}
+                {/* Plant Charge Rate / Compliance Pills */}
+                {isPlant ? (
+                  <div className="p-2.5 rounded-lg bg-surface-dark/50 border border-border-dark/60 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-text-muted block">Charge-Out Rate:</span>
+                      <span className="font-mono font-bold text-amber-400">
+                        ${Number(v.hourly_charge_rate || 0).toFixed(2)}/hr
                       </span>
                     </div>
-                  ) : null}
-                </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setLoggingUsageVehicle(v)
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-black font-bold text-[11px] flex items-center gap-1 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-xs">timer</span>
+                      Log Job Hours
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 pt-1 border-t border-border-dark/40">
+                    <div className="flex items-center justify-between gap-1">
+                      {getCompliancePill(v.wof_expiry_date, 'WOF')}
+                      {getCompliancePill(v.rego_expiry_date, 'Rego')}
+                    </div>
+
+                    {v.ruc_due_km ? (
+                      <div className="flex items-center justify-between text-[11px] text-text-muted bg-background-dark/80 px-2.5 py-1 rounded-lg border border-border-dark/50">
+                        <span>RUC Due at {Number(v.ruc_due_km).toLocaleString()} KM</span>
+                        <span
+                          className={`font-mono font-bold ${
+                            rucRemaining < 1000
+                              ? 'text-red-400'
+                              : rucRemaining < 3000
+                              ? 'text-amber-400'
+                              : 'text-emerald-400'
+                          }`}
+                        >
+                          {rucRemaining > 0 ? `${rucRemaining.toLocaleString()} KM left` : 'Overdue!'}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
 
                 {/* Quick Check Action */}
                 <div className="pt-2 flex justify-end">
@@ -258,17 +319,17 @@ export default function FleetPage() {
         </div>
       )}
 
-      {/* Inspection History Section for Selected Vehicle */}
+      {/* Inspection History Section for Selected Asset */}
       {activeVehicle && (
         <div className="bg-card-dark border border-border-dark rounded-xl p-5 space-y-4 shadow-lg shadow-black/20">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-base">history</span>
-                Inspection History: {activeVehicle.registration_number} ({activeVehicle.make_model})
+                Inspection & Safety History: {activeVehicle.registration_number} ({activeVehicle.make_model})
               </h2>
               <p className="text-xs text-text-muted">
-                Assigned to: <strong className="text-white">{activeVehicle.technician?.full_name || 'Pool Van'}</strong> • Monthly technician safety and condition records
+                Assigned to: <strong className="text-white">{activeVehicle.technician?.full_name || 'Pool Asset'}</strong> • Safety and operating condition records
               </p>
             </div>
           </div>
@@ -280,9 +341,9 @@ export default function FleetPage() {
               <span className="material-symbols-outlined text-3xl text-text-muted/40 block mb-1">
                 checklist
               </span>
-              <p className="text-white text-xs font-medium">No check sheets submitted yet for this vehicle</p>
+              <p className="text-white text-xs font-medium">No check sheets submitted yet for this asset</p>
               <p className="text-[11px] text-text-muted mt-0.5">
-                Click "Monthly Check Sheet" above to complete a 2-minute inspection.
+                Click "Check Sheet" above to complete a 2-minute safety inspection.
               </p>
             </div>
           ) : (
@@ -292,7 +353,7 @@ export default function FleetPage() {
                   <tr>
                     <th className="px-4 py-3">Inspection Date</th>
                     <th className="px-4 py-3">Technician</th>
-                    <th className="px-4 py-3">Odometer</th>
+                    <th className="px-4 py-3">Reading</th>
                     <th className="px-4 py-3">Safety Status</th>
                     <th className="px-4 py-3">Key Checks</th>
                     <th className="px-4 py-3">Notes</th>
@@ -308,7 +369,7 @@ export default function FleetPage() {
                         {cs.technician?.full_name || 'Technician'}
                       </td>
                       <td className="px-4 py-3 font-mono">
-                        {Number(cs.odometer_km).toLocaleString()} KM
+                        {Number(cs.odometer_km).toLocaleString()} {activeVehicle.usage_tracking_type === 'hours' ? 'HRS' : 'KM'}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -326,9 +387,8 @@ export default function FleetPage() {
                       <td className="px-4 py-3 text-text-muted">
                         <span className="flex items-center gap-2 font-mono text-[11px]">
                           <span>Oil: {cs.oil_level === 'pass' ? 'PASS' : 'FAIL'}</span> •
-                          <span>Tires: {cs.tire_tread_and_pressure === 'pass' ? 'PASS' : 'FAIL'}</span> •
-                          <span>Lights: {cs.lights_and_indicators === 'pass' ? 'PASS' : 'FAIL'}</span> •
-                          <span>Coolant: {cs.coolant_level === 'pass' ? 'PASS' : 'FAIL'}</span>
+                          <span>Condition: {cs.tire_tread_and_pressure === 'pass' ? 'PASS' : 'FAIL'}</span> •
+                          <span>Safety: {cs.lights_and_indicators === 'pass' ? 'PASS' : 'FAIL'}</span>
                         </span>
                       </td>
                       <td className="px-4 py-3 text-text-muted max-w-xs truncate">
@@ -353,7 +413,7 @@ export default function FleetPage() {
         />
       )}
 
-      {/* Edit / Assign Vehicle Modal */}
+      {/* Edit Vehicle Modal */}
       {editingVehicle && (
         <EditVehicleModal
           isOpen={!!editingVehicle}
@@ -372,6 +432,19 @@ export default function FleetPage() {
           vehicle={inspectingVehicle}
           onSubmit={handleSubmitInspection}
           isPending={isSubmittingSheet}
+        />
+      )}
+
+      {/* Log Plant Usage Modal */}
+      {loggingUsageVehicle && (
+        <LogPlantUsageModal
+          isOpen={!!loggingUsageVehicle}
+          onClose={() => setLoggingUsageVehicle(null)}
+          vehicle={loggingUsageVehicle}
+          onSuccess={() => {
+            refreshVehicles()
+            setToast({ type: 'success', message: 'Plant hours logged onto project' })
+          }}
         />
       )}
 
