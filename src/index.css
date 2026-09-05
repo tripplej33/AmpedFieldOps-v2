@@ -10,7 +10,13 @@
     --bg-main: #101417;
     --bg-card: #192124;
     --bg-surface: #222d30;
-    --bg-nav-hover: #2a373b;
+    --bg-sidebar: #1b2326;
+    --bg-sidebar-header: #171e21;
+    --border-sidebar: #344449;
+    --bg-nav-active: #223338;
+    --bg-nav-hover: #253236;
+    --text-nav: #cbd5e1;
+    --text-nav-active: #ffffff;
     --border-main: #3f5056;
     --text-main: #fafafa;
     --text-muted: #a2b7bd;
@@ -39,12 +45,19 @@
 
   /* High-Contrast Clean Light Mode Theme */
   html.light-theme {
-    --bg-main: #f1f5f9;
+    --bg-main: #f8fafc;
     --bg-card: #ffffff;
-    --bg-nav-hover: #e2e8f0;
+    --bg-surface: #f1f5f9;
+    --bg-sidebar: #ffffff;
+    --bg-sidebar-header: #f8fafc;
+    --border-sidebar: #e2e8f0;
+    --bg-nav-active: rgba(var(--primary-rgb), 0.12);
+    --bg-nav-hover: #f1f5f9;
+    --text-nav: #475569;
+    --text-nav-active: var(--primary-color);
     --border-main: #cbd5e1;
     --text-main: #0f172a;
-    --text-muted: #475569;
+    --text-muted: #64748b;
     --text-disabled: #94a3b8;
   }
 

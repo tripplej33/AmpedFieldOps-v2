@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useVehicles, useCreateVehicle, useUpdateVehicle } from '@/hooks/useVehicles'
 import { useVehicleCheckSheets, useSubmitVehicleCheckSheet } from '@/hooks/useVehicleCheckSheets'
 import AddVehicleModal from '@/components/fleet/AddVehicleModal'
@@ -13,8 +14,29 @@ export default function FleetPage() {
   const { vehicles, loading: vehiclesLoading, refresh: refreshVehicles } = useVehicles()
   const { create: createVehicle, isPending: isCreatingVehicle } = useCreateVehicle()
   const { update: updateVehicle, isPending: isUpdatingVehicle } = useUpdateVehicle()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const categoryParam = searchParams.get('category') as 'all' | 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer' | null
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
-  const [categoryFilter, setCategoryFilter] = useState<'all' | 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'>('all')
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer'>(() => {
+    if (categoryParam && ['all', 'vehicle', 'heavy_machinery', 'equipment', 'trailer'].includes(categoryParam)) {
+      return categoryParam
+    }
+    return 'all'
+  })
+
+  useEffect(() => {
+    if (categoryParam && ['all', 'vehicle', 'heavy_machinery', 'equipment', 'trailer'].includes(categoryParam)) {
+      setCategoryFilter(categoryParam)
+    } else if (!categoryParam) {
+      setCategoryFilter('all')
+    }
+  }, [categoryParam])
+
+  const handleCategoryChange = (cat: 'all' | 'vehicle' | 'heavy_machinery' | 'equipment' | 'trailer') => {
+    setCategoryFilter(cat)
+    setSearchParams(cat === 'all' ? {} : { category: cat })
+  }
+
 
   const { checkSheets, loading: sheetsLoading, refresh: refreshSheets } = useVehicleCheckSheets(
     selectedVehicleId || vehicles[0]?.id
@@ -162,9 +184,9 @@ export default function FleetPage() {
           return (
             <button
               key={tab.key}
-              onClick={() => setCategoryFilter(tab.key as any)}
+              onClick={() => handleCategoryChange(tab.key as any)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-                isActive ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                isActive ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">{tab.icon}</span>

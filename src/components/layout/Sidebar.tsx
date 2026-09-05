@@ -19,33 +19,58 @@ interface SidebarProps {
 
 const SUB_CATEGORIES: Record<string, { label: string; path: string; icon: string }[]> = {
   projects: [
-    { label: 'All Projects Hub', path: '/app/projects', icon: 'view_kanban' },
-    { label: 'New Project Job', path: '/app/projects/new', icon: 'add_circle' },
+    { label: 'Table View', path: '/app/projects?view=table', icon: 'table_rows' },
+    { label: 'Kanban Pipeline', path: '/app/projects?view=kanban', icon: 'view_kanban' },
+    { label: 'Files Hub', path: '/app/files', icon: 'folder' },
+  ],
+  schedule: [
+    { label: 'Resource Timeline', path: '/app/schedule?view=timeline', icon: 'view_timeline' },
+    { label: 'Daily Tech Agenda', path: '/app/schedule?view=agenda', icon: 'calendar_view_day' },
   ],
   'purchase-orders': [
-    { label: 'All Purchase Orders', path: '/app/purchase-orders', icon: 'shopping_cart' },
-    { label: 'Van Restock POs', path: '/app/purchase-orders?type=van_restock', icon: 'local_shipping' },
-    { label: 'Project Orders', path: '/app/purchase-orders?type=project_job', icon: 'receipt_long' },
+    { label: 'All Purchase Orders', path: '/app/purchase-orders', icon: 'receipt_long' },
+    { label: 'Project Job Orders', path: '/app/purchase-orders?type=project_job', icon: 'work' },
+    { label: 'Van Restock Orders', path: '/app/purchase-orders?type=van_restock', icon: 'local_shipping' },
   ],
   'van-stock': [
-    { label: 'Master Stock Register', path: '/app/van-stock', icon: 'inventory_2' },
     { label: 'Storage Places & Depots', path: '/app/van-stock?tab=locations', icon: 'warehouse' },
-    { label: 'Movements Audit Log', path: '/app/van-stock?tab=movements', icon: 'sync_alt' },
-    { label: 'Low Stock Restock', path: '/app/van-stock?tab=restock', icon: 'warning' },
+    { label: 'Master Stock Register', path: '/app/van-stock?tab=catalog', icon: 'inventory_2' },
+    { label: 'Low Stock & Restock', path: '/app/van-stock?tab=low_stock', icon: 'warning' },
+    { label: 'Stock Movements Log', path: '/app/van-stock?tab=transactions', icon: 'sync_alt' },
+    { label: 'Assigned Van Stock', path: '/app/van-stock?tab=van_view', icon: 'directions_car' },
+  ],
+  fleet: [
+    { label: 'All Fleet & Plant', path: '/app/fleet', icon: 'directions_car' },
+    { label: 'Service Vans & Utes', path: '/app/fleet?category=vehicle', icon: 'airport_shuttle' },
+    { label: 'Heavy Machinery', path: '/app/fleet?category=heavy_machinery', icon: 'precision_manufacturing' },
+    { label: 'Tools & Equipment', path: '/app/fleet?category=equipment', icon: 'handyman' },
+    { label: 'Plant Trailers', path: '/app/fleet?category=trailer', icon: 'rv_hookup' },
   ],
   safety: [
-    { label: 'SWMS & Documents', path: '/app/safety', icon: 'shield_with_heart' },
-    { label: 'Evacuation & Sign-Ins', path: '/app/safety?tab=signins', icon: 'how_to_reg' },
-    { label: 'Hazards & Incidents', path: '/app/safety?tab=hazards', icon: 'report_problem' },
+    { label: 'All Safety Docs & SWMS', path: '/app/safety', icon: 'shield_with_heart' },
+    { label: 'Pending Signatures', path: '/app/safety?tab=pending', icon: 'pending_actions' },
+    { label: 'Completed Documents', path: '/app/safety?tab=completed', icon: 'task_alt' },
+    { label: 'SWMS Template Builder', path: '/app/safety?tab=templates', icon: 'post_add' },
   ],
   compliance: [
-    { label: 'Testing & CoC Hub', path: '/app/compliance', icon: 'verified' },
-    { label: 'Switchboard Schedules', path: '/app/compliance?tab=schedules', icon: 'developer_board' },
+    { label: 'CoC & ESC Certificates', path: '/app/compliance', icon: 'verified' },
+    { label: 'Electrical Test Sheets', path: '/app/compliance?tab=test_sheets', icon: 'fact_check' },
+    { label: 'Switchboard Schedules', path: '/app/compliance?tab=switchboards', icon: 'developer_board' },
+    { label: 'Tools & Equipment', path: '/app/compliance?tab=equipment', icon: 'build_circle' },
+    { label: 'PAT Test Logs', path: '/app/compliance?tab=pat', icon: 'power' },
+  ],
+  timesheets: [
+    { label: 'Daily Timeline', path: '/app/timesheets?view=day', icon: 'schedule' },
+    { label: 'Weekly Grid', path: '/app/timesheets?view=weekly', icon: 'calendar_view_week' },
+    { label: 'Timesheet Register', path: '/app/timesheets?view=table', icon: 'table_rows' },
+    { label: 'Approvals Hub', path: '/app/timesheets?view=approvals', icon: 'thumb_up' },
   ],
   financials: [
-    { label: 'Invoices & Billing', path: '/app/financials', icon: 'receipt' },
-    { label: 'Cost Centers & Margins', path: '/app/financials?tab=cost_centers', icon: 'account_tree' },
-    { label: 'Xero Accounting', path: '/app/financials?tab=xero', icon: 'sync' },
+    { label: 'All Invoices', path: '/app/financials', icon: 'receipt' },
+    { label: 'Awaiting Payment', path: '/app/financials?tab=awaiting_payment', icon: 'hourglass_top' },
+    { label: 'Overdue Invoices', path: '/app/financials?tab=overdue', icon: 'warning' },
+    { label: 'Paid Invoices', path: '/app/financials?tab=paid', icon: 'check_circle' },
+    { label: 'Draft Invoices', path: '/app/financials?tab=draft', icon: 'edit_note' },
   ],
   settings: [
     { label: 'Active Team', path: '/app/settings', icon: 'group' },
@@ -56,6 +81,49 @@ const SUB_CATEGORIES: Record<string, { label: string; path: string; icon: string
     { label: 'Xero Integration', path: '/app/settings?tab=xero', icon: 'sync_alt' },
     { label: 'Audit & System Logs', path: '/app/settings?tab=audit_logs', icon: 'manage_history' },
   ],
+}
+
+function isSubItemActive(
+  currentPathname: string,
+  currentSearch: string,
+  subPath: string,
+  allSubItemsForCategory: { label: string; path: string; icon: string }[]
+): boolean {
+  const [subBase, subQuery] = subPath.split('?')
+  if (currentPathname !== subBase) return false
+
+  const currentParams = new URLSearchParams(currentSearch)
+
+  if (!subQuery) {
+    const hasAnyOtherMatch = allSubItemsForCategory.some((other) => {
+      if (other.path === subPath) return false
+      const [otherBase, otherQuery] = other.path.split('?')
+      if (otherBase !== currentPathname || !otherQuery) return false
+      const otherParams = new URLSearchParams(otherQuery)
+      let matches = true
+      for (const [k, v] of otherParams.entries()) {
+        if (currentParams.get(k) !== v) matches = false
+      }
+      return matches
+    })
+    return !hasAnyOtherMatch
+  }
+
+  const subParams = new URLSearchParams(subQuery)
+  for (const [key, value] of subParams.entries()) {
+    const currentVal = currentParams.get(key)
+    if (!currentVal) {
+      if (subBase === '/app/projects' && key === 'view' && value === 'table') continue
+      if (subBase === '/app/schedule' && key === 'view' && value === 'timeline') continue
+      if (subBase === '/app/van-stock' && key === 'tab' && value === 'locations') continue
+      if (subBase === '/app/timesheets' && key === 'view' && value === 'day') continue
+      return false
+    }
+    if (currentVal !== value) {
+      return false
+    }
+  }
+  return true
 }
 
 export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileClose }: SidebarProps) {
@@ -82,6 +150,12 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
       window.removeEventListener('amped_preferences_updated', handleStorageChange)
     }
   }, [])
+
+  // Automatically reset manual accordion overrides when navigating between pages,
+  // ensuring only the active main category is expanded by default.
+  useEffect(() => {
+    setExpandedSection(null)
+  }, [location.pathname])
 
   const {
     notifications,
@@ -129,10 +203,14 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
     }
   }
 
-  const toggleAccordion = (id: string, e: React.MouseEvent) => {
+  const toggleAccordion = (id: string, e: React.MouseEvent, isActive: boolean) => {
     e.preventDefault()
     e.stopPropagation()
-    setExpandedSection((prev) => (prev === id ? 'none' : id))
+    setExpandedSection((prev) => {
+      if (prev === id) return 'none'
+      if (prev === null && isActive) return 'none'
+      return id
+    })
   }
 
   return (
@@ -148,7 +226,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen bg-[#1b2326] border-r border-[#344449] z-50
+          fixed top-0 left-0 h-screen bg-[var(--bg-sidebar)] border-r border-[var(--border-sidebar)] z-50
           transition-all duration-300 ease-in-out flex flex-col justify-between shadow-2xl
           ${isCollapsed ? 'w-20' : 'w-64'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -156,11 +234,11 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo Header */}
-          <div className="h-16 flex items-center justify-between px-3.5 border-b border-[#344449] bg-[#171e21] shrink-0">
+          <div className="h-16 flex items-center justify-between px-3.5 border-b border-[var(--border-sidebar)] bg-[var(--bg-sidebar-header)] shrink-0">
             {!isCollapsed ? (
               <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1" title={companyProfile.companyName || 'AmpedFieldOps'}>
                 {companyProfile.logoUrl ? (
-                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[#222d30] border border-[#38484e] flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-sidebar)] flex items-center justify-center shrink-0 shadow-sm">
                     <img
                       src={companyProfile.logoUrl}
                       alt={companyProfile.companyName || 'AmpedFieldOps'}
@@ -176,10 +254,10 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                   </div>
                 )}
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-white font-bold font-display text-xs truncate leading-tight">
+                  <span className="text-[var(--text-main)] font-bold font-display text-xs truncate leading-tight">
                     {companyProfile.companyName || 'AmpedFieldOps'}
                   </span>
-                  <span className="text-[10px] text-primary/80 font-mono font-medium truncate">
+                  <span className="text-[10px] text-primary font-mono font-medium truncate">
                     Field Operations
                   </span>
                 </div>
@@ -191,7 +269,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 title={companyProfile.companyName || 'AmpedFieldOps'}
               >
                 {companyProfile.logoUrl ? (
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#222d30] border border-[#38484e] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-sidebar)] flex items-center justify-center">
                     <img
                       src={companyProfile.logoUrl}
                       alt="Logo"
@@ -210,7 +288,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
             )}
             <button
               onClick={onToggle}
-              className="p-1.5 rounded-lg hover:bg-[#28363a] transition-colors text-slate-300 hover:text-white hidden lg:block shrink-0"
+              className="p-1.5 rounded-lg hover:bg-[var(--bg-nav-hover)] transition-colors text-text-muted hover:text-[var(--text-main)] hidden lg:block shrink-0"
               title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
               <span className="material-symbols-outlined text-xl">
@@ -225,8 +303,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
               const isActive = location.pathname === item.path || (item.path !== '/app/dashboard' && location.pathname.startsWith(item.path))
               const subItems = SUB_CATEGORIES[item.id]
               const hasSubcategories = showSubcategories && !isCollapsed && subItems && subItems.length > 0
-              // When showSubcategories is active, default all subcategory sections to open unless explicitly collapsed by user
-              const isAccordionOpen = expandedSection === 'none' ? false : (expandedSection === item.id || expandedSection === null)
+              // When showSubcategories is active, only the active main category's subtabs are open by default
+              const isAccordionOpen = expandedSection === 'none' ? false : (expandedSection === item.id || (expandedSection === null && isActive))
 
               return (
                 <div key={item.id} className="space-y-0.5">
@@ -238,8 +316,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                         flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl
                         transition-all duration-150 group font-medium text-xs
                         ${isActive
-                          ? 'bg-[#223338] text-white border-l-4 border-primary font-bold shadow-md'
-                          : 'text-slate-300 hover:bg-[#253236] hover:text-white'
+                          ? 'bg-[var(--bg-nav-active)] text-primary font-bold border-l-4 border-primary shadow-sm'
+                          : 'text-[var(--text-nav)] hover:bg-[var(--bg-nav-hover)] hover:text-[var(--text-main)]'
                         }
                         ${isCollapsed ? 'justify-center px-0' : ''}
                       `}
@@ -247,7 +325,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                     >
                       <span
                         className={`material-symbols-outlined text-xl transition-colors ${
-                          isActive ? 'text-primary' : 'text-slate-400 group-hover:text-primary'
+                          isActive ? 'text-primary' : 'text-text-muted group-hover:text-primary'
                         }`}
                       >
                         {item.icon}
@@ -260,8 +338,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                     {hasSubcategories && (
                       <button
                         type="button"
-                        onClick={(e) => toggleAccordion(item.id, e)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#28363a] transition-colors"
+                        onClick={(e) => toggleAccordion(item.id, e, isActive)}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)] transition-colors"
                         title={isAccordionOpen ? 'Collapse sub-items' : 'Expand sub-items'}
                       >
                         <span className={`material-symbols-outlined text-base transition-transform duration-200 ${isAccordionOpen ? 'rotate-180' : ''}`}>
@@ -273,11 +351,9 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
 
                   {/* Subcategories Accordion */}
                   {hasSubcategories && isAccordionOpen && (
-                    <div className="pl-6 pr-1 py-1 space-y-0.5 border-l-2 border-[#344449]/70 ml-4 animate-fadeIn">
+                    <div className="pl-6 pr-1 py-1 space-y-0.5 border-l-2 border-[var(--border-sidebar)] ml-4 animate-fadeIn">
                       {subItems.map((sub) => {
-                        const isSubActive =
-                          location.pathname + location.search === sub.path ||
-                          (location.pathname === sub.path && !location.search)
+                        const isSubActive = isSubItemActive(location.pathname, location.search, sub.path, subItems)
 
                         return (
                           <Link
@@ -286,8 +362,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                             onClick={handleLinkClick}
                             className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
                               isSubActive
-                                ? 'bg-primary/20 text-primary font-bold border border-primary/30 shadow-sm'
-                                : 'text-slate-400 hover:text-white hover:bg-[#253236]'
+                                ? 'bg-primary/15 text-primary font-bold border border-primary/30 shadow-sm'
+                                : 'text-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
                             }`}
                           >
                             <span className="material-symbols-outlined text-sm shrink-0 opacity-80">
@@ -306,7 +382,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
         </div>
 
         {/* User Profile & Action Toolbar Footer */}
-        <div className="p-3 border-t border-[#344449] shrink-0 relative bg-[#171e21]">
+        <div className="p-3 border-t border-[var(--border-sidebar)] shrink-0 relative bg-[var(--bg-sidebar-header)]">
           {/* Notification Popover Dropdown */}
           <NotificationDropdown
             isOpen={isNotificationOpen}
@@ -330,17 +406,17 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 onClick={handleLinkClick}
                 className={`flex items-center gap-2.5 p-2 rounded-xl border transition-all ${
                   isProfileActive
-                    ? 'bg-primary/20 border-primary shadow-sm'
-                    : 'bg-[#222d30] border-[#38484e] hover:border-primary/50 hover:bg-[#28363a]'
+                    ? 'bg-primary/15 border-primary shadow-sm'
+                    : 'bg-[var(--bg-card)] border-[var(--border-sidebar)] hover:border-primary/50 hover:bg-[var(--bg-nav-hover)]'
                 }`}
                 title="View & Edit My Profile"
               >
                 <UserAvatar user={user} size="sm" showRoleBadge />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">
+                  <p className="text-xs font-bold text-[var(--text-main)] truncate">
                     {user?.full_name || user?.email}
                   </p>
-                  <p className="text-[10px] text-slate-400 capitalize truncate">
+                  <p className="text-[10px] text-text-muted capitalize truncate">
                     {user?.role || 'Staff'} • Profile Settings
                   </p>
                 </div>
@@ -353,10 +429,10 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                   type="button"
                   data-notification-trigger="true"
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className={`h-[34px] rounded-lg border text-slate-300 hover:text-white flex items-center justify-center relative transition-colors ${
+                  className={`h-[34px] rounded-lg border flex items-center justify-center relative transition-colors ${
                     isNotificationOpen
-                      ? 'bg-primary/20 border-primary text-primary shadow-sm'
-                      : 'bg-[#222d30] border-[#38484e] hover:bg-[#28363a]'
+                      ? 'bg-primary/15 border-primary text-primary shadow-sm'
+                      : 'bg-[var(--bg-card)] border-[var(--border-sidebar)] text-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
                   }`}
                   title="Alerts & Notifications"
                 >
@@ -375,10 +451,10 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                     handleLinkClick()
                     navigate('/app/settings')
                   }}
-                  className={`h-[34px] rounded-lg border text-slate-300 hover:text-white flex items-center justify-center transition-colors ${
+                  className={`h-[34px] rounded-lg border flex items-center justify-center transition-colors ${
                     isSettingsActive
-                      ? 'bg-primary/20 border-primary text-primary'
-                      : 'bg-[#222d30] border-[#38484e] hover:bg-[#28363a]'
+                      ? 'bg-primary/15 border-primary text-primary shadow-sm'
+                      : 'bg-[var(--bg-card)] border-[var(--border-sidebar)] text-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
                   }`}
                   title="System Settings"
                 >
@@ -389,7 +465,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 <button
                   type="button"
                   onClick={() => logout()}
-                  className="h-[34px] rounded-lg border border-[#38484e] bg-[#222d30] hover:bg-red-500/20 text-slate-300 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition-colors"
+                  className="h-[34px] rounded-lg border border-[var(--border-sidebar)] bg-[var(--bg-card)] hover:bg-red-500/10 text-text-muted hover:text-red-500 hover:border-red-500/30 flex items-center justify-center transition-colors"
                   title="Sign Out"
                 >
                   <span className="material-symbols-outlined text-lg">logout</span>
@@ -404,7 +480,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 className={`p-1 rounded-xl flex items-center justify-center border transition-all ${
                   isProfileActive
                     ? 'border-primary ring-1 ring-primary/40 bg-primary/10'
-                    : 'border-[#38484e] bg-[#222d30] hover:border-primary/40'
+                    : 'border-[var(--border-sidebar)] bg-[var(--bg-card)] hover:border-primary/40'
                 }`}
                 title="My Profile"
               >
@@ -417,8 +493,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center border relative transition-colors ${
                   isNotificationOpen
-                    ? 'bg-primary/20 border-primary text-primary shadow-sm'
-                    : 'bg-[#222d30] text-slate-300 border-[#38484e] hover:text-white hover:bg-[#28363a]'
+                    ? 'bg-primary/15 border-primary text-primary shadow-sm'
+                    : 'bg-[var(--bg-card)] text-text-muted border-[var(--border-sidebar)] hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
                 }`}
                 title="Notifications"
               >
@@ -435,8 +511,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 onClick={() => navigate('/app/settings')}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center border transition-colors ${
                   isSettingsActive
-                    ? 'bg-primary/20 border-primary text-primary'
-                    : 'bg-[#222d30] text-slate-300 border-[#38484e] hover:text-white hover:bg-[#28363a]'
+                    ? 'bg-primary/15 border-primary text-primary shadow-sm'
+                    : 'bg-[var(--bg-card)] text-text-muted border-[var(--border-sidebar)] hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
                 }`}
                 title="Settings"
               >
@@ -446,7 +522,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
               <button
                 type="button"
                 onClick={() => logout()}
-                className="w-9 h-9 rounded-lg flex items-center justify-center border border-[#38484e] bg-[#222d30] text-slate-300 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40 transition-colors"
+                className="w-9 h-9 rounded-lg flex items-center justify-center border border-[var(--border-sidebar)] bg-[var(--bg-card)] text-text-muted hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
                 title="Logout"
               >
                 <span className="material-symbols-outlined text-lg">logout</span>
@@ -458,3 +534,4 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
     </>
   )
 }
+

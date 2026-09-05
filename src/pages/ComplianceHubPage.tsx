@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCompliance } from '@/hooks/useCompliance'
 import { useEquipment } from '@/hooks/useEquipment'
 import { useCompanyProfile } from '@/hooks/useCompanyProfile'
@@ -39,7 +40,29 @@ export default function ComplianceHubPage() {
     deletePatLog,
   } = useEquipment()
 
-  const [activeTab, setActiveTab] = useState<'certificates' | 'test_sheets' | 'switchboards' | 'equipment' | 'pat'>('certificates')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as 'certificates' | 'test_sheets' | 'switchboards' | 'equipment' | 'pat' | null
+
+  const [activeTab, setActiveTab] = useState<'certificates' | 'test_sheets' | 'switchboards' | 'equipment' | 'pat'>(() => {
+    if (tabParam && ['certificates', 'test_sheets', 'switchboards', 'equipment', 'pat'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'certificates'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['certificates', 'test_sheets', 'switchboards', 'equipment', 'pat'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      setActiveTab('certificates')
+    }
+  }, [tabParam])
+
+  const handleTabChange = (tab: 'certificates' | 'test_sheets' | 'switchboards' | 'equipment' | 'pat') => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'certificates' ? {} : { tab })
+  }
+
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
 
@@ -207,45 +230,45 @@ export default function ComplianceHubPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex gap-2 border-b border-border-dark pb-2 overflow-x-auto">
             <button
-              onClick={() => setActiveTab('certificates')}
+              onClick={() => handleTabChange('certificates')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === 'certificates' ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                activeTab === 'certificates' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">verified</span>
               Certificates ({certificates.length})
             </button>
             <button
-              onClick={() => setActiveTab('test_sheets')}
+              onClick={() => handleTabChange('test_sheets')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === 'test_sheets' ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                activeTab === 'test_sheets' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">checklist</span>
               AS/NZS 3000 Logs ({testSheets.length})
             </button>
             <button
-              onClick={() => setActiveTab('switchboards')}
+              onClick={() => handleTabChange('switchboards')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === 'switchboards' ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                activeTab === 'switchboards' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">table_chart</span>
               Switchboards ({switchboards.length})
             </button>
             <button
-              onClick={() => setActiveTab('equipment')}
+              onClick={() => handleTabChange('equipment')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === 'equipment' ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                activeTab === 'equipment' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">precision_manufacturing</span>
               Meter Calibration ({equipment.length})
             </button>
             <button
-              onClick={() => setActiveTab('pat')}
+              onClick={() => handleTabChange('pat')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                activeTab === 'pat' ? 'bg-primary text-black' : 'text-text-muted hover:text-white hover:bg-card-dark'
+                activeTab === 'pat' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-white hover:bg-card-dark'
               }`}
             >
               <span className="material-symbols-outlined text-sm">qr_code_scanner</span>

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   useTimesheets,
   useDeleteTimesheet,
@@ -28,11 +29,33 @@ import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 
 export default function TimesheetsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewParam = searchParams.get('view') as 'day' | 'weekly' | 'table' | 'approvals' | null
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<TimesheetFilters>({})
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
   const [showFilters, setShowFilters] = useState(false)
-  const [viewMode, setViewMode] = useState<'day' | 'weekly' | 'table' | 'approvals'>('day')
+  const [viewMode, setViewMode] = useState<'day' | 'weekly' | 'table' | 'approvals'>(() => {
+    if (viewParam && ['day', 'weekly', 'table', 'approvals'].includes(viewParam)) {
+      return viewParam
+    }
+    return 'day'
+  })
+
+  useEffect(() => {
+    if (viewParam && ['day', 'weekly', 'table', 'approvals'].includes(viewParam)) {
+      setViewMode(viewParam)
+    } else if (!viewParam) {
+      setViewMode('day')
+    }
+  }, [viewParam])
+
+  const handleViewChange = (mode: 'day' | 'weekly' | 'table' | 'approvals') => {
+    setViewMode(mode)
+    setCurrentPage(1)
+    setSearchParams(mode === 'day' ? {} : { view: mode })
+  }
+
   const [dayDate, setDayDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -242,7 +265,7 @@ export default function TimesheetsPage() {
           <div className="flex items-center bg-card-dark p-1 rounded-xl border border-border-dark shadow-sm">
             <button
               type="button"
-              onClick={() => setViewMode('day')}
+              onClick={() => handleViewChange('day')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'day'
                   ? 'bg-primary text-white shadow-sm'
@@ -256,7 +279,7 @@ export default function TimesheetsPage() {
 
             <button
               type="button"
-              onClick={() => setViewMode('weekly')}
+              onClick={() => handleViewChange('weekly')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'weekly'
                   ? 'bg-primary text-white shadow-sm'
@@ -270,7 +293,7 @@ export default function TimesheetsPage() {
 
             <button
               type="button"
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewChange('table')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 viewMode === 'table'
                   ? 'bg-primary text-white shadow-sm'
@@ -285,10 +308,7 @@ export default function TimesheetsPage() {
             {isManager && (
               <button
                 type="button"
-                onClick={() => {
-                  setViewMode('approvals')
-                  setCurrentPage(1)
-                }}
+                onClick={() => handleViewChange('approvals')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                   viewMode === 'approvals'
                     ? 'bg-blue-600 text-white shadow-sm'

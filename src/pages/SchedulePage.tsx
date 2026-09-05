@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSchedule } from '@/hooks/useSchedule'
 import { useProjects } from '@/hooks/useProjects'
@@ -18,9 +19,23 @@ import type { SafetyDocument } from '@/types/safety'
 
 export default function SchedulePage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewParam = searchParams.get('view') as 'timeline' | 'agenda' | null
   const todayStr = useMemo(() => getLocalTodayString(), [])
   const [selectedDate, setSelectedDate] = useState<string>(todayStr)
-  const [viewMode, setViewMode] = useState<'timeline' | 'agenda'>('timeline')
+  const [viewMode, setViewMode] = useState<'timeline' | 'agenda'>(viewParam === 'agenda' ? 'agenda' : 'timeline')
+
+  useEffect(() => {
+    if (viewParam === 'timeline' || viewParam === 'agenda') {
+      setViewMode(viewParam)
+    }
+  }, [viewParam])
+
+  const handleViewChange = (mode: 'timeline' | 'agenda') => {
+    setViewMode(mode)
+    setSearchParams(mode === 'timeline' ? {} : { view: mode })
+  }
+
 
   // Filter state
   const [selectedTechFilter, setSelectedTechFilter] = useState<string>('all')
@@ -239,10 +254,10 @@ export default function SchedulePage() {
 
           <div className="flex bg-surface-dark border border-border-dark rounded-xl p-1">
             <button
-              onClick={() => setViewMode('timeline')}
+              onClick={() => handleViewChange('timeline')}
               className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
                 viewMode === 'timeline'
-                  ? 'bg-primary text-black font-bold'
+                  ? 'bg-primary text-white font-bold shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
             >
@@ -251,10 +266,10 @@ export default function SchedulePage() {
             </button>
 
             <button
-              onClick={() => setViewMode('agenda')}
+              onClick={() => handleViewChange('agenda')}
               className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
                 viewMode === 'agenda'
-                  ? 'bg-primary text-black font-bold'
+                  ? 'bg-primary text-white font-bold shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
             >

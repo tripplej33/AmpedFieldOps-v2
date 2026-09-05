@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../hooks/useProjects'
 import type { Project, ProjectFormData, ProjectFilters, ProjectStatus } from '../types'
 import { supabase } from '../lib/supabase'
@@ -9,7 +10,21 @@ import ProjectFiltersComponent from '../components/ProjectFilters'
 import Button from '../components/ui/Button'
 
 export default function ProjectsPage() {
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewParam = searchParams.get('view') as 'table' | 'kanban' | null
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>(viewParam === 'kanban' ? 'kanban' : 'table')
+
+  useEffect(() => {
+    if (viewParam === 'kanban' || viewParam === 'table') {
+      setViewMode(viewParam)
+    }
+  }, [viewParam])
+
+  const handleViewChange = (mode: 'table' | 'kanban') => {
+    setViewMode(mode)
+    setSearchParams(mode === 'table' ? {} : { view: mode })
+  }
+
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<ProjectFilters>()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -117,7 +132,7 @@ export default function ProjectsPage() {
           {/* View Toggle */}
           <div className="flex gap-0.5 bg-card-dark border border-border-dark rounded-lg p-1">
             <button
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewChange('table')}
               className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
                 viewMode === 'table'
                   ? 'bg-primary text-white font-medium shadow-sm'
@@ -129,7 +144,7 @@ export default function ProjectsPage() {
               <span className="text-xs font-semibold">Table</span>
             </button>
             <button
-              onClick={() => setViewMode('kanban')}
+              onClick={() => handleViewChange('kanban')}
               className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
                 viewMode === 'kanban'
                   ? 'bg-primary text-white font-medium shadow-sm'

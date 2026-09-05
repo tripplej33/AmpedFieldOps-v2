@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useVehicles } from '@/hooks/useVehicles'
@@ -29,9 +30,28 @@ export default function VanStockPage() {
   const { user } = useAuth()
   const { isAdmin, isManager } = usePermissions()
   const isElevated = isAdmin || isManager
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as ActiveTab | null
 
   // State
-  const [activeTab, setActiveTab] = useState<ActiveTab>('locations')
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (tabParam && ['locations', 'catalog', 'low_stock', 'transactions', 'van_view'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'locations'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['locations', 'catalog', 'low_stock', 'transactions', 'van_view'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
+
+  const handleTabChange = (tab: ActiveTab) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'locations' ? {} : { tab })
+  }
+
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -280,7 +300,7 @@ export default function VanStockPage() {
       <div className="flex border-b border-border-dark overflow-x-auto gap-1">
         <button
           type="button"
-          onClick={() => setActiveTab('locations')}
+          onClick={() => handleTabChange('locations')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'locations'
               ? 'border-primary text-primary bg-primary/10 rounded-t-lg'
@@ -293,7 +313,7 @@ export default function VanStockPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('catalog')}
+          onClick={() => handleTabChange('catalog')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'catalog'
               ? 'border-primary text-primary bg-primary/10 rounded-t-lg'
@@ -306,7 +326,7 @@ export default function VanStockPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('low_stock')}
+          onClick={() => handleTabChange('low_stock')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'low_stock'
               ? 'border-amber-400 text-amber-400 bg-amber-400/10 rounded-t-lg'
@@ -324,7 +344,7 @@ export default function VanStockPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('transactions')}
+          onClick={() => handleTabChange('transactions')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'transactions'
               ? 'border-primary text-primary bg-primary/10 rounded-t-lg'
@@ -337,7 +357,7 @@ export default function VanStockPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('van_view')}
+          onClick={() => handleTabChange('van_view')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'van_view'
               ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10 rounded-t-lg'

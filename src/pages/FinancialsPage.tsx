@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import StatCard from '@/components/ui/StatCard'
 import { Invoice } from '../types'
 
@@ -10,12 +11,35 @@ interface XeroSyncStatus {
   itemsSynced: number
 }
 
+type FinancialsTab = 'all' | 'draft' | 'awaiting_approval' | 'awaiting_payment' | 'overdue' | 'paid' | 'void'
+
 export default function FinancialsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as FinancialsTab | null
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [xeroSync, setXeroSync] = useState<XeroSyncStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'all' | 'draft' | 'awaiting_approval' | 'awaiting_payment' | 'overdue' | 'paid' | 'void'>('all')
+  const [activeTab, setActiveTab] = useState<FinancialsTab>(() => {
+    if (tabParam && ['all', 'draft', 'awaiting_approval', 'awaiting_payment', 'overdue', 'paid', 'void'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'all'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['all', 'draft', 'awaiting_approval', 'awaiting_payment', 'overdue', 'paid', 'void'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      setActiveTab('all')
+    }
+  }, [tabParam])
+
+  const handleTabChange = (tab: FinancialsTab) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'all' ? {} : { tab })
+  }
+
 
   useEffect(() => {
     fetchFinancialsData()
@@ -190,7 +214,7 @@ export default function FinancialsPage() {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id as FinancialsTab)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === tab.id
                     ? 'bg-primary text-white shadow-lg'
                     : 'text-text-muted hover:text-white hover:bg-white/5'

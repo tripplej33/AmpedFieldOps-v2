@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Button from '@/components/ui/Button'
 import ReceiveGoodsModal from './ReceiveGoodsModal'
 import type { PurchaseOrder } from '@/types'
@@ -16,10 +17,52 @@ export default function PurchaseOrdersList({
   onRaisePO,
   onReceiveItem,
 }: PurchaseOrdersListProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const typeParam = searchParams.get('type') as 'all' | 'project_job' | 'van_restock' | null
+  const statusParam = searchParams.get('status')
   const [selectedPOForReceiving, setSelectedPOForReceiving] = useState<PurchaseOrder | null>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'project_job' | 'van_restock'>('all')
+  const [statusFilter, setStatusFilter] = useState<string>(statusParam || 'all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'project_job' | 'van_restock'>(typeParam || 'all')
+
+  useEffect(() => {
+    if (typeParam && ['all', 'project_job', 'van_restock'].includes(typeParam)) {
+      setTypeFilter(typeParam)
+    } else if (!typeParam) {
+      setTypeFilter('all')
+    }
+  }, [typeParam])
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam)
+    } else {
+      setStatusFilter('all')
+    }
+  }, [statusParam])
+
+  const handleTypeChange = (newType: 'all' | 'project_job' | 'van_restock') => {
+    setTypeFilter(newType)
+    const nextParams = new URLSearchParams(searchParams)
+    if (newType === 'all') {
+      nextParams.delete('type')
+    } else {
+      nextParams.set('type', newType)
+    }
+    setSearchParams(nextParams)
+  }
+
+  const handleStatusChange = (newStatus: string) => {
+    setStatusFilter(newStatus)
+    const nextParams = new URLSearchParams(searchParams)
+    if (newStatus === 'all') {
+      nextParams.delete('status')
+    } else {
+      nextParams.set('status', newStatus)
+    }
+    setSearchParams(nextParams)
+  }
+
 
   const filtered = purchaseOrders.filter((po) => {
     if (statusFilter !== 'all' && po.status !== statusFilter) return false
@@ -74,7 +117,7 @@ export default function PurchaseOrdersList({
 
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as any)}
+            onChange={(e) => handleTypeChange(e.target.value as any)}
             className="h-[36px] px-2.5 bg-background-dark border border-border-dark rounded-lg text-xs text-white focus:outline-none focus:border-primary shrink-0"
           >
             <option value="all">All Destinations</option>
@@ -84,7 +127,7 @@ export default function PurchaseOrdersList({
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => handleStatusChange(e.target.value)}
             className="h-[36px] px-2.5 bg-background-dark border border-border-dark rounded-lg text-xs text-white focus:outline-none focus:border-primary shrink-0"
           >
             <option value="all">All Statuses</option>

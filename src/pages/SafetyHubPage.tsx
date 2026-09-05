@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useSafetyDocuments, useSafetyTemplates } from '@/hooks/useSafety'
 import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/ui/Button'
@@ -18,7 +19,29 @@ export default function SafetyHubPage() {
     archiveDocumentPdf,
   } = useSafetyDocuments()
 
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'completed' | 'templates'>('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as 'all' | 'pending' | 'completed' | 'templates' | null
+
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'completed' | 'templates'>(() => {
+    if (tabParam && ['all', 'pending', 'completed', 'templates'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'all'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['all', 'pending', 'completed', 'templates'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      setActiveTab('all')
+    }
+  }, [tabParam])
+
+  const handleTabChange = (tab: 'all' | 'pending' | 'completed' | 'templates') => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'all' ? {} : { tab })
+  }
+
   const [isDocModalOpen, setIsDocModalOpen] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState<SafetyDocument | null>(null)
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
@@ -148,7 +171,7 @@ export default function SafetyHubPage() {
       <div className="flex items-center gap-1.5 border-b border-border-dark overflow-x-auto pb-px">
         <button
           type="button"
-          onClick={() => setActiveTab('all')}
+          onClick={() => handleTabChange('all')}
           className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'all'
               ? 'border-primary text-white bg-card-dark/60'
@@ -164,7 +187,7 @@ export default function SafetyHubPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('pending')}
+          onClick={() => handleTabChange('pending')}
           className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'pending'
               ? 'border-amber-400 text-amber-300 bg-card-dark/60'
@@ -182,7 +205,7 @@ export default function SafetyHubPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('completed')}
+          onClick={() => handleTabChange('completed')}
           className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'completed'
               ? 'border-emerald-400 text-emerald-300 bg-card-dark/60'
@@ -198,7 +221,7 @@ export default function SafetyHubPage() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('templates')}
+          onClick={() => handleTabChange('templates')}
           className={`px-4 py-2 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'templates'
               ? 'border-cyan-400 text-cyan-300 bg-card-dark/60'
