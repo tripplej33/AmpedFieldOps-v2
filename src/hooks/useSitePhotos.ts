@@ -69,34 +69,39 @@ export function useSitePhotos(projectId?: string) {
       setUploading(true)
       const { data: authData } = await supabase.auth.getUser()
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.jpg`
-      const filePath = `site_photos/${projectId || 'general'}/${fileName}`
+      const targetProjId = projectId || 'general'
+      const folderPrefix = `folder_${encodeURIComponent('Site Photos & Markups')}`
+      const storagePath = `project_${targetProjId}/${folderPrefix}/${fileName}`
 
       let photoUrl = ''
+      let fileSizeBytes = 0
 
       if (dataUrl) {
         // Convert base64 dataUrl to blob
         const res = await fetch(dataUrl)
         const blob = await res.blob()
+        fileSizeBytes = blob.size
         const { error: uploadErr } = await supabase.storage
           .from('project-files')
-          .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true })
+          .upload(storagePath, blob, { contentType: 'image/jpeg', upsert: true })
 
         if (uploadErr) throw uploadErr
 
         const { data: publicUrlData } = supabase.storage
           .from('project-files')
-          .getPublicUrl(filePath)
+          .getPublicUrl(storagePath)
         photoUrl = publicUrlData.publicUrl
       } else if (file) {
+        fileSizeBytes = file.size
         const { error: uploadErr } = await supabase.storage
           .from('project-files')
-          .upload(filePath, file, { upsert: true })
+          .upload(storagePath, file, { contentType: file.type || 'image/jpeg', upsert: true })
 
         if (uploadErr) throw uploadErr
 
         const { data: publicUrlData } = supabase.storage
           .from('project-files')
-          .getPublicUrl(filePath)
+          .getPublicUrl(storagePath)
         photoUrl = publicUrlData.publicUrl
       }
 
@@ -121,6 +126,26 @@ export function useSitePhotos(projectId?: string) {
         .single()
 
       if (insertErr) throw insertErr
+
+      // Auto-register in project_files table under "Site Photos & Markups"
+      if (projectId) {
+        try {
+          const cleanName = caption && caption.trim() ? caption.trim() : `${category.toUpperCase()} Photo (${fileName})`
+          await supabase.from('project_files').insert([
+            {
+              project_id: projectId,
+              name: cleanName.endsWith('.jpg') || cleanName.endsWith('.png') ? cleanName : `${cleanName}.jpg`,
+              mime_type: 'image/jpeg',
+              size_bytes: fileSizeBytes,
+              path: storagePath,
+              uploaded_by: authData?.user?.id || null,
+            },
+          ])
+        } catch (fileErr) {
+          console.warn('[useSitePhotos] Auto-filing to project_files warning:', fileErr)
+        }
+      }
+
       await fetchPhotos()
       return data as ProjectSitePhoto
     } finally {

@@ -554,7 +554,20 @@ export default function ProfileSettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+            <label className="flex items-center justify-between p-3 rounded-xl bg-background-dark border border-border-dark cursor-pointer hover:border-primary/40 transition-colors">
+              <div>
+                <span className="font-semibold text-white block">Sidebar Sub-tabs</span>
+                <span className="text-[10px] text-text-muted">Nested nav categories</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.showSidebarSubcategories ?? false}
+                onChange={(e) => updatePreferenceField('showSidebarSubcategories', e.target.checked)}
+                className="rounded border-border-dark text-primary focus:ring-primary w-4 h-4 bg-card-dark"
+              />
+            </label>
+
             <label className="flex items-center justify-between p-3 rounded-xl bg-background-dark border border-border-dark cursor-pointer hover:border-primary/40 transition-colors">
               <div>
                 <span className="font-semibold text-white block">Compact Density</span>

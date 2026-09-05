@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useRoles, useSaveRole } from '@/hooks/useRoles'
 import { useUserInvitations, useCreateInvitation } from '@/hooks/useUserInvitations'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -10,6 +11,7 @@ import InviteUserModal from '@/components/settings/InviteUserModal'
 import XeroSettingsSection from '@/components/settings/XeroSettingsSection'
 import ActivityTypesSection from '@/components/settings/ActivityTypesSection'
 import TradeCustomizationSection from '@/components/settings/TradeCustomizationSection'
+import AuditLogsSection from '@/components/settings/AuditLogsSection'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 import type { User, InviteUserFormData, RoleFormData } from '@/types'
@@ -17,8 +19,37 @@ import { useCompanyProfile, CompanyProfile } from '@/hooks/useCompanyProfile'
 
 export default function SettingsPage() {
   const { isAdmin, hasPermission } = usePermissions()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<'team' | 'roles' | 'company' | 'trade' | 'activity_types' | 'xero'>('team')
+  const tabParam = searchParams.get('tab') as
+    | 'team'
+    | 'roles'
+    | 'company'
+    | 'trade'
+    | 'activity_types'
+    | 'xero'
+    | 'audit_logs'
+    | null
+
+  const [activeTab, setActiveTab] = useState<
+    'team' | 'roles' | 'company' | 'trade' | 'activity_types' | 'xero' | 'audit_logs'
+  >(() => {
+    if (tabParam && ['team', 'roles', 'company', 'trade', 'activity_types', 'xero', 'audit_logs'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'team'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['team', 'roles', 'company', 'trade', 'activity_types', 'xero', 'audit_logs'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
+
+  const handleTabChange = (tab: 'team' | 'roles' | 'company' | 'trade' | 'activity_types' | 'xero' | 'audit_logs') => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'team' ? {} : { tab })
+  }
 
   // Users state
   const [usersList, setUsersList] = useState<User[]>([])
@@ -184,7 +215,7 @@ export default function SettingsPage() {
       {/* Settings Navigation Tabs */}
       <div className="flex border-b border-border-dark gap-2 overflow-x-auto pb-px">
         <button
-          onClick={() => setActiveTab('team')}
+          onClick={() => handleTabChange('team')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'team'
               ? 'border-primary text-primary'
@@ -196,7 +227,7 @@ export default function SettingsPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('roles')}
+          onClick={() => handleTabChange('roles')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'roles'
               ? 'border-primary text-primary'
@@ -208,7 +239,7 @@ export default function SettingsPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('company')}
+          onClick={() => handleTabChange('company')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'company'
               ? 'border-primary text-primary'
@@ -220,7 +251,7 @@ export default function SettingsPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('trade')}
+          onClick={() => handleTabChange('trade')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'trade'
               ? 'border-primary text-primary'
@@ -232,7 +263,7 @@ export default function SettingsPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('activity_types')}
+          onClick={() => handleTabChange('activity_types')}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'activity_types'
               ? 'border-primary text-primary'
@@ -245,7 +276,7 @@ export default function SettingsPage() {
 
         {canAccessXero && (
           <button
-            onClick={() => setActiveTab('xero')}
+            onClick={() => handleTabChange('xero')}
             className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === 'xero'
                 ? 'border-primary text-primary'
@@ -254,6 +285,20 @@ export default function SettingsPage() {
           >
             <span className="material-symbols-outlined text-base">sync_alt</span>
             Xero Accounting Sync
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            onClick={() => handleTabChange('audit_logs')}
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'audit_logs'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-muted hover:text-white'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">manage_history</span>
+            Audit & System Logs
           </button>
         )}
       </div>
@@ -471,6 +516,13 @@ export default function SettingsPage() {
       {activeTab === 'xero' && canAccessXero && (
         <div className="space-y-4">
           <XeroSettingsSection />
+        </div>
+      )}
+
+      {/* TAB 6: AUDIT & SYSTEM LOGS (Admin only) */}
+      {activeTab === 'audit_logs' && isAdmin && (
+        <div className="space-y-4">
+          <AuditLogsSection />
         </div>
       )}
 

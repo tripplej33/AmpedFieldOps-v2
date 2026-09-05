@@ -7,6 +7,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   themeColor: 'cyan',
   defaultLandingPage: '/app/dashboard',
   compactView: false,
+  showSidebarSubcategories: false,
   enableSoundAlerts: true,
   enableEmailNotifications: true,
 }

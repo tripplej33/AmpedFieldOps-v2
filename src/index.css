@@ -7,13 +7,14 @@
     --font-display: "Space Grotesk", sans-serif;
     --primary-rgb: 18 125 161;
     --primary-color: #127da1;
-    --bg-main: #121417;
-    --bg-card: #1c2426;
-    --bg-nav-hover: #293438;
-    --border-main: #3c4d53;
+    --bg-main: #101417;
+    --bg-card: #192124;
+    --bg-surface: #222d30;
+    --bg-nav-hover: #2a373b;
+    --border-main: #3f5056;
     --text-main: #fafafa;
-    --text-muted: #9db2b8;
-    --text-disabled: #64748b;
+    --text-muted: #a2b7bd;
+    --text-disabled: #6c8087;
   }
   
   * {

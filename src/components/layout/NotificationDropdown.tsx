@@ -38,12 +38,16 @@ export default function NotificationDropdown({
   const [isSendModalOpen, setIsSendModalOpen] = useState(false)
   const [actioningId, setActioningId] = useState<string | null>(null)
 
-  // Close when clicking outside (unless send modal is open)
+  // Close when clicking outside (unless send modal is open or clicking on notification trigger)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      const isTriggerClick = target?.closest('[data-notification-trigger="true"]')
+
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node) &&
+        !dropdownRef.current.contains(target as Node) &&
+        !isTriggerClick &&
         !isSendModalOpen
       ) {
         onClose()

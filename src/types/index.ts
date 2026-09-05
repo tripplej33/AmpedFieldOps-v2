@@ -14,6 +14,7 @@ export interface UserPreferences {
   themeColor: 'cyan' | 'amber' | 'blue' | 'emerald' | 'violet' | string
   defaultLandingPage: string
   compactView: boolean
+  showSidebarSubcategories?: boolean
   enableSoundAlerts: boolean
   enableEmailNotifications: boolean
 }

@@ -477,7 +477,7 @@ export default function ProjectDetailPage() {
           <Button
             variant="secondary"
             onClick={() => setIsJobReportModalOpen(true)}
-            className="text-xs font-bold text-purple-400 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 flex items-center gap-1.5"
+            className="text-xs font-bold text-purple-400 border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 flex items-center gap-1.5 shadow-sm"
           >
             <span className="material-symbols-outlined text-sm">description</span>
             Job Report (PDF)
@@ -487,26 +487,26 @@ export default function ProjectDetailPage() {
             <Button
               variant="secondary"
               onClick={() => setIsInvoiceModalOpen(true)}
-              className="text-xs font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center gap-1.5"
+              className="text-xs font-bold text-emerald-400 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center gap-1.5 shadow-sm"
             >
               <span className="material-symbols-outlined text-sm">receipt_long</span>
               Create Invoice
             </Button>
           )}
 
-          <Button variant="secondary" onClick={() => setIsEditProjectModalOpen(true)}>
+          <Button variant="secondary" onClick={() => setIsEditProjectModalOpen(true)} className="text-xs font-semibold">
             <span className="material-symbols-outlined text-sm">edit</span>
             Edit
           </Button>
-          <Button variant="secondary" onClick={() => setIsScannerOpen(true)}>
-            <span className="material-symbols-outlined">document_scanner</span>
+          <Button variant="secondary" onClick={() => setIsScannerOpen(true)} className="text-xs font-semibold">
+            <span className="material-symbols-outlined text-sm">document_scanner</span>
             Scan Receipt / Doc
           </Button>
-          <span className={`px-3 py-1 rounded text-xs font-semibold ${
-            project.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-            project.status === 'Completed' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-            project.status === 'Pending' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-            'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+          <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
+            project.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+            project.status === 'Completed' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' :
+            project.status === 'Pending' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+            'bg-slate-500/20 text-slate-300 border border-slate-500/40'
           }`}>
             {project.status}
           </span>
@@ -514,104 +514,173 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* 360° Navigation Tabs */}
-      <div className="flex gap-2 border-b border-border-dark pb-2 overflow-x-auto">
+      <div className="flex gap-1.5 border-b border-border-dark pb-2.5 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'overview' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'overview'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">dashboard</span>
+          <span className="material-symbols-outlined text-base text-primary">dashboard</span>
           Overview & Cost Centers
         </button>
         <button
           onClick={() => setActiveTab('materials')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'materials' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'materials'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">inventory_2</span>
-          Job Materials & Stock ({materials.length})
+          <span className="material-symbols-outlined text-base text-primary">inventory_2</span>
+          Job Materials & Stock
+          {materials.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'materials' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {materials.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('purchase_orders')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'purchase_orders' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'purchase_orders'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">shopping_cart</span>
-          Purchase Orders ({purchaseOrders.length})
+          <span className="material-symbols-outlined text-base text-primary">shopping_cart</span>
+          Purchase Orders
+          {purchaseOrders.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'purchase_orders' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {purchaseOrders.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('contacts')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'contacts' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'contacts'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">contact_phone</span>
-          Site Contacts ({contacts.length})
+          <span className="material-symbols-outlined text-base text-primary">contact_phone</span>
+          Site Contacts
+          {contacts.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'contacts' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {contacts.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('safety')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'safety' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'safety'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">shield</span>
-          Site Safety & Sign-In ({onSiteCount} on site)
+          <span className="material-symbols-outlined text-base text-emerald-400">shield_with_heart</span>
+          Site Safety & Sign-In
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            onSiteCount > 0 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold' : 'bg-surface-dark text-text-muted border border-border-dark'
+          }`}>
+            {onSiteCount} on site
+          </span>
         </button>
         <button
           onClick={() => setActiveTab('testing')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'testing' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'testing'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">verified</span>
+          <span className="material-symbols-outlined text-base text-primary">verified</span>
           Testing & CoC/ESC
         </button>
         <button
           onClick={() => setActiveTab('photos')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'photos' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'photos'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">photo_camera</span>
+          <span className="material-symbols-outlined text-base text-cyan-400">photo_camera</span>
           Site Photos & Markups
         </button>
         <button
           onClick={() => setActiveTab('snags')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'snags' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'snags'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">fact_check</span>
-          QC & Snags ({snags.length})
+          <span className="material-symbols-outlined text-base text-amber-400">fact_check</span>
+          QC & Snags
+          {snags.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'snags' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {snags.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('timesheets')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'timesheets' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'timesheets'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">schedule</span>
-          Timesheets ({projectTimesheets.length})
+          <span className="material-symbols-outlined text-base text-primary">schedule</span>
+          Timesheets
+          {projectTimesheets.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'timesheets' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {projectTimesheets.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('files')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'files' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'files'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">folder</span>
-          Files & Scans ({filesList.length})
+          <span className="material-symbols-outlined text-base text-primary">folder</span>
+          Files & Scans
+          {filesList.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeTab === 'files' ? 'bg-primary/30 text-white' : 'bg-surface-dark text-text-muted border border-border-dark'
+            }`}>
+              {filesList.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('financials')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-            activeTab === 'financials' ? 'bg-primary text-white font-semibold' : 'text-text-muted hover:text-white hover:bg-card-dark'
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === 'financials'
+              ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
+              : 'bg-card-dark/80 hover:bg-surface-dark text-slate-300 hover:text-white border border-border-dark/80 hover:border-border-dark'
           }`}
         >
-          <span className="material-symbols-outlined text-base">payments</span>
+          <span className="material-symbols-outlined text-base text-primary">payments</span>
           Financials & Billing
         </button>
       </div>
