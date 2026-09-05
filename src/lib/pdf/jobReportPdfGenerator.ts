@@ -289,13 +289,20 @@ export function generateJobReportPdf(data: JobReportData, companyProfile?: Compa
       // Embed Image if base64 available
       if (p.base64DataUrl || p.photo_url) {
         try {
-          doc.addImage(p.base64DataUrl || p.photo_url, 'JPEG', x + 2, y + 2, colWidth - 4, 44)
+          const imgSource = (p.base64DataUrl || p.photo_url) as string
+          let format = 'JPEG'
+          if (imgSource.startsWith('data:image/png')) {
+            format = 'PNG'
+          } else if (imgSource.startsWith('data:image/webp')) {
+            format = 'WEBP'
+          }
+          doc.addImage(imgSource, format, x + 2, y + 2, colWidth - 4, 44)
         } catch {
           doc.setFillColor(241, 245, 249)
           doc.rect(x + 2, y + 2, colWidth - 4, 44, 'F')
           doc.setFontSize(8)
           doc.setTextColor(148, 163, 184)
-          doc.text('[ Photo Evidence File ]', x + colWidth / 2, y + 24, { align: 'center' })
+          doc.text('[ Photo Evidence Attached ]', x + colWidth / 2, y + 24, { align: 'center' })
         }
       }
 

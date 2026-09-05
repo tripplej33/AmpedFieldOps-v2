@@ -58,6 +58,7 @@ export function useCompanyProfile() {
         const merged = { ...DEFAULT_COMPANY_PROFILE, ...parsed }
         setProfile(merged)
         localStorage.setItem('amped_company_settings', JSON.stringify(merged))
+        window.dispatchEvent(new CustomEvent('amped_company_profile_updated', { detail: merged }))
       }
     } catch (e) {
       console.warn('[useCompanyProfile] Fallback to cached profile:', e)
@@ -68,6 +69,36 @@ export function useCompanyProfile() {
 
   useEffect(() => {
     fetchProfile()
+
+    // Listen to in-window profile updates
+    const handleProfileUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<CompanyProfile>
+      if (customEvent.detail) {
+        setProfile(customEvent.detail)
+      } else {
+        try {
+          const saved = localStorage.getItem('amped_company_settings')
+          if (saved) setProfile({ ...DEFAULT_COMPANY_PROFILE, ...JSON.parse(saved) })
+        } catch {}
+      }
+    }
+
+    // Listen to other tabs' storage changes
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'amped_company_settings' && e.newValue) {
+        try {
+          setProfile({ ...DEFAULT_COMPANY_PROFILE, ...JSON.parse(e.newValue) })
+        } catch {}
+      }
+    }
+
+    window.addEventListener('amped_company_profile_updated', handleProfileUpdate)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener('amped_company_profile_updated', handleProfileUpdate)
+      window.removeEventListener('storage', handleStorage)
+    }
   }, [fetchProfile])
 
   const saveProfile = async (newProfile: Partial<CompanyProfile>) => {
@@ -83,7 +114,10 @@ export function useCompanyProfile() {
       localStorage.setItem('amped_company_settings', JSON.stringify(merged))
       setProfile(merged)
 
-      // 2. Save to app_settings table in Supabase
+      // 2. Broadcast to all mounted components (Sidebar, Dashboard, PDFs, etc.)
+      window.dispatchEvent(new CustomEvent('amped_company_profile_updated', { detail: merged }))
+
+      // 3. Save to app_settings table in Supabase
       const { error: upsertErr } = await supabase
         .from('app_settings')
         .upsert(

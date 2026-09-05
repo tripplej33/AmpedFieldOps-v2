@@ -91,6 +91,7 @@ export function savePreferences(prefs: UserPreferences) {
   try {
     localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(prefs))
     applyTheme(prefs)
+    window.dispatchEvent(new CustomEvent('amped_preferences_updated', { detail: prefs }))
   } catch (err) {
     console.error('Failed to save preferences:', err)
   }

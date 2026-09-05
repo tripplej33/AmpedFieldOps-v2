@@ -9,6 +9,8 @@ import { useSitePhotos } from '@/hooks/useSitePhotos'
 import { useCompanyProfile } from '@/hooks/useCompanyProfile'
 import { generateJobReportPdf, type JobReportData } from '@/lib/pdf/jobReportPdfGenerator'
 import type { Client, Project } from '@/types'
+import type { PhotoCategory } from '@/types/photos'
+import { supabase } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 
 interface GenerateJobReportModalProps {
@@ -17,19 +19,43 @@ interface GenerateJobReportModalProps {
   projectId?: string
 }
 
-async function urlToBase64(url: string): Promise<string> {
+async function photoToBase64(photoUrl: string): Promise<string> {
+  if (!photoUrl) return ''
+  if (photoUrl.startsWith('data:')) return photoUrl
+
   try {
-    const res = await fetch(url)
-    const blob = await res.blob()
-    return new Promise((resolve) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve((reader.result as string) || '')
-      reader.onerror = () => resolve('')
-      reader.readAsDataURL(blob)
-    })
-  } catch {
-    return ''
+    // 1. If it's a Supabase storage URL or path, use authenticated download to avoid CORS/RLS restrictions
+    if (photoUrl.includes('/project-files/')) {
+      const parts = photoUrl.split('/project-files/')
+      if (parts[1]) {
+        const rawPath = decodeURIComponent(parts[1].split('?')[0])
+        const { data: blob, error } = await supabase.storage.from('project-files').download(rawPath)
+        if (!error && blob) {
+          return new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve((reader.result as string) || '')
+            reader.onerror = () => resolve('')
+            reader.readAsDataURL(blob)
+          })
+        }
+      }
+    }
+
+    // 2. Fetch directly with CORS fallback
+    const res = await fetch(photoUrl, { mode: 'cors' })
+    if (res.ok) {
+      const blob = await res.blob()
+      return new Promise((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve((reader.result as string) || '')
+        reader.onerror = () => resolve('')
+        reader.readAsDataURL(blob)
+      })
+    }
+  } catch (err) {
+    console.warn('[photoToBase64] Note converting photo:', err)
   }
+  return photoUrl
 }
 
 export default function GenerateJobReportModal({
@@ -66,6 +92,13 @@ export default function GenerateJobReportModal({
   const [selectedSnagIds, setSelectedSnagIds] = useState<string[]>([])
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([])
 
+  // Modal Photo Upload State
+  const [uploadCategory, setUploadCategory] = useState<PhotoCategory>('as_built')
+  const [uploadCaption, setUploadCaption] = useState('')
+  const [isUploadingPhotoInModal, setIsUploadingPhotoInModal] = useState(false)
+  const modalFileInputRef = useRef<HTMLInputElement | null>(null)
+  const modalCameraInputRef = useRef<HTMLInputElement | null>(null)
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
 
@@ -76,7 +109,7 @@ export default function GenerateJobReportModal({
   const { usageLogs } = usePlantEquipment()
   const { materials = [] } = useProjectMaterials(selectedProjectId || undefined)
   const { snags = [] } = useSnags(selectedProjectId || undefined)
-  const { photos = [] } = useSitePhotos(selectedProjectId || undefined)
+  const { photos = [], uploadPhoto } = useSitePhotos(selectedProjectId || undefined)
 
   const projectPlantLogs = usageLogs.filter((u) => u.project_id === selectedProjectId)
 
@@ -179,6 +212,28 @@ export default function GenerateJobReportModal({
     }
   }
 
+  const handleModalPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      setIsUploadingPhotoInModal(true)
+      const newPhoto = await uploadPhoto({
+        file,
+        category: uploadCategory,
+        caption: uploadCaption.trim() || file.name.replace(/\.[^/.]+$/, ''),
+      })
+      if (newPhoto?.id) {
+        setSelectedPhotoIds((prev) => Array.from(new Set([...prev, newPhoto.id])))
+      }
+      setUploadCaption('')
+    } catch (err) {
+      console.error('Failed to upload photo in report modal:', err)
+    } finally {
+      setIsUploadingPhotoInModal(false)
+      if (e.target) e.target.value = ''
+    }
+  }
+
   const handleGeneratePdf = async () => {
     try {
       setGenerating(true)
@@ -194,7 +249,7 @@ export default function GenerateJobReportModal({
       const enrichedPhotos = await Promise.all(
         chosenPhotosRaw.map(async (p) => {
           if (p.photo_url) {
-            const base64 = await urlToBase64(p.photo_url)
+            const base64 = await photoToBase64(p.photo_url)
             return { ...p, base64DataUrl: base64 }
           }
           return p
@@ -648,24 +703,92 @@ export default function GenerateJobReportModal({
           {/* TAB 6: PHOTOS */}
           {activeBuilderTab === 'photos' && (
             <div className="space-y-3">
+              {/* Photo Upload Toolbar */}
+              <div className="bg-surface-dark/50 border border-border-dark rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap flex-1">
+                  <select
+                    value={uploadCategory}
+                    onChange={(e) => setUploadCategory(e.target.value as PhotoCategory)}
+                    className="h-8 px-2.5 bg-background-dark border border-border-dark rounded-lg text-white text-xs"
+                  >
+                    <option value="as_built">As-Built / Handover</option>
+                    <option value="before">Before Work</option>
+                    <option value="in_progress">In-Progress</option>
+                    <option value="defect">Defects & Snags</option>
+                    <option value="hazard">Hazard / Safety</option>
+                  </select>
+
+                  <input
+                    type="text"
+                    placeholder="Photo caption (e.g. Completed switchboard installation)..."
+                    value={uploadCaption}
+                    onChange={(e) => setUploadCaption(e.target.value)}
+                    className="h-8 px-2.5 bg-background-dark border border-border-dark rounded-lg text-white text-xs flex-1 min-w-[180px]"
+                  />
+
+                  <div className="flex items-center gap-1.5">
+                    {/* File upload input */}
+                    <input
+                      ref={modalFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleModalPhotoUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => modalFileInputRef.current?.click()}
+                      disabled={isUploadingPhotoInModal || !selectedProjectId}
+                      className="h-8 text-xs flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-sm">upload_file</span>
+                      Attach File
+                    </Button>
+
+                    {/* Camera capture input */}
+                    <input
+                      ref={modalCameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleModalPhotoUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => modalCameraInputRef.current?.click()}
+                      disabled={isUploadingPhotoInModal || !selectedProjectId}
+                      className="h-8 text-xs flex items-center gap-1 bg-cyan-600 hover:bg-cyan-500 text-white"
+                    >
+                      <span className="material-symbols-outlined text-sm">photo_camera</span>
+                      {isUploadingPhotoInModal ? 'Uploading...' : 'Take Photo'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Photos Gallery Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                     Site Photo Evidence Gallery Picker
                   </h3>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toggleSelectAll(
-                        selectedPhotoIds,
-                        photos.map((p) => p.id),
-                        setSelectedPhotoIds
-                      )
-                    }
-                    className="px-2 py-0.5 rounded bg-surface-dark border border-border-dark text-[10px] text-cyan-400 hover:underline"
-                  >
-                    {selectedPhotoIds.length === photos.length ? 'Deselect All' : 'Select All'}
-                  </button>
+                  {photos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleSelectAll(
+                          selectedPhotoIds,
+                          photos.map((p) => p.id),
+                          setSelectedPhotoIds
+                        )
+                      }
+                      className="px-2 py-0.5 rounded bg-surface-dark border border-border-dark text-[10px] text-cyan-400 hover:underline"
+                    >
+                      {selectedPhotoIds.length === photos.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  )}
                 </div>
                 <span className="text-xs font-mono font-bold text-cyan-400">
                   {selectedPhotoIds.length} photos chosen
@@ -673,11 +796,13 @@ export default function GenerateJobReportModal({
               </div>
 
               {photos.length === 0 ? (
-                <div className="p-6 text-center text-text-muted border border-dashed border-border-dark rounded-xl">
-                  No site photos uploaded to this project yet.
+                <div className="p-6 text-center text-text-muted border border-dashed border-border-dark rounded-xl bg-background-dark/30 space-y-2">
+                  <span className="material-symbols-outlined text-3xl text-text-muted/50 block">add_a_photo</span>
+                  <p className="text-xs text-white">No site photos uploaded for this project yet.</p>
+                  <p className="text-[11px] text-text-muted">Use the buttons above to attach or capture photos directly into this report.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-72 overflow-y-auto p-1 custom-scrollbar">
                   {photos.map((p) => {
                     const isChecked = selectedPhotoIds.includes(p.id)
                     return (
@@ -694,12 +819,15 @@ export default function GenerateJobReportModal({
                             : 'border-border-dark opacity-50 hover:opacity-80'
                         }`}
                       >
-                        <div className="aspect-video bg-black/40 overflow-hidden">
+                        <div className="aspect-video bg-black/40 overflow-hidden flex items-center justify-center">
                           {p.photo_url ? (
                             <img
                               src={p.photo_url}
                               alt={p.caption || 'Photo'}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-text-muted">

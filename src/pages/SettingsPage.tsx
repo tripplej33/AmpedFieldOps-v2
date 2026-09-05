@@ -179,7 +179,8 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      await uploadCompanyLogo(file)
+      const newUrl = await uploadCompanyLogo(file)
+      setCompanySettings((prev) => ({ ...prev, logoUrl: newUrl }))
       setToast({ type: 'success', message: 'Company logo uploaded and updated' })
     } catch (err) {
       setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to upload logo' })
@@ -189,6 +190,7 @@ export default function SettingsPage() {
   const handleRemoveLogo = async () => {
     try {
       await removeCompanyLogo()
+      setCompanySettings((prev) => ({ ...prev, logoUrl: null }))
       setToast({ type: 'info', message: 'Company logo removed' })
     } catch {
       setToast({ type: 'error', message: 'Failed to remove logo' })

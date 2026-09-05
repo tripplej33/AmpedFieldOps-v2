@@ -76,7 +76,11 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
       setShowSubcategories(getStoredPreferences().showSidebarSubcategories ?? false)
     }
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('amped_preferences_updated', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('amped_preferences_updated', handleStorageChange)
+    }
   }, [])
 
   const {
@@ -128,7 +132,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
   const toggleAccordion = (id: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setExpandedSection((prev) => (prev === id ? null : id))
+    setExpandedSection((prev) => (prev === id ? 'none' : id))
   }
 
   return (
@@ -154,23 +158,31 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
           {/* Logo Header */}
           <div className="h-16 flex items-center justify-between px-3.5 border-b border-[#344449] bg-[#171e21] shrink-0">
             {!isCollapsed ? (
-              <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1">
+              <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1" title={companyProfile.companyName || 'AmpedFieldOps'}>
                 {companyProfile.logoUrl ? (
-                  <div className="h-9 max-w-[130px] flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[#222d30] border border-[#38484e] flex items-center justify-center shrink-0 shadow-sm">
                     <img
                       src={companyProfile.logoUrl}
                       alt={companyProfile.companyName || 'AmpedFieldOps'}
                       className="max-h-full max-w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
                     />
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-primary text-xl">bolt</span>
                   </div>
                 )}
-                <span className="text-white font-bold font-display text-sm truncate">
-                  {companyProfile.companyName || 'AmpedFieldOps'}
-                </span>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-white font-bold font-display text-xs truncate leading-tight">
+                    {companyProfile.companyName || 'AmpedFieldOps'}
+                  </span>
+                  <span className="text-[10px] text-primary/80 font-mono font-medium truncate">
+                    Field Operations
+                  </span>
+                </div>
               </Link>
             ) : (
               <Link
@@ -179,11 +191,16 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                 title={companyProfile.companyName || 'AmpedFieldOps'}
               >
                 {companyProfile.logoUrl ? (
-                  <img
-                    src={companyProfile.logoUrl}
-                    alt="Logo"
-                    className="w-8 h-8 object-contain rounded"
-                  />
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#222d30] border border-[#38484e] flex items-center justify-center">
+                    <img
+                      src={companyProfile.logoUrl}
+                      alt="Logo"
+                      className="max-h-full max-w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center">
                     <span className="material-symbols-outlined text-primary text-lg">bolt</span>
@@ -208,7 +225,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
               const isActive = location.pathname === item.path || (item.path !== '/app/dashboard' && location.pathname.startsWith(item.path))
               const subItems = SUB_CATEGORIES[item.id]
               const hasSubcategories = showSubcategories && !isCollapsed && subItems && subItems.length > 0
-              const isAccordionOpen = expandedSection === item.id || (isActive && expandedSection === null)
+              // When showSubcategories is active, default all subcategory sections to open unless explicitly collapsed by user
+              const isAccordionOpen = expandedSection === 'none' ? false : (expandedSection === item.id || expandedSection === null)
 
               return (
                 <div key={item.id} className="space-y-0.5">
