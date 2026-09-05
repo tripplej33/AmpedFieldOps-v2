@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { InventoryLocation, InventoryStockLevel } from '@/types/inventory'
+import type { InventoryLocation, InventoryStockLevel, InventoryTransaction } from '@/types/inventory'
 
 export function useInventoryLocations() {
   const [locations, setLocations] = useState<InventoryLocation[]>([])
@@ -58,7 +58,50 @@ export function useInventoryLocations() {
     }
   }, [fetchLocations])
 
-  return { locations, loading, error, refresh: fetchLocations }
+  const createLocation = async (payload: {
+    name: string
+    location_type: 'warehouse' | 'workshop' | 'van' | 'site_container' | 'yard' | 'other'
+    vehicle_id?: string | null
+    is_primary?: boolean
+  }) => {
+    try {
+      setLoading(true)
+      const { data, error: err } = await supabase
+        .from('inventory_locations')
+        .insert([
+          {
+            name: payload.name,
+            location_type: payload.location_type,
+            vehicle_id: payload.vehicle_id || null,
+            is_primary: !!payload.is_primary,
+          },
+        ])
+        .select(`
+          *,
+          vehicle:vehicles(id, registration_number, make_model)
+        `)
+        .single()
+
+      if (err) throw err
+      await fetchLocations()
+      return data as InventoryLocation
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteLocation = async (id: string) => {
+    try {
+      setLoading(true)
+      const { error: err } = await supabase.from('inventory_locations').delete().eq('id', id)
+      if (err) throw err
+      await fetchLocations()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { locations, loading, error, refresh: fetchLocations, createLocation, deleteLocation }
 }
 
 export function useStockLevels(locationId?: string) {
@@ -67,25 +110,23 @@ export function useStockLevels(locationId?: string) {
   const [error, setError] = useState<string | null>(null)
 
   const fetchStock = useCallback(async () => {
-    if (!locationId) {
-      setStockLevels([])
-      setLoading(false)
-      return
-    }
-
     try {
       setLoading(true)
       setError(null)
-      const { data, error: err } = await supabase
+      let query = supabase
         .from('inventory_stock_levels')
         .select(`
           *,
           item:inventory_items(*),
           location:inventory_locations(*)
         `)
-        .eq('location_id', locationId)
         .order('updated_at', { ascending: false })
 
+      if (locationId && locationId !== 'all') {
+        query = query.eq('location_id', locationId)
+      }
+
+      const { data, error: err } = await query
       if (err) throw err
       setStockLevels((data || []) as InventoryStockLevel[])
     } catch (err) {
@@ -110,6 +151,58 @@ export function useStockLevels(locationId?: string) {
   }, [fetchStock])
 
   return { stockLevels, loading, error, refresh: fetchStock }
+}
+
+export function useInventoryTransactions(locationId?: string) {
+  const [transactions, setTransactions] = useState<InventoryTransaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchTransactions = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      let query = supabase
+        .from('inventory_transactions')
+        .select(`
+          *,
+          item:inventory_items(id, name, sku, unit_of_measure),
+          source_location:inventory_locations!inventory_transactions_source_location_id_fkey(id, name, location_type),
+          dest_location:inventory_locations!inventory_transactions_dest_location_id_fkey(id, name, location_type),
+          project:projects(id, name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (locationId && locationId !== 'all') {
+        query = query.or(`source_location_id.eq.${locationId},dest_location_id.eq.${locationId}`)
+      }
+
+      const { data, error: err } = await query
+      if (err) throw err
+      setTransactions((data || []) as InventoryTransaction[])
+    } catch (err) {
+      console.error('[useInventoryTransactions] Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch inventory transactions')
+    } finally {
+      setLoading(false)
+    }
+  }, [locationId])
+
+  useEffect(() => {
+    fetchTransactions()
+
+    const channel = supabase
+      .channel('inventory_transactions_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_transactions' }, () => fetchTransactions())
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [fetchTransactions])
+
+  return { transactions, loading, error, refresh: fetchTransactions }
 }
 
 export function useInventoryOperations() {

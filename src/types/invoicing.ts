@@ -9,6 +9,7 @@ export interface InvoiceLineItem {
   timesheet_id?: string | null
   inventory_item_id?: string | null
   equipment_usage_id?: string | null
+  project_material_id?: string | null
   quantity: number
   unit_price: number
   tax_rate: number

@@ -1,6 +1,6 @@
 import type { InventoryItem } from '@/types'
 
-export type LocationType = 'warehouse' | 'van' | 'site_container' | 'other'
+export type LocationType = 'warehouse' | 'workshop' | 'van' | 'site_container' | 'yard' | 'other'
 export type TransactionType = 'transfer' | 'job_booking' | 'restock' | 'adjustment'
 
 export interface InventoryLocation {

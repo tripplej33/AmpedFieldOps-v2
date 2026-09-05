@@ -592,6 +592,8 @@ export interface ProjectMaterial {
   logged_by?: string | null
   entry_date: string
   notes?: string | null
+  invoiced?: boolean | null
+  invoice_id?: string | null
   created_at: string
   project?: Project
   cost_center?: CostCenter

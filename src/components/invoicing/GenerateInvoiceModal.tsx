@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useTimesheets } from '@/hooks/useTimesheets'
 import { usePlantEquipment } from '@/hooks/usePlantEquipment'
+import { useProjectMaterials } from '@/hooks/useProjectMaterials'
 import { useProjects } from '@/hooks/useProjects'
 import { useAllClients } from '@/hooks/useClients'
 import { useCompanyProfile } from '@/hooks/useCompanyProfile'
 import { useInvoices } from '@/hooks/useInvoices'
 import { generateInvoicePdf } from '@/lib/pdf/invoicePdfGenerator'
 import type { InvoiceLineItem, Invoice } from '@/types/invoicing'
-import type { Timesheet, Client, Project } from '@/types'
+import type { Timesheet, Client, Project, ProjectMaterial } from '@/types'
 import Button from '@/components/ui/Button'
 
 interface GenerateInvoiceModalProps {
@@ -51,10 +52,12 @@ export default function GenerateInvoiceModal({
     status: ['approved'],
   })
   const { usageLogs } = usePlantEquipment()
+  const { materials = [] } = useProjectMaterials(selectedProjectId || undefined)
 
   // Selected IDs for billing
   const [selectedTsIds, setSelectedTsIds] = useState<string[]>([])
   const [selectedEqIds, setSelectedEqIds] = useState<string[]>([])
+  const [selectedMatIds, setSelectedMatIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
   // Auto-sync client when project changes
@@ -79,11 +82,18 @@ export default function GenerateInvoiceModal({
     setSelectedEqIds(unbilledPlant.map((u) => u.id))
   }, [usageLogs, selectedProjectId])
 
+  // Select all unbilled materials for this project
+  useEffect(() => {
+    const unbilledMats = materials.filter((m: ProjectMaterial) => !m.invoiced)
+    setSelectedMatIds(unbilledMats.map((m: ProjectMaterial) => m.id))
+  }, [materials])
+
   if (!isOpen) return null
 
   // Calculate billable line items
   const billableTimesheets = timesheets.filter((t: Timesheet) => selectedTsIds.includes(t.id))
   const billablePlant = usageLogs.filter((u) => selectedEqIds.includes(u.id))
+  const billableMaterials = materials.filter((m: ProjectMaterial) => selectedMatIds.includes(m.id))
 
   const laborLines: Omit<InvoiceLineItem, 'id' | 'invoice_id'>[] = billableTimesheets.map((ts: Timesheet) => {
     const rate = Number(ts.activity_type?.default_rate || 95)
@@ -114,9 +124,24 @@ export default function GenerateInvoiceModal({
     }
   })
 
+  const materialLines: Omit<InvoiceLineItem, 'id' | 'invoice_id'>[] = billableMaterials.map((mat) => {
+    const qty = Number(mat.quantity_used || 1)
+    const rate = Number(mat.charge_out_rate || mat.unit_cost || 0)
+    return {
+      description: `Material: ${mat.description} (${qty} ${mat.unit_of_measure || 'EA'})`,
+      item_type: 'materials',
+      project_material_id: mat.id,
+      quantity: qty,
+      unit_price: rate,
+      tax_rate: taxRate,
+      line_total: qty * rate,
+    }
+  })
+
   const flattenedLines: Omit<InvoiceLineItem, 'id' | 'invoice_id'>[] = [
     ...laborLines,
     ...plantLines,
+    ...materialLines,
   ]
 
   const subtotal = flattenedLines.reduce((sum, item) => sum + Number(item.line_total), 0)
@@ -129,6 +154,10 @@ export default function GenerateInvoiceModal({
 
   const handleToggleEq = (id: string) => {
     setSelectedEqIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
+  }
+
+  const handleToggleMat = (id: string) => {
+    setSelectedMatIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }
 
   const handleCreateAndDownload = async () => {
@@ -146,6 +175,7 @@ export default function GenerateInvoiceModal({
         lineItems: flattenedLines,
         timesheetIds: selectedTsIds,
         equipmentLogIds: selectedEqIds,
+        materialIds: selectedMatIds,
       })
 
       // Generate PDF
@@ -359,6 +389,64 @@ export default function GenerateInvoiceModal({
                       </label>
                     )
                   })
+              )}
+            </div>
+          </div>
+
+          {/* Materials & Stock Consumables Selection Matrix */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-cyan-400 text-base">inventory_2</span>
+                3. Select Project Materials & Consumables ({billableMaterials.length} selected)
+              </h3>
+              <span className="text-xs font-bold text-cyan-400">
+                ${materialLines.reduce((s, m) => s + m.line_total, 0).toFixed(2)}
+              </span>
+            </div>
+
+            <div className="max-h-36 overflow-y-auto border border-border-dark rounded-xl bg-card-dark divide-y divide-border-dark/60 text-xs">
+              {materials.length === 0 ? (
+                <div className="p-3 text-center text-text-muted text-[11px]">
+                  No project materials logged for this project yet.
+                </div>
+              ) : (
+                materials.map((mat: ProjectMaterial) => {
+                  const isChecked = selectedMatIds.includes(mat.id)
+                  const qty = Number(mat.quantity_used || 1)
+                  const rate = Number(mat.charge_out_rate || mat.unit_cost || 0)
+
+                  return (
+                    <label
+                      key={mat.id}
+                      className={`flex items-center justify-between p-2.5 cursor-pointer hover:bg-surface-dark transition-colors ${
+                        isChecked ? 'bg-cyan-500/5' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleMat(mat.id)}
+                          className="rounded border-border-dark bg-background-dark text-cyan-500 w-4 h-4"
+                        />
+                        <div>
+                          <span className="text-white font-semibold">{mat.description}</span>
+                          <span className="text-text-muted text-[11px] block">
+                            {mat.entry_date} - {mat.source === 'van_stock' ? 'From Van Stock' : 'Direct Purchase'}
+                            {mat.notes ? ` • ${mat.notes}` : ''}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-white font-mono font-bold">${(qty * rate).toFixed(2)}</span>
+                        <span className="text-text-muted text-[10px] block">
+                          {qty} {mat.unit_of_measure || 'EA'} @ ${rate}/{mat.unit_of_measure || 'EA'}
+                        </span>
+                      </div>
+                    </label>
+                  )
+                })
               )}
             </div>
           </div>
