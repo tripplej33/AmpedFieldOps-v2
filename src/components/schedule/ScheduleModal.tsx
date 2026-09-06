@@ -16,6 +16,7 @@ interface ScheduleModalProps {
   schedule?: JobSchedule | null
   initialDate?: string
   initialTechnicianId?: string
+  initialProjectId?: string
   initialStartTime?: string
   initialEndTime?: string
   onSave: (data: ScheduleCreatePayload | ScheduleUpdatePayload) => Promise<void>
@@ -44,6 +45,7 @@ export default function ScheduleModal({
   schedule,
   initialDate,
   initialTechnicianId,
+  initialProjectId,
   initialStartTime,
   initialEndTime,
   onSave,
@@ -130,7 +132,7 @@ export default function ScheduleModal({
       setEndTime(initialEndTime || '16:30')
       setSelectedTechId(initialTechnicianId || '')
       setTitle('')
-      setSelectedProjectId('')
+      setSelectedProjectId(initialProjectId || '')
       setSelectedCostCenterId('')
       setAssignedCrewIds([])
       setAllDay(false)
@@ -141,7 +143,7 @@ export default function ScheduleModal({
       setNotes('')
     }
     setError(null)
-  }, [schedule, isOpen, initialDate, initialTechnicianId, initialStartTime, initialEndTime])
+  }, [schedule, isOpen, initialDate, initialTechnicianId, initialProjectId, initialStartTime, initialEndTime])
 
   // When project changes, auto-fill address and title if empty
   const handleProjectSelect = (projId: string) => {

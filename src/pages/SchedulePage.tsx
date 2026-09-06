@@ -42,13 +42,13 @@ export default function SchedulePage() {
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all')
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<ScheduleStatus | 'all'>('all')
 
-  // Drawer state
-  const [isDrawerOpen, setIsDrawerOpen] = useState(true)
+  // Drawer state - default open on desktop (>= 1024px), collapsed on mobile
+  const [isDrawerOpen, setIsDrawerOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true))
 
   // Modals state
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<JobSchedule | null>(null)
-  const [initialSlotData, setInitialSlotData] = useState<{ techId?: string; startTime?: string }>({})
+  const [initialSlotData, setInitialSlotData] = useState<{ techId?: string; startTime?: string; projectId?: string }>({})
 
   // Safety Modal Integration State
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false)
@@ -85,15 +85,19 @@ export default function SchedulePage() {
   const { createDocument: createSafetyDoc, archiveDocumentPdf } = useSafetyDocuments()
 
   // Load Technicians List
-  useMemo(() => {
+  useEffect(() => {
+    let isMounted = true
     async function loadTechs() {
       const { data } = await supabase
         .from('users')
         .select('id, full_name, email, role')
         .order('full_name')
-      if (data) setTechnicians(data)
+      if (isMounted && data) setTechnicians(data)
     }
     loadTechs()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   // Date Navigation
@@ -111,10 +115,11 @@ export default function SchedulePage() {
   }
 
   // Handle Schedule Project from Drawer
-  const handleScheduleProjectFromDrawer = (_project: Project) => {
+  const handleScheduleProjectFromDrawer = (project: Project) => {
     setSelectedSchedule(null)
     setInitialSlotData({
       startTime: '08:00',
+      projectId: project.id,
     })
     setIsScheduleModalOpen(true)
   }
@@ -338,6 +343,7 @@ export default function SchedulePage() {
           schedule={selectedSchedule}
           initialDate={selectedDate}
           initialTechnicianId={initialSlotData.techId}
+          initialProjectId={initialSlotData.projectId}
           initialStartTime={initialSlotData.startTime}
           onSave={handleSaveSchedule}
           onDelete={handleDeleteSchedule}

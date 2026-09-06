@@ -514,9 +514,10 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* 360° Navigation Tabs */}
-      <div className="flex gap-1.5 border-b border-border-dark pb-2.5 overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setActiveTab('overview')}
+      <div className="relative">
+        <div className="flex gap-1.5 border-b border-border-dark pb-2.5 overflow-x-auto custom-scrollbar">
+          <button
+            onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
             activeTab === 'overview'
               ? 'bg-primary/20 text-white border border-primary shadow-md shadow-primary/10 ring-1 ring-primary/40'
@@ -684,6 +685,9 @@ export default function ProjectDetailPage() {
           Financials & Billing
         </button>
       </div>
+      {/* Mobile scroll hint shadow */}
+      <div className="absolute right-0 top-0 bottom-2.5 w-8 pointer-events-none bg-gradient-to-l from-background-dark/90 to-transparent sm:hidden" />
+    </div>
 
       {/* TAB 1: OVERVIEW & COST CENTERS */}
       {activeTab === 'overview' && (

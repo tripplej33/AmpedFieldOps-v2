@@ -64,9 +64,12 @@ export default function ProjectsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (await deleteProject(id)) {
+    const success = await deleteProject(id)
+    if (success) {
       await refreshProjects()
+      return true
     }
+    return false
   }
 
   const handleCreateProject = () => {
@@ -182,6 +185,7 @@ export default function ProjectsPage() {
           <ProjectTable
             projects={projects}
             isLoading={isLoading}
+            isDeleting={isDeleting}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onSort={() => {}}

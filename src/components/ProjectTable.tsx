@@ -7,8 +7,9 @@ import Modal from './ui/Modal'
 interface ProjectTableProps {
   projects: Project[]
   isLoading: boolean
+  isDeleting?: boolean
   onEdit: (project: Project) => void
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<boolean | void> | void
   onSort: (field: string) => void
   pageCount: number
   currentPage: number
@@ -27,6 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ProjectTable({
   projects,
   isLoading,
+  isDeleting = false,
   onEdit,
   onDelete,
   onSort,
@@ -36,10 +38,16 @@ export default function ProjectTable({
 }: ProjectTableProps) {
   const navigate = useNavigate()
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const handleDelete = (id: string) => {
-    onDelete(id)
-    setDeleteConfirm(null)
+  const handleDelete = async (id: string) => {
+    setDeleteError(null)
+    const result = await onDelete(id)
+    if (result !== false) {
+      setDeleteConfirm(null)
+    } else {
+      setDeleteError('Failed to delete project. Please check if related resources prevent deletion.')
+    }
   }
 
   const formatDate = (dateStr?: string) => {
@@ -184,15 +192,40 @@ export default function ProjectTable({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <Modal isOpen={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Project">
+        <Modal
+          isOpen={!!deleteConfirm}
+          onClose={() => {
+            if (!isDeleting) {
+              setDeleteConfirm(null)
+              setDeleteError(null)
+            }
+          }}
+          title="Delete Project"
+        >
           <div className="space-y-4">
             <p className="text-text-muted">Are you sure you want to delete this project? This action cannot be undone.</p>
+            {deleteError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-400">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-2 justify-end">
-              <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDeleteConfirm(null)
+                  setDeleteError(null)
+                }}
+                disabled={isDeleting}
+              >
                 Cancel
               </Button>
-              <Button variant="danger" onClick={() => handleDelete(deleteConfirm)}>
-                Delete
+              <Button
+                variant="danger"
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </div>

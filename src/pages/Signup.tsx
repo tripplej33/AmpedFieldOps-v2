@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -192,12 +192,12 @@ export default function Signup({ isFirstTimeSetup = false }: SignupPageProps) {
             <div className="mt-6 text-center">
               <p className="text-text-muted">
                 Already have an account?{' '}
-                <a
-                  href="/login"
+                <Link
+                  to="/login"
                   className="text-primary hover:text-primary/80 font-semibold transition-colors"
                 >
                   Sign in
-                </a>
+                </Link>
               </p>
             </div>
           )}

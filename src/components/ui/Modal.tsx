@@ -7,9 +7,10 @@ interface ModalProps {
   children: ReactNode
   title?: string
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  footer?: ReactNode
 }
 
-export default function Modal({ isOpen, onClose, children, title, size = 'md' }: ModalProps) {
+export default function Modal({ isOpen, onClose, children, title, size = 'md', footer }: ModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -70,6 +71,13 @@ export default function Modal({ isOpen, onClose, children, title, size = 'md' }:
         <div className="px-6 py-4 overflow-y-auto flex-1">
           {children}
         </div>
+
+        {/* Sticky Footer */}
+        {footer && (
+          <div className="px-6 py-3.5 border-t border-border-dark shrink-0 bg-background-dark/80 rounded-b-2xl flex items-center justify-end gap-3">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )
