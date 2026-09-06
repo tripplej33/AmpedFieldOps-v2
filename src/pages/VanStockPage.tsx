@@ -436,7 +436,7 @@ export default function VanStockPage() {
                               )}
                             </div>
                             <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-surface-dark text-text-muted capitalize border border-border-dark inline-block mt-0.5">
-                              {loc.location_type.replace('_', ' ')}
+                              {(loc.location_type || 'workshop').replace(/_/g, ' ')}
                             </span>
                           </div>
                         </div>
@@ -457,7 +457,8 @@ export default function VanStockPage() {
                         <div className="mt-3 p-2 rounded-lg bg-surface-dark/60 border border-border-dark text-[11px] flex items-center justify-between text-text-muted">
                           <span>Linked Fleet Vehicle:</span>
                           <span className="font-mono font-bold text-white">
-                            {loc.vehicle.registration_number} ({loc.vehicle.make_model})
+                            {loc.vehicle.registration_number || 'Vehicle'}
+                            {loc.vehicle.make_model ? ` (${loc.vehicle.make_model})` : ''}
                           </span>
                         </div>
                       )}

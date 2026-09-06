@@ -11,8 +11,8 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
   const { user, loading } = useAuth()
   const location = useLocation()
 
-  // Check loading FIRST to avoid premature redirect while auth is resolving
-  if (loading) {
+  // Only show full-screen spinner if loading AND we don't already have a user
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background-dark p-4">
         <Spinner size="lg" />

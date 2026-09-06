@@ -43,32 +43,61 @@ interface StockOverview {
   pendingPOsCount: number
 }
 
+interface DashboardCacheData {
+  stats: DashboardStats
+  projectBurnList: ProjectBurnSummary[]
+  activities: ActivityFeedItem[]
+  fleetOverview: FleetOverview
+  stockOverview: StockOverview
+  timestamp: number
+}
+
+const getInitialDashboardCache = (userId?: string): DashboardCacheData | null => {
+  try {
+    const raw = sessionStorage.getItem(`amped_dashboard_cache_${userId || 'default'}`)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return null
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const { t } = useTerminology()
   const { profile: companyProfile } = useCompanyProfile()
   const navigate = useNavigate()
 
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProjects: 0,
-    activeProjects: 0,
-    totalClients: 0,
-    pendingTimesheets: 0,
-    approvedTimesheets: 0,
-    totalLaborHours: 0,
-  })
-  const [projectBurnList, setProjectBurnList] = useState<ProjectBurnSummary[]>([])
-  const [activities, setActivities] = useState<ActivityFeedItem[]>([])
-  const [fleetOverview, setFleetOverview] = useState<FleetOverview>({
-    totalVehicles: 0,
-    activePlantEquipment: 0,
-    serviceAlerts: 0,
-  })
-  const [stockOverview, setStockOverview] = useState<StockOverview>({
-    lowStockCount: 0,
-    pendingPOsCount: 0,
-  })
-  const [loading, setLoading] = useState(true)
+  const initialCache = getInitialDashboardCache(user?.id)
+
+  const [stats, setStats] = useState<DashboardStats>(
+    initialCache?.stats || {
+      totalProjects: 0,
+      activeProjects: 0,
+      totalClients: 0,
+      pendingTimesheets: 0,
+      approvedTimesheets: 0,
+      totalLaborHours: 0,
+    }
+  )
+  const [projectBurnList, setProjectBurnList] = useState<ProjectBurnSummary[]>(
+    initialCache?.projectBurnList || []
+  )
+  const [activities, setActivities] = useState<ActivityFeedItem[]>(
+    initialCache?.activities || []
+  )
+  const [fleetOverview, setFleetOverview] = useState<FleetOverview>(
+    initialCache?.fleetOverview || {
+      totalVehicles: 0,
+      activePlantEquipment: 0,
+      serviceAlerts: 0,
+    }
+  )
+  const [stockOverview, setStockOverview] = useState<StockOverview>(
+    initialCache?.stockOverview || {
+      lowStockCount: 0,
+      pendingPOsCount: 0,
+    }
+  )
+  const [loading, setLoading] = useState(!initialCache)
   const [isRealtimeActive, setIsRealtimeActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false)
@@ -124,15 +153,15 @@ export default function Dashboard() {
           .from('projects')
           .select('id, name, status, budget, end_date, created_at, client:clients(id, name, contact_name)')
           .order('created_at', { ascending: false })
-          .limit(100),
-        supabase.from('clients').select('id, name, status, contact_type').limit(100),
+          .limit(50),
+        supabase.from('clients').select('id, name, status, contact_type').limit(50),
         supabase
           .from('timesheets')
           .select(
             'id, user_id, project_id, cost_center_id, activity_type_id, entry_date, hours, status, notes, created_at, project:projects(id, name), cost_center:cost_centers(id, name, customer_po_number)'
           )
           .order('created_at', { ascending: false })
-          .limit(200),
+          .limit(100),
         supabase.from('users').select('id, full_name, email, role'),
         supabase.from('project_files').select('id, project_id, name, created_at').order('created_at', { ascending: false }).limit(15),
         supabase
@@ -312,14 +341,42 @@ export default function Dashboard() {
       combinedActivities.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      setActivities(combinedActivities.slice(0, 15))
+      const topActivities = combinedActivities.slice(0, 15)
+      setActivities(topActivities)
+
+      // Update SWR cache in sessionStorage
+      try {
+        const cacheSnapshot: DashboardCacheData = {
+          stats: {
+            totalProjects,
+            activeProjects,
+            totalClients,
+            pendingTimesheets,
+            approvedTimesheets,
+            totalLaborHours,
+          },
+          projectBurnList: burnList,
+          activities: topActivities,
+          fleetOverview: {
+            totalVehicles,
+            activePlantEquipment: plantItems,
+            serviceAlerts,
+          },
+          stockOverview: {
+            lowStockCount: lowStockItems,
+            pendingPOsCount: pendingPOs,
+          },
+          timestamp: Date.now(),
+        }
+        sessionStorage.setItem(`amped_dashboard_cache_${user?.id || 'default'}`, JSON.stringify(cacheSnapshot))
+      } catch {}
     } catch (err) {
       console.error('Dashboard fetch error:', err)
       setError(err instanceof Error ? err.message : 'Failed to load dashboard')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     fetchDashboardData()

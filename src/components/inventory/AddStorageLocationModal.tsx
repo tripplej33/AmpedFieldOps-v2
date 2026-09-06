@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
+import Modal from '@/components/ui/Modal'
+import Button from '@/components/ui/Button'
 import { useVehicles } from '@/hooks/useVehicles'
 import { useInventoryLocations } from '@/hooks/useInventoryLocations'
-import Button from '@/components/ui/Button'
 import type { LocationType } from '@/types/inventory'
 
 interface AddStorageLocationModalProps {
@@ -25,11 +26,20 @@ export default function AddStorageLocationModal({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (!isOpen) return null
+  const handleResetAndClose = () => {
+    if (saving) return
+    setName('')
+    setLocationType('workshop')
+    setVehicleId('')
+    setIsPrimary(false)
+    setError(null)
+    onClose()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) {
+    const trimmedName = name.trim()
+    if (!trimmedName) {
       setError('Please provide a storage location name')
       return
     }
@@ -38,13 +48,13 @@ export default function AddStorageLocationModal({
       setSaving(true)
       setError(null)
       await createLocation({
-        name: name.trim(),
-        location_type: locationType,
+        name: trimmedName,
+        location_type: locationType || 'workshop',
         vehicle_id: locationType === 'van' ? (vehicleId || null) : null,
         is_primary: isPrimary,
       })
       onSuccess?.()
-      onClose()
+      handleResetAndClose()
     } catch (err) {
       console.error('Failed to create storage location:', err)
       setError(err instanceof Error ? err.message : 'Failed to create storage location')
@@ -53,26 +63,40 @@ export default function AddStorageLocationModal({
     }
   }
 
+  const modalFooter = (
+    <>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={handleResetAndClose}
+        disabled={saving}
+        className="text-xs"
+      >
+        Cancel
+      </Button>
+      <Button
+        type="button"
+        onClick={handleSubmit}
+        disabled={saving || !name.trim()}
+        className="text-xs font-bold"
+      >
+        {saving ? 'Creating...' : 'Create Storage Place'}
+      </Button>
+    </>
+  )
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-md bg-card-dark border border-border-dark rounded-2xl shadow-2xl p-6 space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border-dark pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined text-2xl">warehouse</span>
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white font-display">Add Storage Place / Depot</h2>
-              <p className="text-[11px] text-text-muted">
-                Create a workshop, site container, yard, or mobile van location.
-              </p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-text-muted hover:text-white p-1 rounded-lg">
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleResetAndClose}
+      title="Add Storage Place / Depot"
+      size="sm"
+      footer={modalFooter}
+    >
+      <div className="space-y-4 text-xs">
+        <p className="text-[11px] text-text-muted">
+          Create a workshop, yard, site container, central warehouse depot, or mobile fleet van.
+        </p>
 
         {error && (
           <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
@@ -80,8 +104,7 @@ export default function AddStorageLocationModal({
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="text-[11px] text-text-muted block mb-1 font-semibold">
               Location Name <span className="text-red-400">*</span>
@@ -92,7 +115,8 @@ export default function AddStorageLocationModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Main Workshop, Bay 2, Penrose Yard, Site Container A"
-              className="w-full h-8 px-2.5 bg-background-dark border border-border-dark rounded-lg text-white placeholder-text-muted/50 focus:outline-none focus:border-primary"
+              className="w-full h-9 px-3 bg-background-dark border border-border-dark rounded-lg text-white placeholder-text-muted/50 focus:outline-none focus:border-primary text-xs"
+              autoFocus
             />
           </div>
 
@@ -103,7 +127,7 @@ export default function AddStorageLocationModal({
             <select
               value={locationType}
               onChange={(e) => setLocationType(e.target.value as LocationType)}
-              className="w-full h-8 px-2 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary"
+              className="w-full h-9 px-2.5 bg-background-dark border border-border-dark rounded-lg text-white focus:outline-none focus:border-primary text-xs"
             >
               <option value="workshop">Workshop / Storage Bay</option>
               <option value="warehouse">Main HQ Warehouse / Depot</option>
@@ -122,7 +146,7 @@ export default function AddStorageLocationModal({
               <select
                 value={vehicleId}
                 onChange={(e) => setVehicleId(e.target.value)}
-                className="w-full h-8 px-2 bg-background-dark border border-border-dark rounded-lg text-white"
+                className="w-full h-9 px-2.5 bg-background-dark border border-border-dark rounded-lg text-white text-xs"
               >
                 <option value="">-- Select Vehicle (Optional) --</option>
                 {vehicles.map((v) => (
@@ -135,27 +159,23 @@ export default function AddStorageLocationModal({
           )}
 
           <div className="pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-text-muted hover:text-white">
+            <label className="flex items-center gap-2 cursor-pointer text-text-muted hover:text-white select-none">
               <input
                 type="checkbox"
                 checked={isPrimary}
                 onChange={(e) => setIsPrimary(e.target.checked)}
-                className="rounded border-border-dark bg-background-dark text-primary w-4 h-4"
+                className="rounded border-border-dark bg-background-dark text-primary w-4 h-4 cursor-pointer"
               />
-              <span>Set as Primary Central Warehouse / HQ Depot</span>
+              <span className="text-xs font-medium">Set as Primary Central Warehouse / HQ Depot</span>
             </label>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-dark">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={saving} className="text-xs">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving || !name.trim()} className="text-xs font-bold">
-              {saving ? 'Creating...' : 'Create Storage Place'}
-            </Button>
+            {isPrimary && (
+              <p className="text-[10px] text-amber-400 mt-1 pl-6">
+                This location will become the default destination for POs and company stock takes.
+              </p>
+            )}
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   )
 }

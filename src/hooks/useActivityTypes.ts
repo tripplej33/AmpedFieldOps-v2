@@ -3,29 +3,47 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { ActivityType, ActivityTypeFormData } from '../types'
 
+let cachedActivityTypes: ActivityType[] | null = null
+
 export function useActivityTypes() {
-  const [data, setData] = useState<ActivityType[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [data, setData] = useState<ActivityType[]>(() => cachedActivityTypes || [])
+  const [isLoading, setIsLoading] = useState(!cachedActivityTypes)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchTypes = async () => {
-      setIsLoading(true)
-      setError(null)
       try {
+        if (!cachedActivityTypes) {
+          setIsLoading(true)
+        }
+        setError(null)
         const { data: rows, error: err } = await supabase
           .from('activity_types')
           .select('*')
           .order('name', { ascending: true })
         if (err) throw err
-        setData((rows || []) as ActivityType[])
+        if (isMounted) {
+          const fresh = (rows || []) as ActivityType[]
+          cachedActivityTypes = fresh
+          setData(fresh)
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch activity types')
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch activity types')
+        }
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
     fetchTypes()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   return { data, isLoading, error }
@@ -47,6 +65,7 @@ export function useCreateActivityType() {
           .select('*')
           .single()
         if (err) throw err
+        cachedActivityTypes = null
         return inserted as ActivityType
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create activity type')
@@ -76,6 +95,7 @@ export function useUpdateActivityType() {
         .select('*')
         .single()
       if (err) throw err
+      cachedActivityTypes = null
       return updated as ActivityType
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update activity type')
@@ -101,6 +121,7 @@ export function useDeleteActivityType() {
         .delete()
         .eq('id', id)
       if (err) throw err
+      cachedActivityTypes = null
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete activity type')

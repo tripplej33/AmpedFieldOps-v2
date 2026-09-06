@@ -48,15 +48,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (fetchErr || !data) {
         // Retry with backoff if network transient failure
         if (attempt < 2) {
-          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
           return loadUserProfile(userId, attempt + 1)
         }
         console.error('Error loading user profile after retries:', fetchErr)
+        const existing = getInitialCachedUser()
+        if (existing && existing.id === userId) {
+          setUser(existing)
+          setError(null)
+          return existing
+        }
         await supabase.auth.signOut()
         setUser(null)
         localStorage.removeItem('amped_user_profile')
         setError('Profile not found. Please contact support.')
-        setLoading(false)
         return null
       }
 
@@ -64,23 +69,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(loadedUser)
       localStorage.setItem('amped_user_profile', JSON.stringify(loadedUser))
       setError(null)
-      setLoading(false)
       return loadedUser
     } catch (err) {
-      if (attempt >= 2) {
-        console.error('Error loading user profile:', err)
-        await supabase.auth.signOut()
-        setUser(null)
-        localStorage.removeItem('amped_user_profile')
-        setError(err instanceof Error ? err.message : 'Failed to load profile')
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
+        return loadUserProfile(userId, attempt + 1)
+      }
+      console.error('Error loading user profile:', err)
+      const existing = getInitialCachedUser()
+      if (existing && existing.id === userId) {
+        setUser(existing)
+        return existing
+      }
+      setError(err instanceof Error ? err.message : 'Failed to load profile')
+      return null
+    } finally {
+      if (attempt === 0 || attempt >= 2) {
         setLoading(false)
       }
-      return null
     }
   }
 
   useEffect(() => {
     let isMounted = true
+
+    // Safety guard: Ensure loading state is never stuck true
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setLoading(false)
+    }, 2500)
 
     // 1. Initial background session validation
     supabase.auth
@@ -112,9 +128,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem('amped_user_profile')
         setError(null)
         setLoading(false)
-      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || (event as string) === 'INITIAL_SESSION') {
         if (session?.user) {
           await loadUserProfile(session.user.id)
+        } else {
+          setLoading(false)
         }
       } else if (event === 'TOKEN_REFRESHED') {
         setLoading(false)
@@ -123,6 +141,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => {
       isMounted = false
+      clearTimeout(safetyTimer)
       subscription.unsubscribe()
     }
   }, [])

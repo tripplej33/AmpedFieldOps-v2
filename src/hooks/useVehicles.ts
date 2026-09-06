@@ -2,14 +2,18 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Vehicle, VehicleFormData } from '@/types'
 
+let cachedVehicles: Vehicle[] | null = null
+
 export function useVehicles() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [loading, setLoading] = useState(true)
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => cachedVehicles || [])
+  const [loading, setLoading] = useState(!cachedVehicles)
   const [error, setError] = useState<string | null>(null)
 
   const fetchVehicles = useCallback(async () => {
     try {
-      setLoading(true)
+      if (!cachedVehicles) {
+        setLoading(true)
+      }
       setError(null)
 
       const [{ data: rows, error: err }, { data: usersData }] = await Promise.all([
@@ -25,7 +29,8 @@ export function useVehicles() {
         technician: v.assigned_technician_id ? userMap.get(v.assigned_technician_id) : undefined,
       }))
 
-      setVehicles(enriched as Vehicle[])
+      cachedVehicles = enriched as Vehicle[]
+      setVehicles(cachedVehicles)
     } catch (err) {
       console.error('Failed to fetch vehicles:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch vehicles')
@@ -69,6 +74,7 @@ export function useCreateVehicle() {
         .single()
 
       if (err) throw err
+      cachedVehicles = null
       return vehicle as Vehicle
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to add vehicle'
@@ -112,6 +118,7 @@ export function useUpdateVehicle() {
         .single()
 
       if (err) throw err
+      cachedVehicles = null
       return vehicle as Vehicle
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to update vehicle'

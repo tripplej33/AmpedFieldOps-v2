@@ -2,14 +2,18 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { InventoryLocation, InventoryStockLevel, InventoryTransaction } from '@/types/inventory'
 
+let cachedLocations: InventoryLocation[] | null = null
+
 export function useInventoryLocations() {
-  const [locations, setLocations] = useState<InventoryLocation[]>([])
-  const [loading, setLoading] = useState(true)
+  const [locations, setLocations] = useState<InventoryLocation[]>(() => cachedLocations || [])
+  const [loading, setLoading] = useState(!cachedLocations)
   const [error, setError] = useState<string | null>(null)
 
   const fetchLocations = useCallback(async () => {
     try {
-      setLoading(true)
+      if (!cachedLocations) {
+        setLoading(true)
+      }
       setError(null)
       const { data, error: err } = await supabase
         .from('inventory_locations')
@@ -29,14 +33,20 @@ export function useInventoryLocations() {
           .insert([
             { name: 'Main HQ / Workshop Warehouse', location_type: 'warehouse', is_primary: true },
           ])
-          .select()
+          .select(`
+            *,
+            vehicle:vehicles(id, registration_number, make_model)
+          `)
         if (!initErr && initData) {
-          setLocations(initData as InventoryLocation[])
+          cachedLocations = initData as InventoryLocation[]
+          setLocations(cachedLocations)
           return
         }
       }
 
-      setLocations((data || []) as InventoryLocation[])
+      const freshLocations = (data || []) as InventoryLocation[]
+      cachedLocations = freshLocations
+      setLocations(freshLocations)
     } catch (err) {
       console.error('[useInventoryLocations] Error:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch inventory locations')
@@ -66,13 +76,22 @@ export function useInventoryLocations() {
   }) => {
     try {
       setLoading(true)
+
+      // If this is set as primary, demote existing primary locations first
+      if (payload.is_primary) {
+        await supabase
+          .from('inventory_locations')
+          .update({ is_primary: false })
+          .eq('is_primary', true)
+      }
+
       const { data, error: err } = await supabase
         .from('inventory_locations')
         .insert([
           {
-            name: payload.name,
-            location_type: payload.location_type,
-            vehicle_id: payload.vehicle_id || null,
+            name: payload.name.trim(),
+            location_type: payload.location_type || 'workshop',
+            vehicle_id: payload.location_type === 'van' ? (payload.vehicle_id || null) : null,
             is_primary: !!payload.is_primary,
           },
         ])
