@@ -157,6 +157,13 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
     setExpandedSection(null)
   }, [location.pathname])
 
+  // Close notifications popup if sidebar collapses
+  useEffect(() => {
+    if (isCollapsed) {
+      setIsNotificationOpen(false)
+    }
+  }, [isCollapsed])
+
   const {
     notifications,
     sentNotifications,
@@ -234,67 +241,52 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo Header */}
-          <div className="h-16 flex items-center justify-between px-3.5 border-b border-[var(--border-sidebar)] bg-[var(--bg-sidebar-header)] shrink-0">
+          <div className={`h-16 flex items-center border-b border-[var(--border-sidebar)] bg-[var(--bg-sidebar-header)] shrink-0 ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'}`}>
             {!isCollapsed ? (
-              <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1" title={companyProfile.companyName || 'AmpedFieldOps'}>
-                {companyProfile.logoUrl ? (
-                  <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-sidebar)] flex items-center justify-center shrink-0 shadow-sm">
-                    <img
-                      src={companyProfile.logoUrl}
-                      alt={companyProfile.companyName || 'AmpedFieldOps'}
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
+              <>
+                <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1" title={companyProfile.companyName || 'AmpedFieldOps'}>
+                  {companyProfile.logoUrl ? (
+                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-sidebar)] flex items-center justify-center shrink-0 shadow-sm">
+                      <img
+                        src={companyProfile.logoUrl}
+                        alt={companyProfile.companyName || 'AmpedFieldOps'}
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-primary text-xl">bolt</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[var(--text-main)] font-bold font-display text-xs truncate leading-tight">
+                      {companyProfile.companyName || 'AmpedFieldOps'}
+                    </span>
+                    <span className="text-[10px] text-primary font-mono font-medium truncate">
+                      Field Operations
+                    </span>
                   </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-primary text-xl">bolt</span>
-                  </div>
-                )}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[var(--text-main)] font-bold font-display text-xs truncate leading-tight">
-                    {companyProfile.companyName || 'AmpedFieldOps'}
-                  </span>
-                  <span className="text-[10px] text-primary font-mono font-medium truncate">
-                    Field Operations
-                  </span>
-                </div>
-              </Link>
+                </Link>
+                <button
+                  onClick={onToggle}
+                  className="p-1.5 rounded-lg hover:bg-[var(--bg-nav-hover)] transition-colors text-text-muted hover:text-[var(--text-main)] hidden lg:block shrink-0"
+                  title="Collapse Sidebar"
+                >
+                  <span className="material-symbols-outlined text-xl">menu_open</span>
+                </button>
+              </>
             ) : (
-              <Link
-                to="/app/dashboard"
-                className="w-full flex justify-center py-2"
-                title={companyProfile.companyName || 'AmpedFieldOps'}
+              <button
+                onClick={onToggle}
+                className="w-10 h-10 rounded-xl hover:bg-[var(--bg-nav-hover)] transition-colors text-text-muted hover:text-[var(--text-main)] flex items-center justify-center"
+                title="Expand Sidebar"
               >
-                {companyProfile.logoUrl ? (
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border-sidebar)] flex items-center justify-center">
-                    <img
-                      src={companyProfile.logoUrl}
-                      alt="Logo"
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-lg">bolt</span>
-                  </div>
-                )}
-              </Link>
+                <span className="material-symbols-outlined text-xl">menu</span>
+              </button>
             )}
-            <button
-              onClick={onToggle}
-              className="p-1.5 rounded-lg hover:bg-[var(--bg-nav-hover)] transition-colors text-text-muted hover:text-[var(--text-main)] hidden lg:block shrink-0"
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              <span className="material-symbols-outlined text-xl">
-                {isCollapsed ? 'menu_open' : 'menu'}
-              </span>
-            </button>
           </div>
 
           {/* Navigation Items */}
@@ -489,41 +481,9 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
 
               <button
                 type="button"
-                data-notification-trigger="true"
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center border relative transition-colors ${
-                  isNotificationOpen
-                    ? 'bg-primary/15 border-primary text-primary shadow-sm'
-                    : 'bg-[var(--bg-card)] text-text-muted border-[var(--border-sidebar)] hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
-                }`}
-                title="Notifications"
-              >
-                <span className="material-symbols-outlined text-lg">notifications</span>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate('/app/settings')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center border transition-colors ${
-                  isSettingsActive
-                    ? 'bg-primary/15 border-primary text-primary shadow-sm'
-                    : 'bg-[var(--bg-card)] text-text-muted border-[var(--border-sidebar)] hover:text-[var(--text-main)] hover:bg-[var(--bg-nav-hover)]'
-                }`}
-                title="Settings"
-              >
-                <span className="material-symbols-outlined text-lg">settings</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => logout()}
                 className="w-9 h-9 rounded-lg flex items-center justify-center border border-[var(--border-sidebar)] bg-[var(--bg-card)] text-text-muted hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
-                title="Logout"
+                title="Sign Out"
               >
                 <span className="material-symbols-outlined text-lg">logout</span>
               </button>
