@@ -76,8 +76,9 @@ export function useCompliance(projectId?: string) {
     fetchData()
 
     // Realtime channel
+    const channelId = `compliance_realtime_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('compliance_realtime_channel')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'electrical_test_sheets' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'electrical_certificates' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'switchboard_schedules' }, () => fetchData())

@@ -51,8 +51,9 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     // Real-time project updates
+    const channelId = `projects_live_sync_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('projects-live-sync')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
         refreshProjects()
       })

@@ -71,8 +71,9 @@ export function useSchedule(filters?: ScheduleFilterOptions) {
     fetchSchedules()
 
     // Realtime channel subscription
+    const channelId = `job_schedules_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('job_schedules_realtime')
+      .channel(channelId)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'job_schedules' },

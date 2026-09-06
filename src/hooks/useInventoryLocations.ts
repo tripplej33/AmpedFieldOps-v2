@@ -58,8 +58,9 @@ export function useInventoryLocations() {
   useEffect(() => {
     fetchLocations()
 
+    const channelId = `inventory_locations_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('inventory_locations_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_locations' }, () => fetchLocations())
       .subscribe()
 
@@ -159,8 +160,9 @@ export function useStockLevels(locationId?: string) {
   useEffect(() => {
     fetchStock()
 
+    const channelId = `inventory_stock_levels_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('inventory_stock_levels_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_stock_levels' }, () => fetchStock())
       .subscribe()
 
@@ -211,8 +213,9 @@ export function useInventoryTransactions(locationId?: string) {
   useEffect(() => {
     fetchTransactions()
 
+    const channelId = `inventory_transactions_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('inventory_transactions_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_transactions' }, () => fetchTransactions())
       .subscribe()
 

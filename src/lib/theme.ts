@@ -1,4 +1,6 @@
 import type { UserPreferences } from '@/types'
+import { safeLocalStorage } from '@/lib/storage'
+import { supabase } from '@/lib/supabase'
 
 export const PREFERENCES_STORAGE_KEY = 'amped_user_preferences_v1'
 
@@ -46,7 +48,7 @@ export const ACCENT_COLORS: Record<string, {
 
 export function getStoredPreferences(): UserPreferences {
   try {
-    const saved = localStorage.getItem(PREFERENCES_STORAGE_KEY)
+    const saved = safeLocalStorage.getItem(PREFERENCES_STORAGE_KEY)
     if (!saved) return DEFAULT_PREFERENCES
     return { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) }
   } catch {
@@ -87,14 +89,42 @@ export function applyTheme(prefs: UserPreferences) {
   }
 }
 
-export function savePreferences(prefs: UserPreferences) {
+/**
+ * Saves user preferences locally for 0ms response AND syncs to Supabase Auth user_metadata
+ * so the preferences automatically sync across any browser, phone, or computer the user logs into.
+ */
+export async function savePreferences(prefs: UserPreferences, syncToServer = true) {
   try {
-    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(prefs))
+    safeLocalStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(prefs))
     applyTheme(prefs)
     window.dispatchEvent(new CustomEvent('amped_preferences_updated', { detail: prefs }))
+
+    if (syncToServer) {
+      // Asynchronously update server-side user metadata in Supabase
+      supabase.auth.updateUser({
+        data: { preferences: prefs }
+      }).catch((err) => {
+        console.warn('Failed to sync preferences to Supabase server in background:', err)
+      })
+    }
   } catch (err) {
     console.error('Failed to save preferences:', err)
   }
+}
+
+/**
+ * Synchronizes preferences received from the Supabase server upon login or profile load.
+ */
+export function syncPreferencesFromServer(serverPrefs: Partial<UserPreferences>) {
+  if (!serverPrefs || typeof serverPrefs !== 'object') return
+  const current = getStoredPreferences()
+  const merged: UserPreferences = {
+    ...current,
+    ...serverPrefs,
+  }
+  safeLocalStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(merged))
+  applyTheme(merged)
+  window.dispatchEvent(new CustomEvent('amped_preferences_updated', { detail: merged }))
 }
 
 // Initialize theme on app load

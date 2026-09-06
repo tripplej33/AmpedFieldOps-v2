@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { safeLocalStorage } from '@/lib/storage'
+import { syncPreferencesFromServer } from '@/lib/theme'
 import { User, AuthState, LoginCredentials } from '@/types'
 
 interface AuthContextType extends AuthState {
@@ -24,7 +26,7 @@ interface AuthProviderProps {
 
 const getInitialCachedUser = (): User | null => {
   try {
-    const cached = localStorage.getItem('amped_user_profile')
+    const cached = safeLocalStorage.getItem('amped_user_profile')
     return cached ? JSON.parse(cached) : null
   } catch {
     return null
@@ -60,14 +62,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         await supabase.auth.signOut()
         setUser(null)
-        localStorage.removeItem('amped_user_profile')
+        safeLocalStorage.removeItem('amped_user_profile')
         setError('Profile not found. Please contact support.')
         return null
       }
 
       const loadedUser = data as User
       setUser(loadedUser)
-      localStorage.setItem('amped_user_profile', JSON.stringify(loadedUser))
+      safeLocalStorage.setItem('amped_user_profile', JSON.stringify(loadedUser))
       setError(null)
       return loadedUser
     } catch (err) {
@@ -104,10 +106,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       .then(async ({ data: { session } }) => {
         if (!isMounted) return
         if (session?.user) {
+          // Sync server preferences from user_metadata if available
+          if (session.user.user_metadata?.preferences) {
+            syncPreferencesFromServer(session.user.user_metadata.preferences)
+          }
           await loadUserProfile(session.user.id)
         } else {
           setUser(null)
-          localStorage.removeItem('amped_user_profile')
+          safeLocalStorage.removeItem('amped_user_profile')
           setLoading(false)
         }
       })
@@ -125,17 +131,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (event === 'SIGNED_OUT' || !session) {
         setUser(null)
-        localStorage.removeItem('amped_user_profile')
+        safeLocalStorage.removeItem('amped_user_profile')
         setError(null)
         setLoading(false)
       } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || (event as string) === 'INITIAL_SESSION') {
         if (session?.user) {
+          if (session.user.user_metadata?.preferences) {
+            syncPreferencesFromServer(session.user.user_metadata.preferences)
+          }
           await loadUserProfile(session.user.id)
         } else {
           setLoading(false)
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        setLoading(false)
       }
     })
 
@@ -146,29 +153,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, [])
 
-  const login = async ({ email, password }: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
       setLoading(true)
       setError(null)
 
       const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: credentials.email,
+        password: credentials.password,
       })
 
-      if (signInErr) {
-        console.error('Login error:', signInErr)
-        throw signInErr
-      }
+      if (signInErr) throw signInErr
 
       if (data.user) {
+        if (data.user.user_metadata?.preferences) {
+          syncPreferencesFromServer(data.user.user_metadata.preferences)
+        }
         await loadUserProfile(data.user.id)
       }
     } catch (err) {
-      console.error('Login failed:', err)
-      const message = err instanceof Error ? err.message : 'Login failed'
-      setError(message)
-      throw new Error(message)
+      const msg = err instanceof Error ? err.message : 'Login failed'
+      setError(msg)
+      throw err
     } finally {
       setLoading(false)
     }
@@ -177,37 +183,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       setLoading(true)
-      localStorage.removeItem('amped_user_profile')
+      await supabase.auth.signOut()
       setUser(null)
+      safeLocalStorage.removeItem('amped_user_profile')
       setError(null)
-      const { error: signOutErr } = await supabase.auth.signOut()
-      if (signOutErr) throw signOutErr
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Logout failed'
-      setError(message)
-      throw new Error(message)
+      setError(err instanceof Error ? err.message : 'Logout failed')
     } finally {
       setLoading(false)
     }
   }
 
   const refreshUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (session?.user) {
-      await loadUserProfile(session.user.id)
+    if (user?.id) {
+      await loadUserProfile(user.id)
     }
   }
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    refreshUser,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }

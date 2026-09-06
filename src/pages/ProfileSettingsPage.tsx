@@ -157,15 +157,15 @@ export default function ProfileSettingsPage() {
   const updatePreferenceField = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
     const updated = { ...preferences, [key]: value }
     setPreferences(updated)
-    savePreferences(updated)
+    savePreferences(updated, true)
   }
 
-  const handleSavePreferences = (e: React.FormEvent) => {
+  const handleSavePreferences = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       setIsSavingPreferences(true)
-      savePreferences(preferences)
-      setToast({ type: 'success', message: 'App preferences applied and saved' })
+      await savePreferences(preferences, true)
+      setToast({ type: 'success', message: 'Preferences saved and synced across all your devices' })
     } catch (err) {
       setToast({ type: 'error', message: 'Failed to save preferences' })
     } finally {

@@ -40,8 +40,9 @@ export function useSitePhotos(projectId?: string) {
   useEffect(() => {
     fetchPhotos()
 
+    const channelId = `project_site_photos_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('project_site_photos_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'project_site_photos' }, () => fetchPhotos())
       .subscribe()
 

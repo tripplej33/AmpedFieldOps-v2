@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTerminology } from '@/hooks/useTerminology'
 import { useCompanyProfile } from '@/hooks/useCompanyProfile'
 import { supabase } from '@/lib/supabase'
+import { safeLocalStorage } from '@/lib/storage'
 import { getClientDisplayName } from '@/lib/clientName'
 import { ActivityFeedItem } from '@/mocks/dashboardData'
 
@@ -106,7 +107,7 @@ export default function Dashboard() {
   const storageKey = `amped_dashboard_widgets_${user?.id || 'default'}`
   const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>(() => {
     try {
-      const saved = localStorage.getItem(storageKey)
+      const saved = safeLocalStorage.getItem(storageKey)
       if (saved) {
         const parsed: DashboardWidgetConfig[] = JSON.parse(saved)
         const existingIds = new Set(parsed.map((p) => p.id))
@@ -122,7 +123,10 @@ export default function Dashboard() {
 
   const handleSaveWidgets = (newWidgets: DashboardWidgetConfig[]) => {
     setWidgets(newWidgets)
-    localStorage.setItem(storageKey, JSON.stringify(newWidgets))
+    safeLocalStorage.setItem(storageKey, JSON.stringify(newWidgets))
+    supabase.auth.updateUser({
+      data: { dashboard_widgets: newWidgets }
+    }).catch(() => {})
   }
 
   const isWidgetEnabled = useCallback(
@@ -166,12 +170,11 @@ export default function Dashboard() {
         supabase.from('project_files').select('id, project_id, name, created_at').order('created_at', { ascending: false }).limit(15),
         supabase
           .from('xero_sync_log')
-          .select('id, sync_type, status, error_message, created_at')
-          .order('created_at', { ascending: false })
+          .select('id, sync_type, status, error_message')
           .limit(10),
-        supabase.from('vehicles').select('id, registration_number, vehicle_type, status, current_hours, wof_expiry, cof_expiry'),
+        supabase.from('vehicles').select('id, registration_number, make_model, status, current_hours, wof_expiry_date, rego_expiry_date'),
         supabase.from('purchase_orders').select('id, po_number, status, total, created_at'),
-        supabase.from('inventory_items').select('id, name, quantity_on_hand, minimum_stock_level'),
+        supabase.from('inventory_stock_levels').select('id, item_id, quantity_on_hand, min_reorder_level'),
         supabase.from('activity_types').select('id, name, default_rate'),
       ])
 
@@ -208,14 +211,12 @@ export default function Dashboard() {
       // Fleet overview calculations
       const totalVehicles = vehiclesData?.length || 0
       const plantItems = (vehiclesData || []).filter(
-        (v: any) =>
-          ['equipment', 'machinery', 'plant', 'digger', 'trailer'].includes(v.vehicle_type) ||
-          Number(v.current_hours) > 0
+        (v: any) => Number(v.current_hours) > 0
       ).length
       const nowMs = Date.now()
       const serviceAlerts = (vehiclesData || []).filter((v: any) => {
-        if (v.wof_expiry && new Date(v.wof_expiry).getTime() - nowMs < 1000 * 60 * 60 * 24 * 30) return true
-        if (v.cof_expiry && new Date(v.cof_expiry).getTime() - nowMs < 1000 * 60 * 60 * 24 * 30) return true
+        if (v.wof_expiry_date && new Date(v.wof_expiry_date).getTime() - nowMs < 1000 * 60 * 60 * 24 * 30) return true
+        if (v.rego_expiry_date && new Date(v.rego_expiry_date).getTime() - nowMs < 1000 * 60 * 60 * 24 * 30) return true
         return false
       }).length
 
@@ -228,8 +229,8 @@ export default function Dashboard() {
       // Stock overview calculations
       const lowStockItems = (inventoryData || []).filter(
         (i: any) =>
-          Number(i.quantity_on_hand || 0) <= Number(i.minimum_stock_level || 0) &&
-          Number(i.minimum_stock_level) > 0
+          Number(i.quantity_on_hand || 0) <= Number(i.min_reorder_level || 5) &&
+          Number(i.min_reorder_level || 5) > 0
       ).length
       const pendingPOs = (purchaseOrdersData || []).filter(
         (po: any) => po.status === 'ordered' || po.status === 'draft'
@@ -382,8 +383,9 @@ export default function Dashboard() {
     fetchDashboardData()
 
     // Realtime channel for live dashboard synchronization
+    const channelId = `dashboard_realtime_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('dashboard-realtime-channel')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
         fetchDashboardData()
       })

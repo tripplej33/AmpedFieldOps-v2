@@ -39,8 +39,9 @@ export function useInvoices(projectId?: string) {
   useEffect(() => {
     fetchInvoices()
 
+    const channelId = `invoices_realtime_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('invoices_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => fetchInvoices())
       .subscribe()
 

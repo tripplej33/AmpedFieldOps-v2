@@ -46,8 +46,9 @@ export function useEquipment() {
   useEffect(() => {
     fetchData()
 
+    const channelId = `equipment_realtime_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('equipment_realtime_channel')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'equipment_calibration_register' }, () => fetchData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pat_test_logs' }, () => fetchData())
       .subscribe()

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { safeLocalStorage } from '@/lib/storage'
 import { TRADE_PRESETS } from '@/lib/tradePresets'
 import type {
   TradeType,
@@ -71,7 +72,7 @@ export const TerminologyProvider: React.FC<{ children: React.ReactNode }> = ({ c
           modules: { ...DEFAULT_CONFIG.modules, ...(parsed.modules || {}) },
         }
         setConfig(merged)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+        safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
       }
     } catch (e) {
       console.warn('[TerminologyContext] Using cached trade customization:', e)
@@ -94,7 +95,7 @@ export const TerminologyProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       setConfig(toSave)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+      safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
 
       await supabase.from('app_settings').upsert(
         [

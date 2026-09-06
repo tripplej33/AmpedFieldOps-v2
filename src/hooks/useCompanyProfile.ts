@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { safeLocalStorage } from '@/lib/storage'
 
 export interface CompanyProfile {
   companyName: string
@@ -57,7 +58,7 @@ export function useCompanyProfile() {
         const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value
         const merged = { ...DEFAULT_COMPANY_PROFILE, ...parsed }
         setProfile(merged)
-        localStorage.setItem('amped_company_settings', JSON.stringify(merged))
+        safeLocalStorage.setItem('amped_company_settings', JSON.stringify(merged))
         window.dispatchEvent(new CustomEvent('amped_company_profile_updated', { detail: merged }))
       }
     } catch (e) {
@@ -77,7 +78,7 @@ export function useCompanyProfile() {
         setProfile(customEvent.detail)
       } else {
         try {
-          const saved = localStorage.getItem('amped_company_settings')
+          const saved = safeLocalStorage.getItem('amped_company_settings')
           if (saved) setProfile({ ...DEFAULT_COMPANY_PROFILE, ...JSON.parse(saved) })
         } catch {}
       }
@@ -111,7 +112,7 @@ export function useCompanyProfile() {
       }
 
       // 1. Save to local storage for instant offline / cache access
-      localStorage.setItem('amped_company_settings', JSON.stringify(merged))
+      safeLocalStorage.setItem('amped_company_settings', JSON.stringify(merged))
       setProfile(merged)
 
       // 2. Broadcast to all mounted components (Sidebar, Dashboard, PDFs, etc.)

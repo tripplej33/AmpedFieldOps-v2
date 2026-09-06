@@ -49,8 +49,9 @@ export function usePlantEquipment() {
   useEffect(() => {
     fetchData()
 
+    const channelId = `plant_equipment_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
     const channel = supabase
-      .channel('plant_equipment_realtime')
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'equipment_usage_logs' }, () => fetchData())
       .subscribe()
 
