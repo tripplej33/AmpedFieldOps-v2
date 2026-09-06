@@ -377,4 +377,127 @@ router.get('/clients', async (_req: Request, res: Response) => {
   }
 });
 
+// POST /admin/accept-invite - Validate invitation token, set user password, create/update profile, mark accepted
+router.post('/accept-invite', async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    // 1. Fetch invitation
+    const { data: invitation, error: invErr } = await supabase
+      .from('user_invitations')
+      .select('*')
+      .eq('token', token)
+      .single();
+
+    if (invErr || !invitation) {
+      return res.status(404).json({ error: 'Invalid invitation token or link' });
+    }
+
+    if (invitation.status === 'revoked') {
+      return res.status(400).json({ error: 'This invitation has been revoked' });
+    }
+
+    if (invitation.status === 'accepted') {
+      return res.status(400).json({ error: 'This invitation has already been accepted' });
+    }
+
+    if (new Date(invitation.expires_at).getTime() < Date.now()) {
+      return res.status(400).json({ error: 'This invitation has expired' });
+    }
+
+    const email = invitation.email.toLowerCase().trim();
+    const fullName = invitation.full_name?.trim() || '';
+    const roleId = invitation.role_id || 'technician';
+
+    // 2. Check if auth user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingAuthUser = existingUsers?.users?.find(
+      (u) => u.email?.toLowerCase() === email
+    );
+
+    let userId: string;
+
+    if (existingAuthUser) {
+      userId = existingAuthUser.id;
+      // Update password and confirm email
+      const { error: updateAuthErr } = await supabase.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          role: roleId,
+        },
+      });
+      if (updateAuthErr) {
+        console.error('[AcceptInvite] Failed to update auth user:', updateAuthErr);
+        return res.status(500).json({ error: updateAuthErr.message });
+      }
+    } else {
+      // Create new auth user
+      const { data: newAuthData, error: createAuthErr } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          role: roleId,
+        },
+      });
+
+      if (createAuthErr || !newAuthData.user) {
+        console.error('[AcceptInvite] Failed to create auth user:', createAuthErr);
+        return res.status(500).json({ error: createAuthErr?.message || 'Failed to create user' });
+      }
+      userId = newAuthData.user.id;
+    }
+
+    // 3. Upsert into public.users
+    const { error: userUpsertErr } = await supabase
+      .from('users')
+      .upsert({
+        id: userId,
+        email,
+        full_name: fullName,
+        role: roleId,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (userUpsertErr) {
+      console.error('[AcceptInvite] Failed to upsert public.users:', userUpsertErr);
+      return res.status(500).json({ error: 'Failed to create user profile' });
+    }
+
+    // 4. Mark invitation as accepted
+    const { error: markErr } = await supabase
+      .from('user_invitations')
+      .update({ status: 'accepted' })
+      .eq('id', invitation.id);
+
+    if (markErr) {
+      console.error('[AcceptInvite] Failed to mark invitation accepted:', markErr);
+    }
+
+    console.log(`[AcceptInvite] Successfully activated user ${email} (${userId}) with role ${roleId}`);
+    return res.json({
+      success: true,
+      user: {
+        id: userId,
+        email,
+        full_name: fullName,
+        role: roleId,
+      },
+    });
+  } catch (err: any) {
+    console.error('[AcceptInvite] Unexpected error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
 export default router;

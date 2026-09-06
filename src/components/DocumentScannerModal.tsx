@@ -15,6 +15,9 @@ export default function DocumentScannerModal({ isOpen, onClose, onApply }: Docum
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [ocrProgress, setOcrProgress] = useState(0)
+  const [ocrStatus, setOcrStatus] = useState('Preparing document...')
+  const [showRawText, setShowRawText] = useState(false)
   const [extractedData, setExtractedData] = useState<ExtractedDocumentData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -23,14 +26,20 @@ export default function DocumentScannerModal({ isOpen, onClose, onApply }: Docum
     try {
       setFile(selectedFile)
       setError(null)
+      setShowRawText(false)
 
       // Set image preview
       const objectUrl = URL.createObjectURL(selectedFile)
       setPreviewUrl(objectUrl)
 
-      // Run OCR Analysis
+      // Run OCR Analysis with real progress callback
       setIsProcessing(true)
-      const parsed = await parseReceiptDocument(selectedFile)
+      setOcrProgress(5)
+      setOcrStatus('Initializing OCR engine...')
+      const parsed = await parseReceiptDocument(selectedFile, (progress, statusMsg) => {
+        setOcrProgress(Math.round(progress * 100))
+        setOcrStatus(statusMsg)
+      })
       setExtractedData(parsed)
     } catch (err) {
       console.error('OCR Error:', err)
@@ -124,14 +133,24 @@ export default function DocumentScannerModal({ isOpen, onClose, onApply }: Docum
           </div>
         )}
 
-        {/* Processing State */}
+        {/* Processing State with Live OCR Progress */}
         {isProcessing && (
-          <div className="text-center py-12 space-y-4">
+          <div className="text-center py-12 space-y-4 max-w-md mx-auto">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <div>
-              <p className="text-white font-medium text-lg">Analyzing document with AI OCR...</p>
-              <p className="text-text-muted text-sm">Extracting vendor name, line items, totals, and invoice metadata</p>
+              <p className="text-white font-medium text-lg">Analyzing document with Optical OCR...</p>
+              <p className="text-primary text-sm font-semibold mt-1">{ocrStatus}</p>
             </div>
+            {/* Progress bar */}
+            <div className="w-full bg-background-dark border border-border-dark rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${Math.max(8, ocrProgress)}%` }}
+              ></div>
+            </div>
+            <p className="text-text-muted text-xs">
+              Extracting actual text characters, vendor info, line items, and totals ({ocrProgress}%)
+            </p>
           </div>
         )}
 
@@ -247,6 +266,25 @@ export default function DocumentScannerModal({ isOpen, onClose, onApply }: Docum
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Collapsible Raw Recognized Text */}
+                <div className="pt-2 border-t border-border-dark/60">
+                  <button
+                    type="button"
+                    onClick={() => setShowRawText(!showRawText)}
+                    className="flex items-center gap-1.5 text-xs text-text-muted hover:text-white transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {showRawText ? 'expand_less' : 'expand_more'}
+                    </span>
+                    <span>{showRawText ? 'Hide Raw Recognized OCR Text' : 'View Raw Recognized OCR Text'}</span>
+                  </button>
+                  {showRawText && (
+                    <pre className="mt-2 p-3 bg-background-dark border border-border-dark rounded-lg text-[11px] text-text-muted font-mono whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
+                      {extractedData.rawText || 'No text detected from image'}
+                    </pre>
+                  )}
                 </div>
               </div>
             </div>

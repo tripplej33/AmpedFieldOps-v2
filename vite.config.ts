@@ -18,6 +18,13 @@ export default defineConfig({
       'localhost',
       '192.168.1.124',
     ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
     chunkSizeWarningLimit: 1000,

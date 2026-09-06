@@ -91,55 +91,96 @@ export default function AcceptInvitePage() {
       setSubmitting(true)
       setError(null)
 
-      // 1. Sign up Supabase Auth user
-      const { data: authData, error: authErr } = await supabase.auth.signUp({
-        email: invitation.email,
-        password,
-        options: {
-          data: {
-            full_name: invitation.full_name,
-            role: invitation.role_id,
-          },
-        },
-      })
+      let acceptedSuccessfully = false
 
-      if (authErr) {
-        // If user already registered in auth, try sign in with provided password
-        if (authErr.message.toLowerCase().includes('already registered')) {
-          const { error: signInErr } = await supabase.auth.signInWithPassword({
-            email: invitation.email,
-            password,
-          })
-          if (signInErr) {
-            throw new Error('An account with this email already exists. Please login instead.')
-          }
-        } else {
-          throw authErr
-        }
-      }
-
-      const userId = authData.user?.id
-      if (userId) {
-        // 2. Upsert record into public.users
-        await supabase.from('users').upsert({
-          id: userId,
-          email: invitation.email,
-          full_name: invitation.full_name,
-          role: invitation.role_id,
-          updated_at: new Date().toISOString(),
+      // 1. Primary Strategy: Try secure backend service-role endpoint
+      try {
+        const res = await fetch('/api/admin/accept-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: invitation.token, password }),
         })
 
-        // 3. Mark invitation as accepted
-        await supabase
-          .from('user_invitations')
-          .update({ status: 'accepted' })
-          .eq('id', invitation.id)
+        if (res.ok) {
+          const result = await res.json()
+          if (result.success) {
+            acceptedSuccessfully = true
+          } else if (result.error) {
+            throw new Error(result.error)
+          }
+        }
+      } catch (apiErr: any) {
+        console.warn('[AcceptInvite] Backend endpoint unavailable, falling back to direct RPC:', apiErr.message || apiErr)
+      }
+
+      // 2. Fallback Strategy: Direct Supabase Auth + SECURITY DEFINER RPC
+      if (!acceptedSuccessfully) {
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
+          email: invitation.email,
+          password,
+          options: {
+            data: {
+              full_name: invitation.full_name,
+              role: invitation.role_id,
+            },
+          },
+        })
+
+        let userId = authData?.user?.id
+
+        if (authErr) {
+          if (authErr.message.toLowerCase().includes('already registered')) {
+            const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+              email: invitation.email,
+              password,
+            })
+            if (signInErr) {
+              throw new Error('An account with this email already exists. Please verify your password or reset it.')
+            }
+            userId = signInData.user?.id
+          } else {
+            throw authErr
+          }
+        }
+
+        if (!userId) {
+          throw new Error('Could not establish user identity. Please try again.')
+        }
+
+        // Call Postgres SECURITY DEFINER function to bypass RLS and activate user
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc('accept_user_invitation', {
+          p_token: invitation.token,
+          p_user_id: userId,
+        })
+
+        if (rpcErr) {
+          console.error('[AcceptInvite] RPC error:', rpcErr)
+          throw new Error(rpcErr.message || 'Failed to complete profile activation.')
+        }
+
+        if (rpcRes && rpcRes.success === false) {
+          throw new Error(rpcRes.error || 'Failed to complete profile activation.')
+        }
+
+        acceptedSuccessfully = true
+      }
+
+      // 3. Ensure an active authenticated session exists for immediate dashboard access
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (!sessionData?.session) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: invitation.email,
+          password,
+        })
+        if (signInErr) {
+          console.warn('[AcceptInvite] Automatic sign-in notification:', signInErr.message)
+        }
       }
 
       setSuccess(true)
       setTimeout(() => {
         navigate('/app/dashboard')
-      }, 2000)
+      }, 1800)
     } catch (err) {
       console.error('Failed to accept invitation:', err)
       setError(err instanceof Error ? err.message : 'Failed to activate account.')
