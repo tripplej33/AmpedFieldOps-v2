@@ -43,8 +43,13 @@ export default function Toast({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
-      <div className={`rounded-lg border p-4 ${bgColor} flex items-center gap-3 max-w-sm`}>
+    <div
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
+      className="fixed bottom-4 right-4 z-[10000] animate-slide-up"
+    >
+      <div className={`rounded-lg border p-4 ${bgColor} flex items-center gap-3 max-w-sm shadow-xl`}>
         <div className={`${iconColor} flex-shrink-0 flex items-center justify-center`}>
           <span className="material-symbols-outlined text-xl">
             {iconNames[type]}

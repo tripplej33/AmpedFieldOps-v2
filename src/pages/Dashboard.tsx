@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTerminology } from '@/hooks/useTerminology'
 import { useCompanyProfile } from '@/hooks/useCompanyProfile'
 import { supabase } from '@/lib/supabase'
+import { getClientDisplayName } from '@/lib/clientName'
 import { ActivityFeedItem } from '@/mocks/dashboardData'
 
 interface DashboardStats {
@@ -106,7 +107,7 @@ export default function Dashboard() {
     try {
       setError(null)
 
-      // Fetch in parallel: Projects, Clients, Timesheets, Users, Files, SyncLogs, Vehicles, and POs
+      // Fetch in parallel: Projects, Clients, Timesheets, Users, Files, SyncLogs, Vehicles, POs, and ActivityTypes
       const [
         { data: projectsData, error: projErr },
         { data: clientsData, error: clientErr },
@@ -117,6 +118,7 @@ export default function Dashboard() {
         { data: vehiclesData },
         { data: purchaseOrdersData },
         { data: inventoryData },
+        { data: activityTypesData },
       ] = await Promise.all([
         supabase
           .from('projects')
@@ -127,7 +129,7 @@ export default function Dashboard() {
         supabase
           .from('timesheets')
           .select(
-            'id, user_id, project_id, cost_center_id, entry_date, hours, status, notes, created_at, project:projects(id, name), cost_center:cost_centers(id, name, customer_po_number)'
+            'id, user_id, project_id, cost_center_id, activity_type_id, entry_date, hours, status, notes, created_at, project:projects(id, name), cost_center:cost_centers(id, name, customer_po_number)'
           )
           .order('created_at', { ascending: false })
           .limit(200),
@@ -141,6 +143,7 @@ export default function Dashboard() {
         supabase.from('vehicles').select('id, registration_number, vehicle_type, status, current_hours, wof_expiry, cof_expiry'),
         supabase.from('purchase_orders').select('id, po_number, status, total, created_at'),
         supabase.from('inventory_items').select('id, name, quantity_on_hand, minimum_stock_level'),
+        supabase.from('activity_types').select('id, name, default_rate'),
       ])
 
       if (projErr) throw projErr
@@ -207,15 +210,23 @@ export default function Dashboard() {
         pendingPOsCount: pendingPOs,
       })
 
+      // Dynamic labor rate calculation map based on activity types (BUG-004)
+      const activityTypeRateMap = new Map(
+        (activityTypesData || []).map((at: any) => [at.id, Number(at.default_rate) || 0])
+      )
+      const defaultFallbackLaborRate =
+        (activityTypesData || []).find((at: any) => Number(at.default_rate) > 0)?.default_rate || 85
+
       // Aggregate project burn calculations
       const burnList: ProjectBurnSummary[] = (projectsData || []).slice(0, 5).map((p: any) => {
-        const clientName = p.client?.name || p.client?.contact_name || 'General Client'
+        const clientName = getClientDisplayName(p.client)
 
         const projectTs = (timesheetsData || []).filter((t) => t.project_id === p.id)
         const loggedHours = projectTs.reduce((sum, t) => sum + (Number(t.hours) || 0), 0)
-        // TODO: Pull DEFAULT_LABOR_RATE_PER_HOUR from activity_types.default_rate or company settings
-        const DEFAULT_LABOR_RATE_PER_HOUR = 85
-        const estimatedLaborCost = loggedHours * DEFAULT_LABOR_RATE_PER_HOUR
+        const estimatedLaborCost = projectTs.reduce((sum, t) => {
+          const rate = activityTypeRateMap.get(t.activity_type_id) || defaultFallbackLaborRate
+          return sum + (Number(t.hours) || 0) * Number(rate)
+        }, 0)
 
         return {
           id: p.id,

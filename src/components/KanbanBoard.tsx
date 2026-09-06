@@ -126,8 +126,18 @@ export default function KanbanBoard({
   }
 
   return (
-    <div className="overflow-x-auto pb-6">
-      <div className="flex gap-4 min-w-[1720px] xl:min-w-full">
+    <div className="space-y-2">
+      {/* Mobile / Tablet scroll affordance hint (VIS-001) */}
+      <div className="xl:hidden flex items-center justify-between px-3 py-1.5 bg-card-dark/60 rounded-lg border border-border-dark text-xs text-text-muted">
+        <span className="flex items-center gap-1.5 font-medium">
+          <span className="material-symbols-outlined text-sm text-primary">swipe</span>
+          Swipe horizontally to explore all workflow columns
+        </span>
+        <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted/80">6 Stages</span>
+      </div>
+
+      <div className="overflow-x-auto pb-6 custom-scrollbar">
+        <div className="flex gap-4 min-w-[1720px] xl:min-w-full">
         {STATUSES.map((status) => {
           const columnProjects = getProjectsByStatus(status)
           const config = STATUS_METRICS[status]
@@ -208,5 +218,6 @@ export default function KanbanBoard({
         })}
       </div>
     </div>
-  )
+  </div>
+)
 }

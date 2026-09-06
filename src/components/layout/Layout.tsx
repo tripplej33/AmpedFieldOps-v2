@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import ErrorBoundary from '../ErrorBoundary'
 
 export default function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -48,7 +49,9 @@ export default function Layout() {
         <Header onMenuToggle={handleMobileToggle} />
 
         <main className="p-4 lg:p-6">
-          <Outlet />
+          <ErrorBoundary compact>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

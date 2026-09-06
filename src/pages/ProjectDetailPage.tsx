@@ -24,6 +24,7 @@ import { useSnags, useCreateSnag, useUpdateSnagStatus } from '@/hooks/useSnags'
 import { useSiteAttendance, useSiteSignIn } from '@/hooks/useSiteSafety'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { getClientDisplayName } from '@/lib/clientName'
 import Button from '@/components/ui/Button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import ProjectModal from '@/components/ProjectModal'
@@ -432,17 +433,20 @@ export default function ProjectDetailPage() {
     )
   }
 
-  const clientDisplayName =
-    project.clients?.name ||
-    project.clients?.company ||
-    (project.clients ? `${project.clients.first_name || ''} ${project.clients.last_name || ''}`.trim() : '') ||
-    '—'
+  const clientDisplayName = getClientDisplayName(project.clients)
 
   // Budget & Financial calculations
   const totalBudget = project.budget || 0
   const allocatedBudget = (costCenters || []).reduce((sum, cc) => sum + (cc.budget ? Number(cc.budget) : 0), 0)
   const totalLaborHours = projectTimesheets.reduce((sum, ts) => sum + (Number(ts.hours) || 0), 0)
-  const estimatedLaborCost = totalLaborHours * 85 // $85/hr
+  
+  // Dynamic labor rate calculation based on activity types (BUG-004)
+  const activityTypeRateMap = new Map((activityTypes || []).map((at) => [at.id, Number(at.default_rate) || 0]))
+  const fallbackLaborRate = (activityTypes || []).find((at) => Number(at.default_rate) > 0)?.default_rate || 85
+  const estimatedLaborCost = projectTimesheets.reduce((sum, ts) => {
+    const rate = activityTypeRateMap.get(ts.activity_type_id) || fallbackLaborRate
+    return sum + (Number(ts.hours) || 0) * Number(rate)
+  }, 0)
   const totalMaterialOrders = purchaseOrders.reduce((sum, po) => sum + (Number(po.total) || 0), 0)
   const totalLoggedMaterials = materials.reduce((sum, m) => sum + (Number(m.total_cost) || 0), 0)
   const totalProjectSpend = estimatedLaborCost + totalMaterialOrders + totalLoggedMaterials

@@ -5,7 +5,11 @@ import { Project, ProjectFormData, ProjectFilters } from '../types'
 
 const PAGE_SIZE = 50
 
-export function useProjects(filters?: ProjectFilters, page: number = 1) {
+export function useProjects(
+  filters?: ProjectFilters,
+  page: number = 1,
+  sort?: { field: string; direction: 'asc' | 'desc' }
+) {
   const { user } = useAuth()
   const [data, setData] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -99,8 +103,11 @@ export function useProjects(filters?: ProjectFilters, page: number = 1) {
       const from = (page - 1) * PAGE_SIZE
       const to = from + PAGE_SIZE - 1
 
+      const sortField = sort?.field || 'created_at'
+      const sortAscending = sort ? sort.direction === 'asc' : false
+
       const { data: projects, error: err, count } = await query
-        .order('created_at', { ascending: false })
+        .order(sortField, { ascending: sortAscending })
         .range(from, to)
 
       if (err) throw err
@@ -113,7 +120,7 @@ export function useProjects(filters?: ProjectFilters, page: number = 1) {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, user?.role, filters, page])
+  }, [user?.id, user?.role, filters, page, sort?.field, sort?.direction])
 
   useEffect(() => {
     fetchProjects()

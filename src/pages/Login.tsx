@@ -206,6 +206,16 @@ export default function Login() {
                 <span>Continue</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </Button>
+
+              <div className="pt-1 text-center">
+                <Link
+                  to="/welcome"
+                  className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span>
+                  Back to Welcome
+                </Link>
+              </div>
             </form>
           </div>
         ) : (
@@ -289,6 +299,16 @@ export default function Login() {
               >
                 Sign In
               </Button>
+
+              <div className="pt-2 text-center">
+                <Link
+                  to="/welcome"
+                  className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span>
+                  Back to Welcome
+                </Link>
+              </div>
             </form>
           </div>
         )}

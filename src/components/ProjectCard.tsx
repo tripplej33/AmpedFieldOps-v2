@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Project, ProjectStatus } from '../types'
+import { getClientDisplayName } from '../lib/clientName'
 
 interface ProjectCardProps {
   project: Project
@@ -63,7 +64,7 @@ export default function ProjectCard({
   const [isDragging, setIsDragging] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const clientName = project.clients?.name || project.clients?.company || (project.clients ? `${project.clients.first_name || ''} ${project.clients.last_name || ''}`.trim() : '') || 'No Client Assigned'
+  const clientName = getClientDisplayName(project.clients)
   const config = STATUS_CONFIG[project.status] || STATUS_CONFIG['Pending']
 
   useEffect(() => {

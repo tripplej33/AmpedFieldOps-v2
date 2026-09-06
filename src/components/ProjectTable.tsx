@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Project } from '../types'
+import { getClientDisplayName } from '../lib/clientName'
 import Button from './ui/Button'
 import Modal from './ui/Modal'
 
@@ -8,6 +9,7 @@ interface ProjectTableProps {
   projects: Project[]
   isLoading: boolean
   isDeleting?: boolean
+  currentSort?: { field: string; direction: 'asc' | 'desc' }
   onEdit: (project: Project) => void
   onDelete: (id: string) => Promise<boolean | void> | void
   onSort: (field: string) => void
@@ -29,6 +31,7 @@ export default function ProjectTable({
   projects,
   isLoading,
   isDeleting = false,
+  currentSort,
   onEdit,
   onDelete,
   onSort,
@@ -55,6 +58,17 @@ export default function ProjectTable({
     return new Date(dateStr).toLocaleDateString()
   }
 
+  const renderSortIcon = (field: string) => {
+    if (currentSort?.field !== field) {
+      return <span className="material-symbols-outlined text-xs opacity-40 group-hover:opacity-100 transition-opacity">unfold_more</span>
+    }
+    return (
+      <span className="material-symbols-outlined text-xs text-primary font-bold">
+        {currentSort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+      </span>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -78,25 +92,31 @@ export default function ProjectTable({
         <table className="w-full text-sm">
           <thead className="bg-card-dark border-b border-border-dark">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-text-muted cursor-pointer hover:text-primary" onClick={() => onSort('name')}>
-                Name <span className="material-symbols-outlined text-xs">unfold_more</span>
+              <th className="px-4 py-3 text-left font-semibold text-text-muted cursor-pointer hover:text-primary transition-colors group" onClick={() => onSort('name')}>
+                <span className="inline-flex items-center gap-1">
+                  Name {renderSortIcon('name')}
+                </span>
               </th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted hidden md:table-cell">Client</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted">Status</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted hidden sm:table-cell">Assigned Team</th>
-              <th className="px-4 py-3 text-left font-semibold text-text-muted hidden lg:table-cell cursor-pointer hover:text-primary" onClick={() => onSort('start_date')}>
-                Start Date <span className="material-symbols-outlined text-xs">unfold_more</span>
+              <th className="px-4 py-3 text-left font-semibold text-text-muted hidden lg:table-cell cursor-pointer hover:text-primary transition-colors group" onClick={() => onSort('start_date')}>
+                <span className="inline-flex items-center gap-1">
+                  Start Date {renderSortIcon('start_date')}
+                </span>
               </th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted hidden lg:table-cell">End Date</th>
-              <th className="px-4 py-3 text-left font-semibold text-text-muted hidden xl:table-cell cursor-pointer hover:text-primary" onClick={() => onSort('budget')}>
-                Budget <span className="material-symbols-outlined text-xs">unfold_more</span>
+              <th className="px-4 py-3 text-left font-semibold text-text-muted hidden xl:table-cell cursor-pointer hover:text-primary transition-colors group" onClick={() => onSort('budget')}>
+                <span className="inline-flex items-center gap-1">
+                  Budget {renderSortIcon('budget')}
+                </span>
               </th>
               <th className="px-4 py-3 text-right font-semibold text-text-muted">Actions</th>
             </tr>
           </thead>
           <tbody>
               {projects.map((project) => {
-                const clientName = project.clients?.name || project.clients?.company || (project.clients ? `${project.clients.first_name || ''} ${project.clients.last_name || ''}`.trim() : '') || '—'
+                const clientName = getClientDisplayName(project.clients)
                 const members = project.assigned_members || []
                 return (
                 <tr key={project.id} className="border-b border-border-dark hover:bg-background-dark/50 transition-colors">
@@ -169,23 +189,69 @@ export default function ProjectTable({
 
       {/* Pagination */}
       {pageCount > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap pt-2">
+          <button
+            onClick={() => onPageChange(1)}
+            disabled={currentPage === 1}
+            title="First Page"
+            className="p-2 bg-card-dark hover:bg-surface-dark disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors text-text-muted flex items-center justify-center border border-border-dark"
+          >
+            <span className="material-symbols-outlined text-base">first_page</span>
+          </button>
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-3 py-2 bg-card-dark hover:bg-card-dark/80 disabled:opacity-50 rounded-lg transition-colors text-text-muted"
+            title="Previous Page"
+            className="p-2 bg-card-dark hover:bg-surface-dark disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors text-text-muted flex items-center justify-center border border-border-dark"
           >
-            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="material-symbols-outlined text-base">chevron_left</span>
           </button>
-          <span className="text-sm text-text-muted">
-            Page {currentPage} of {pageCount}
-          </span>
+
+          {/* Direct page numbers: show ±1 around current, plus first and last */}
+          {Array.from({ length: pageCount }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === pageCount || Math.abs(p - currentPage) <= 1)
+            .reduce<(number | string)[]>((acc, p, idx, arr) => {
+              if (idx > 0 && p - (arr[idx - 1] as number) > 1) {
+                acc.push('...')
+              }
+              acc.push(p)
+              return acc
+            }, [])
+            .map((item, idx) =>
+              typeof item === 'number' ? (
+                <button
+                  key={item}
+                  onClick={() => onPageChange(item)}
+                  className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-semibold transition-colors border ${
+                    currentPage === item
+                      ? 'bg-primary text-white font-bold border-primary shadow-sm'
+                      : 'bg-card-dark hover:bg-surface-dark text-text-muted hover:text-white border-border-dark'
+                  }`}
+                >
+                  {item}
+                </button>
+              ) : (
+                <span key={`dots-${idx}`} className="px-1 text-xs text-text-muted select-none">
+                  …
+                </span>
+              )
+            )}
+
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === pageCount}
-            className="px-3 py-2 bg-card-dark hover:bg-card-dark/80 disabled:opacity-50 rounded-lg transition-colors text-text-muted"
+            title="Next Page"
+            className="p-2 bg-card-dark hover:bg-surface-dark disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors text-text-muted flex items-center justify-center border border-border-dark"
           >
-            <span className="material-symbols-outlined">chevron_right</span>
+            <span className="material-symbols-outlined text-base">chevron_right</span>
+          </button>
+          <button
+            onClick={() => onPageChange(pageCount)}
+            disabled={currentPage === pageCount}
+            title="Last Page"
+            className="p-2 bg-card-dark hover:bg-surface-dark disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors text-text-muted flex items-center justify-center border border-border-dark"
+          >
+            <span className="material-symbols-outlined text-base">last_page</span>
           </button>
         </div>
       )}

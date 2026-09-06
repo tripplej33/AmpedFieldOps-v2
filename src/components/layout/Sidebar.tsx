@@ -314,10 +314,10 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
                       onClick={handleLinkClick}
                       className={`
                         flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl
-                        transition-all duration-150 group font-medium text-xs
+                        transition-all duration-150 group font-medium text-xs border-l-4
                         ${isActive
-                          ? 'bg-[var(--bg-nav-active)] text-primary font-bold border-l-4 border-primary shadow-sm'
-                          : 'text-[var(--text-nav)] hover:bg-[var(--bg-nav-hover)] hover:text-[var(--text-main)]'
+                          ? 'bg-[var(--bg-nav-active)] text-primary font-bold border-primary shadow-sm'
+                          : 'border-transparent text-[var(--text-nav)] hover:bg-[var(--bg-nav-hover)] hover:text-[var(--text-main)]'
                         }
                         ${isCollapsed ? 'justify-center px-0' : ''}
                       `}
@@ -500,8 +500,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onToggle, onMobileC
               >
                 <span className="material-symbols-outlined text-lg">notifications</span>
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>

@@ -27,12 +27,17 @@ export default function ProjectsPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<ProjectFilters>()
+  const [sort, setSort] = useState<{ field: string; direction: 'asc' | 'desc' } | undefined>(undefined)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | undefined>()
   const [defaultStatus, setDefaultStatus] = useState<ProjectStatus>('Pending')
   const [showFilters, setShowFilters] = useState(false)
 
-  const { data: projects, isLoading, pageCount, refresh: refreshProjects } = useProjects(filters, currentPage)
+  const { data: projects, isLoading, pageCount, refresh: refreshProjects } = useProjects(
+    filters,
+    currentPage,
+    sort
+  )
   const { mutate: createProject, isPending: isCreating } = useCreateProject()
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject()
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProject()
@@ -102,68 +107,73 @@ export default function ProjectsPage() {
     await refreshProjects()
   }
 
+  const handleSort = (field: string) => {
+    setSort((prev) => {
+      if (prev?.field === field) {
+        if (prev.direction === 'asc') return { field, direction: 'desc' }
+        return undefined
+      }
+      return { field, direction: 'asc' }
+    })
+  }
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className="space-y-6">
+      {/* Top Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-3xl sm:text-4xl text-primary">folder_managed</span>
-            Projects
-          </h1>
-          <p className="text-text-muted text-xs sm:text-sm">Manage company jobs, budget tracking, and scheduling</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Projects</h1>
+          <p className="text-text-muted text-xs mt-0.5">Manage operational jobs, budgets, and milestones</p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {/* Non-intrusive Filter Toggle */}
-          <button
-            type="button"
+        <div className="flex items-center gap-2">
+          {/* Filters Toggle Button */}
+          <Button
+            variant={hasActiveFilters ? 'primary' : 'secondary'}
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors ${
-              showFilters || hasActiveFilters
-                ? 'bg-primary/10 border-primary text-primary'
-                : 'bg-card-dark border-border-dark text-text-muted hover:text-white hover:border-border-dark/80'
-            }`}
+            className="flex items-center gap-1.5 text-xs font-semibold"
           >
-            <span className="material-symbols-outlined text-base">tune</span>
-            <span>Filters</span>
+            <span className="material-symbols-outlined text-sm">filter_list</span>
+            Filters
             {hasActiveFilters && (
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-white ml-0.5 animate-pulse" />
             )}
-          </button>
+          </Button>
 
-          {/* View Toggle */}
-          <div className="flex gap-0.5 bg-card-dark border border-border-dark rounded-lg p-1">
+          {/* View Mode Switcher (Table vs Kanban) */}
+          <div className="flex bg-card-dark p-1 rounded-xl border border-border-dark">
             <button
               onClick={() => handleViewChange('table')}
-              className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === 'table'
-                  ? 'bg-primary text-white font-medium shadow-sm'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
-              title="Table View (Default)"
+              title="Table View"
             >
-              <span className="material-symbols-outlined text-base">table_rows</span>
-              <span className="text-xs font-semibold">Table</span>
+              <span className="material-symbols-outlined text-sm">table_rows</span>
+              Table
             </button>
             <button
               onClick={() => handleViewChange('kanban')}
-              className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === 'kanban'
-                  ? 'bg-primary text-white font-medium shadow-sm'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-text-muted hover:text-white'
               }`}
               title="Kanban Board View"
             >
-              <span className="material-symbols-outlined text-base">dashboard</span>
-              <span className="text-xs font-semibold">Kanban</span>
+              <span className="material-symbols-outlined text-sm">view_kanban</span>
+              Board
             </button>
           </div>
 
-          {/* Create Button */}
-          <Button onClick={handleCreateProject} disabled={isCreating || isUpdating || isDeleting}>
-            <span className="material-symbols-outlined">add</span>
-            <span className="hidden sm:inline">New Project</span>
+          <Button
+            onClick={handleCreateProject}
+            className="flex items-center gap-1.5 text-xs font-semibold shadow-lg shadow-primary/20"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            New Project
           </Button>
         </div>
       </div>
@@ -186,9 +196,10 @@ export default function ProjectsPage() {
             projects={projects}
             isLoading={isLoading}
             isDeleting={isDeleting}
+            currentSort={sort}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onSort={() => {}}
+            onSort={handleSort}
             pageCount={pageCount}
             currentPage={currentPage}
             onPageChange={setCurrentPage}

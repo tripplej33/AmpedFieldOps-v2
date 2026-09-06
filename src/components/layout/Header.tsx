@@ -7,6 +7,34 @@ interface HeaderProps {
 
 export default function Header({ onMenuToggle }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
+
+  // Track network connectivity (UX-013)
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    let removeListener: (() => void) | null = null
+    import('@capacitor/network')
+      .then(({ Network }) => {
+        Network.getStatus().then((status) => setIsOnline(status.connected))
+        Network.addListener('networkStatusChange', (status) => {
+          setIsOnline(status.connected)
+        }).then((handle) => {
+          removeListener = () => handle.remove()
+        })
+      })
+      .catch(() => {})
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      if (removeListener) removeListener()
+    }
+  }, [])
 
   // Listen for global keyboard shortcut Ctrl+K / Cmd+K / /
   useEffect(() => {
@@ -64,10 +92,16 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             </button>
           </div>
 
-          {/* Right side status indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-[11px] text-text-muted font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>FieldOps Live</span>
+          {/* Right side status indicator (UX-013) */}
+          <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'
+              }`}
+            />
+            <span className={isOnline ? 'text-text-muted' : 'text-red-400 font-semibold'}>
+              {isOnline ? 'FieldOps Live' : 'Offline Mode'}
+            </span>
           </div>
         </div>
       </header>

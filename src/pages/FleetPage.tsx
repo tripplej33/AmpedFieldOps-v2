@@ -38,8 +38,16 @@ export default function FleetPage() {
   }
 
 
+  const filteredVehicles = vehicles.filter((v) => {
+    if (categoryFilter === 'all') return true
+    return (v.asset_category || 'vehicle') === categoryFilter
+  })
+
+  const activeVehicleId = selectedVehicleId || filteredVehicles[0]?.id || vehicles[0]?.id || undefined
+  const activeVehicle = vehicles.find((v) => v.id === activeVehicleId)
+
   const { checkSheets, loading: sheetsLoading, refresh: refreshSheets } = useVehicleCheckSheets(
-    selectedVehicleId || vehicles[0]?.id
+    activeVehicleId
   )
   const { submitCheckSheet, isPending: isSubmittingSheet } = useSubmitVehicleCheckSheet()
 
@@ -48,14 +56,6 @@ export default function FleetPage() {
   const [inspectingVehicle, setInspectingVehicle] = useState<Vehicle | null>(null)
   const [loggingUsageVehicle, setLoggingUsageVehicle] = useState<Vehicle | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-
-  const filteredVehicles = vehicles.filter((v) => {
-    if (categoryFilter === 'all') return true
-    return (v.asset_category || 'vehicle') === categoryFilter
-  })
-
-  const activeVehicleId = selectedVehicleId || filteredVehicles[0]?.id || vehicles[0]?.id
-  const activeVehicle = vehicles.find((v) => v.id === activeVehicleId)
 
   const handleAddVehicle = async (data: VehicleFormData) => {
     try {

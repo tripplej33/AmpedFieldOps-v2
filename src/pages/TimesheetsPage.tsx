@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   useTimesheets,
@@ -21,7 +21,7 @@ import TimesheetTable from '@/components/TimesheetTable'
 import WeeklyTimesheetGrid from '@/components/WeeklyTimesheetGrid'
 import DayTimesheetTimeline from '@/components/timesheets/DayTimesheetTimeline'
 import TimesheetFiltersComponent from '@/components/TimesheetFilters'
-import TimesheetModal from '@/components/TimesheetModal'
+const TimesheetModal = lazy(() => import('@/components/TimesheetModal'))
 import ApprovalModal from '@/components/ApprovalModal'
 import DocumentScannerModal from '@/components/DocumentScannerModal'
 import GenerateInvoiceModal from '@/components/invoicing/GenerateInvoiceModal'
@@ -66,7 +66,7 @@ export default function TimesheetsPage() {
   const [modalInitialProjectId, setModalInitialProjectId] = useState<string | undefined>()
   const [modalInitialUserId, setModalInitialUserId] = useState<string | undefined>()
   const [modalInitialStartTime, setModalInitialStartTime] = useState<string | undefined>()
-  const [sort, setSort] = useState<{ key: 'entry_date' | 'hours' | 'status'; direction: 'asc' | 'desc' }>()
+  const [sort, setSort] = useState<{ key: 'entry_date' | 'hours' | 'status'; direction: 'asc' | 'desc' } | undefined>(undefined)
 
   const { user } = useAuth()
   const isManager = user?.role === 'manager' || user?.role === 'admin'
@@ -472,30 +472,34 @@ export default function TimesheetsPage() {
       )}
 
       {/* Modals */}
-      <TimesheetModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setModalInitialDate(undefined)
-          setModalInitialProjectId(undefined)
-          setModalInitialUserId(undefined)
-          setModalInitialStartTime(undefined)
-        }}
-        onSaveDraft={handleModalSaveDraft}
-        onSubmitForApproval={handleModalSubmitApproval}
-        projects={projects || []}
-        costCenters={costCenters || []}
-        activityTypes={activityTypes || []}
-        users={users || []}
-        isPending={isBulkCreating}
-        initialDate={modalInitialDate}
-        initialProjectId={modalInitialProjectId}
-        initialUserId={modalInitialUserId}
-        initialStartTime={modalInitialStartTime}
-        timesheet={selected}
-        isAdmin={isManager}
-        onUnapprove={handleUnapprove}
-      />
+      {isModalOpen && (
+        <Suspense fallback={null}>
+          <TimesheetModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false)
+              setModalInitialDate(undefined)
+              setModalInitialProjectId(undefined)
+              setModalInitialUserId(undefined)
+              setModalInitialStartTime(undefined)
+            }}
+            onSaveDraft={handleModalSaveDraft}
+            onSubmitForApproval={handleModalSubmitApproval}
+            projects={projects || []}
+            costCenters={costCenters || []}
+            activityTypes={activityTypes || []}
+            users={users || []}
+            isPending={isBulkCreating}
+            initialDate={modalInitialDate}
+            initialProjectId={modalInitialProjectId}
+            initialUserId={modalInitialUserId}
+            initialStartTime={modalInitialStartTime}
+            timesheet={selected}
+            isAdmin={isManager}
+            onUnapprove={handleUnapprove}
+          />
+        </Suspense>
+      )}
 
       <ApprovalModal
         isOpen={isApprovalOpen}
