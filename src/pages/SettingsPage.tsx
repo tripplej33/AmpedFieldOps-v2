@@ -123,6 +123,73 @@ export default function SettingsPage() {
     }
   }
 
+  const handleToggleUserActive = async (userId: string, activate: boolean) => {
+    try {
+      let success = false
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/${activate ? 'enable' : 'disable'}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        if (res.ok) {
+          success = true
+        }
+      } catch (e) {
+        console.warn('Backend endpoint unreachable, using direct RPC:', e)
+      }
+
+      if (!success) {
+        const { error } = await supabase.rpc('admin_toggle_user_active', {
+          target_user_id: userId,
+          activate,
+        })
+        if (error) throw error
+      }
+
+      await fetchUsers()
+      setToast({
+        type: 'success',
+        message: activate ? 'User account reactivated successfully.' : 'User account deactivated. Login is now blocked.',
+      })
+    } catch (err: any) {
+      console.error('Failed to toggle user status:', err)
+      setToast({ type: 'error', message: err.message || 'Failed to update user status' })
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      let success = false
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        if (res.ok) {
+          success = true
+        }
+      } catch (e) {
+        console.warn('Backend endpoint unreachable, using direct RPC:', e)
+      }
+
+      if (!success) {
+        const { error } = await supabase.rpc('admin_delete_user', {
+          target_user_id: userId,
+        })
+        if (error) throw error
+      }
+
+      await fetchUsers()
+      setToast({
+        type: 'success',
+        message: 'User account permanently deleted.',
+      })
+    } catch (err: any) {
+      console.error('Failed to delete user:', err)
+      setToast({ type: 'error', message: err.message || 'Failed to delete user account' })
+    }
+  }
+
   const handleInviteUser = async (data: InviteUserFormData) => {
     const inv = await createInvitation(data)
     await refreshInvitations()
@@ -320,6 +387,8 @@ export default function SettingsPage() {
             loading={loadingUsers}
             roles={roles}
             onUpdateRole={handleUpdateRole}
+            onToggleActive={handleToggleUserActive}
+            onDeleteUser={handleDeleteUser}
           />
 
           <InvitationsList

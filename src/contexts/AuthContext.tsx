@@ -68,6 +68,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       const loadedUser = data as User
+      if (loadedUser.is_active === false) {
+        console.warn('Account is deactivated:', loadedUser.email)
+        await supabase.auth.signOut()
+        setUser(null)
+        safeLocalStorage.removeItem('amped_user_profile')
+        setError('Your account has been deactivated by an administrator. Please contact support.')
+        return null
+      }
+
       setUser(loadedUser)
       safeLocalStorage.setItem('amped_user_profile', JSON.stringify(loadedUser))
       setError(null)
@@ -169,7 +178,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (data.user.user_metadata?.preferences) {
           syncPreferencesFromServer(data.user.user_metadata.preferences)
         }
-        await loadUserProfile(data.user.id)
+        const profile = await loadUserProfile(data.user.id)
+        if (!profile) {
+          throw new Error('Your account has been deactivated or profile not found. Please contact support.')
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed'

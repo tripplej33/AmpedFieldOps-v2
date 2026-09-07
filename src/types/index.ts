@@ -5,6 +5,8 @@ export interface User {
   full_name?: string
   phone?: string | null
   avatar_url?: string | null
+  is_active?: boolean
+  disabled_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -760,6 +762,9 @@ export type PermissionKey =
   | 'materials.view'
   | 'materials.log'
   | 'van_stock.manage'
+  | 'inventory.view'
+  | 'inventory.manage'
+  | 'inventory.locations_manage'
   | 'timesheets.view_own'
   | 'timesheets.view_all'
   | 'timesheets.create'
@@ -767,18 +772,33 @@ export type PermissionKey =
   | 'timesheets.delete'
   | 'financials.view'
   | 'financials.export'
+  | 'invoices.view'
+  | 'invoices.create'
+  | 'invoices.sync_xero'
   | 'xero.manage'
   | 'snags.manage'
   | 'fleet.manage'
+  | 'safety.view'
+  | 'safety.create_edit'
+  | 'safety.sign'
   | 'safety.manage'
+  | 'compliance.view'
+  | 'compliance.manage'
+  | 'switchboards.view'
+  | 'switchboards.manage'
+  | 'schedules.view'
+  | 'schedules.manage'
   | 'files.view'
   | 'files.upload'
   | 'files.rename'
   | 'files.create_folder'
   | 'files.delete'
   | 'users.manage'
+  | 'users.disable'
+  | 'users.delete'
   | 'roles.manage'
   | 'settings.manage'
+  | 'audit_logs.view'
 
 export interface Role {
   id: string

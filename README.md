@@ -1,130 +1,112 @@
 # AmpedFieldOps V2 ⚡
 
-> Comprehensive Field Operations, Timesheets, Job Management & Fleet System built for electrical contractors, trade teams, and field service operations. Powered by React 18, TypeScript, Tailwind CSS, Node.js, and Supabase.
+> Next-Generation Field Operations, Electrical Compliance, Job Management & Fleet Platform built for electrical contractors, trade professionals, and service enterprises. Powered by React 19, TypeScript, Tailwind CSS, Node.js, Express, BullMQ, Redis, and Supabase.
 
 ---
 
-## 🎯 System Capabilities
+## 🎯 Platform Capabilities
 
-- **📅 Interactive Timesheets & Day Timeline**:
-  - Full Day Timeline with technician vs. hour matrix and drag-and-drop time editing.
-  - Weekly matrix overview with bulk submission, unapproving, and batch deletion workflows.
-  - Start & Stop time tracking with automatic break deduction.
-- **📍 GPS Pinning & Travel Billing Engine**:
-  - Automatic technician geolocation capture with road-factor adjusted Haversine distance calculations.
-  - Automated travel time and client mileage reimbursement calculator.
-- **📁 Document & Photo Management**:
-  - Project File Explorer with custom folder hierarchy and cost-center partitioning.
-  - Device camera photo capture with pre-upload preview and customizable "Save File As" labeling.
-  - In-place renaming for files, drawings, compliance certificates, and site photos.
-  - Built-in PDF and image previewers with signed URL generation.
-- **🏗️ Projects & Cost Centers**:
-  - Full project lifecycle management (Pending, Active, On Hold, Completed, Invoiced, Archived).
-  - Cost Center budget allocation, spend tracking, and labor burn analytics.
-  - Interactive Kanban and tabular list views with global search integration.
-- **👥 Role-Based Access Control (RBAC) & Invitations**:
-  - Configurable system and custom roles (Administrator, Project Manager, Field Technician, Apprentice, Office Admin, Subcontractor).
-  - Granular permissions (including `files.rename`, `timesheets.delete`, `projects.assign_members`, `safety.manage`, etc.).
-  - Secure email user invitations and profile credential management.
-- **📋 Procurement, Van Stock & Snags**:
-  - Purchase Orders with multi-item receipt tracking and direct cost-center allocation.
-  - Van stock inventory management and direct material logging to jobs.
-  - Visual snag list tracking with status progression and photo attachments.
-- **🚨 Site Safety, Check Sheets & Emergency Evacuation**:
-  - Digital Site Attendance kiosk with QR sign-in/out and real-time roll-call evacuation lists.
-  - Vehicle pre-start safety check sheets with defect escalation workflows.
-- **🔄 Xero Cloud Synchronization**:
-  - Bi-directional sync for Contacts, Inventory Items, and Invoices.
-  - Background queue processing with BullMQ and Redis.
+### ⚡ Electrical Compliance & Switchboards (AS/NZS 3000)
+- **Official Statutory Certificates**: Issue statutory Certificates of Compliance (CoC) and Electrical Safety Certificates (ESC) with high-risk work declarations and licensed electrical inspector endorsements.
+- **Verification Test Sheets**: AS/NZS 3000 verification tests including earth continuity, insulation resistance (500V DC), polarity check, earth fault loop impedance, and RCD trip time/current testing.
+- **Switchboard Circuit Directories**: Interactive switchboard schedule builder with pole layout, circuit breaker types (MCB, RCBO, RCD), cable sizing, phase balancing (A/B/C), and automated load calculations.
+- **Test Meter Calibration Register**: Manage test instruments (testers, clamp meters, insulation testers) with calibration expiry alerts and audit logs.
+
+### 🛡️ Site Safety & Hazard Assessment (SSSP / SWMS)
+- **Digital SWMS & Job Safety Analysis**: Create and deploy Safe Work Method Statements with 5×5 risk assessment matrices (inherent vs. residual risk) and mandatory PPE requirements.
+- **Daily Pre-Start Briefings & Sign-Off**: Digital site safety induction with electronic canvas signatures stored directly with timestamps and location tags.
+- **Attendance Kiosk & Evacuation Roll-Call**: Real-time QR code site check-in/out with live roll-call lists for emergency site evacuation.
+- **Fleet Vehicle Pre-Starts**: Daily pre-trip check sheets with defect reporting and escalation workflows.
+
+### 👥 User Lifecycle & Enterprise RBAC
+- **Soft Deactivation vs. Permanent Deletion**:
+  - **Deactivate**: Instantly revokes session tokens and blocks login while completely preserving all historical timesheets, compliance certificates, and safety sign-offs.
+  - **Permanent Delete**: Administrative cascade deletion that safely sanitizes relational constraints, unlinks historical audit records, and purges credentials from Supabase Auth and database tables.
+- **Granular Permission Matrix (35+ Keys)**: Fine-grained controls across 11 functional modules (Projects, Financials, Invoices, Master Inventory, Compliance, Switchboards, Safety, Timesheets, Scheduling, Fleet, and Administration).
+- **Preset & Custom Roles**: Out-of-the-box presets for **Administrator**, **Project Manager**, **Field Technician**, **Apprentice**, and **Office Administrator**, with interactive custom role builder.
+- **Secure Token-Based Invitations**: Dedicated onboarding flow allowing invitees to set passwords and activate accounts via cryptographically secure links.
+
+### 🔍 Spotlight Omnisearch
+- **Universal Operational Search**: Instant keyboard-driven search (`Ctrl+K` / `Cmd+K`) across Projects, Purchase Orders, Clients, Master Inventory Items, Storage Depots/Vans, Team Members, Safety SWMS, Switchboard Schedules, Invoices, and QC Snags.
+- **Category Filter Tabs**: Quick filtering by module with real-time result counters and keyboard arrow navigation (`↑`/`↓`/`↵`/`Esc`).
+
+### 📦 Multi-Depot Inventory & Van Stock
+- **Master Catalog & Stock Locations**: Central warehouse catalog with support for unlimited satellite storage depots, service vans, and job site containers.
+- **Inter-Location Transfers**: Transfer stock between warehouses and technician vehicles with audit trails.
+- **OCR Material Receipt Scanner**: On-device and server-assisted OCR engine for capturing supplier packing slips and purchase receipts directly into job material logs.
+
+### 📅 Field Timesheets & Resource Scheduling
+- **Visual Day Timeline**: Interactive technician hour grid with drag-to-resize duration, automatic travel time calculations, and lunch break deductions.
+- **Bulk Weekly Approvals**: High-speed batch submission, supervisor sign-off, and one-click unapproval flows.
+- **GPS Travel Billing Engine**: Automatic geolocation logging with road-factor adjusted Haversine distance calculations for mileage reimbursement.
+
+### 🔄 Xero Cloud Accounting Sync
+- **Bi-Directional Synchronization**: Automatic background synchronization for Contacts, Inventory Items, and Sales Invoices.
+- **Resilient Background Queues**: Powered by BullMQ and Redis with automatic retries, concurrency limits, and comprehensive sync audit logs.
 
 ---
 
 ## 🏗️ Architecture & Tech Stack
 
+```mermaid
+graph TD
+    Client["React 19 Frontend (Vite 7 + Tailwind)"] -->|"Supabase JS SDK (RLS + Realtime)"| Supabase["Supabase DB & Auth (PostgreSQL)"]
+    Client -->|"Native APIs (Capacitor 8)"| Native["Mobile Hardware (Camera, GPS, Biometrics)"]
+    Client -->|"/api/admin/* & /api/xero/*"| Backend["Express API Backend (Node.js 20)"]
+    Backend -->|"Service Role Key"| Supabase
+    Backend -->|"OAuth 2.0 REST"| Xero["Xero Accounting Cloud"]
+    Backend -->|"Queue Processing"| Redis["Redis 7 (BullMQ Workers)"]
+```
+
 ### Frontend
-- **Framework:** React 18 + TypeScript + Vite 7
-- **Styling:** Tailwind CSS 3.4 (custom dark theme tokens) + Material Symbols
-- **State & Context:** React Context + custom domain hooks (`useProjects`, `useTimesheets`, `useFiles`, `useGeolocation`, `usePermissions`, etc.)
-- **Forms & Validation:** `react-hook-form` + `zod`
-- **Routing:** `react-router-dom` v6 with client-side hydration & protected guards
+- **Framework:** React 19 + TypeScript + Vite 7
+- **Styling:** Tailwind CSS 3.4 + Material Symbols + Custom dark-mode tokens
+- **Mobile Engine:** Capacitor 8 (Camera, Geolocation, Filesystem, Push Notifications, Status Bar)
+- **OCR:** Tesseract.js client-side fallback + server-assisted vision processing
+- **PDF Generation:** jsPDF + html2canvas for statutory compliance certificates and switchboard schedules
+- **State & Hooks:** Context API + custom hooks (`useProjects`, `useCompliance`, `useSafety`, `useInventoryLocations`, `useGlobalSearch`, `usePermissions`, etc.)
 
 ### Backend & Infrastructure
-- **Database & Storage:** Supabase PostgreSQL with Row Level Security (RLS) + Supabase Storage (`project-files`)
-- **API Server:** Node.js + Express + TypeScript
-- **Cache & Queues:** Redis + BullMQ
-- **Reverse Proxy:** Nginx with SPA history fallback & gzip compression
-- **Deployment:** Docker & Docker Compose on Proxmox LXC VPS
+- **Server:** Node.js 20+ Express.js in TypeScript
+- **Job Queues:** BullMQ with Redis 7
+- **Database:** Supabase PostgreSQL with 25+ SQL migrations, custom RPC functions (`admin_toggle_user_active`, `admin_delete_user`), and strict Row Level Security (RLS)
+- **Encryption:** AES-256-CBC with SHA-256 derived keys for sensitive OAuth tokens
+- **Deployment:** Docker & Docker Compose on Proxmox LXC VPS (`192.168.1.201`) reverse-proxied via Nginx
 
 ---
 
-## 📱 Mobile Applications (Android & iOS)
+## 📱 Native Mobile Setup (Capacitor 8)
 
-AmpedFieldOps is built to run as a native mobile app via **Capacitor**, sharing 100% of the web UI while utilizing native device hardware (High-Res Camera, Background GPS, Biometrics, and Push Notifications).
-
-### Mobile Setup with Capacitor
+AmpedFieldOps is fully configured for native mobile compilation via Capacitor:
 
 ```bash
-# 1. Install Capacitor dependencies
-npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
-npm install @capacitor/camera @capacitor/geolocation @capacitor/push-notifications @capacitor/preferences
-
-# 2. Initialize Capacitor project
-npx cap init AmpedFieldOps com.amped.fieldops --web-dir dist
-
-# 3. Build web assets and generate native projects
+# 1. Build production web bundle
 npm run build
-npx cap add android
-npx cap add ios
 
-# 4. Open native IDEs
-npx cap open android   # Launches Android Studio to build APK / AAB
-npx cap open ios       # Launches Xcode on macOS to build IPA / TestFlight
+# 2. Sync web assets with native mobile projects
+npx cap sync
+
+# 3. Launch native IDEs for compilation
+npx cap open android   # Android Studio -> Generate Release APK / AAB
+npx cap open ios       # Xcode (macOS) -> Archive & TestFlight
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Local Development Setup
 
 ### Prerequisites
 - Node.js 20+
-- Supabase project or local Supabase instance
-- Git
+- Redis (optional for local queue processing; required for Xero sync)
+- Supabase project credentials
 
-### Installation & Local Development
+### Step-by-Step Installation
 
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/tripplej33/AmpedFieldOps-v2.git
 cd AmpedFieldOps-v2
 
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment variables
-cp .env.example .env
-# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-
-# 4. Run database migrations (if using local Supabase CLI)
-node run-migrations.js
-
-# 5. Start development server
-npm run dev
-```
-
-The web app will run locally at `http://localhost:5173`.
-
----
-
-## 📦 Project Structure
-
-```
-AmpedFieldOps-v2/
-├── src/
-│   ├── components/
-│   │   ├── files/           # FileUploader, FileList, ProjectFilesView, TimesheetFileUploader
-│   │   ├── timesheets/      # DayTimesheetTimeline, WeeklyTimesheetGrid, TimesheetModal
-│   │   ├── snags/           # ProjectSnagsList
-│   │   ├── fleet/           # VehicleCheckSheets, FleetManagement
 │   │   ├── safety/          # SiteAttendanceKiosk, EvacuationModal
 │   │   ├── procurement/     # PurchaseOrderModal, GoodsReceipt
 │   │   ├── settings/        # RoleModal, UserInviteModal, ProfileSettings

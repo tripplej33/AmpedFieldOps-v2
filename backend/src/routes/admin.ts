@@ -500,4 +500,112 @@ router.post('/accept-invite', async (req: Request, res: Response) => {
   }
 });
 
+// POST /admin/users/:id/disable - Safely disable a user (retains all records, blocks login)
+router.post('/users/:id/disable', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'User ID is required' });
+
+    // Prevent disabling sole admin
+    const { data: userToDisable } = await supabase.from('users').select('*').eq('id', id).single();
+    if (!userToDisable) return res.status(404).json({ error: 'User not found' });
+
+    if (userToDisable.role === 'admin') {
+      const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin').eq('is_active', true);
+      if (admins && admins.length <= 1) {
+        return res.status(400).json({ error: 'Cannot disable the only active system administrator' });
+      }
+    }
+
+    // Call RPC to update active flag and ban state
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc('admin_toggle_user_active', {
+      target_user_id: id,
+      activate: false,
+    });
+
+    if (rpcErr) {
+      console.error('[DisableUser] RPC error:', rpcErr);
+      return res.status(500).json({ error: rpcErr.message });
+    }
+
+    // Invalidate any active sessions via Supabase Auth Admin
+    try {
+      await supabase.auth.admin.signOut(id, 'global');
+    } catch (e) {
+      console.warn('[DisableUser] SignOut notice:', e);
+    }
+
+    console.log(`[DisableUser] User ${userToDisable.email} (${id}) deactivated successfully`);
+    return res.json({ success: true, user: rpcRes });
+  } catch (err: any) {
+    console.error('[DisableUser] Unexpected error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// POST /admin/users/:id/enable - Reactivate a disabled user
+router.post('/users/:id/enable', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'User ID is required' });
+
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc('admin_toggle_user_active', {
+      target_user_id: id,
+      activate: true,
+    });
+
+    if (rpcErr) {
+      console.error('[EnableUser] RPC error:', rpcErr);
+      return res.status(500).json({ error: rpcErr.message });
+    }
+
+    console.log(`[EnableUser] User ${id} reactivated successfully`);
+    return res.json({ success: true, user: rpcRes });
+  } catch (err: any) {
+    console.error('[EnableUser] Unexpected error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// DELETE /admin/users/:id - Hard delete user account and clean up dependencies
+router.delete('/users/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'User ID is required' });
+
+    const { data: userToDelete } = await supabase.from('users').select('*').eq('id', id).single();
+    if (!userToDelete) return res.status(404).json({ error: 'User not found' });
+
+    if (userToDelete.role === 'admin') {
+      const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin');
+      if (admins && admins.length <= 1) {
+        return res.status(400).json({ error: 'Cannot delete the only system administrator' });
+      }
+    }
+
+    // Execute safe cascading deletion via SECURITY DEFINER function
+    const { data: delRes, error: delErr } = await supabase.rpc('admin_delete_user', {
+      target_user_id: id,
+    });
+
+    if (delErr) {
+      console.error('[DeleteUser] Database error during deletion:', delErr);
+      return res.status(500).json({ error: delErr.message });
+    }
+
+    // Ensure user is removed from auth.users via Supabase Admin API
+    try {
+      await supabase.auth.admin.deleteUser(id);
+    } catch (authDelErr) {
+      console.warn('[DeleteUser] Auth delete notice (may have been deleted by trigger):', authDelErr);
+    }
+
+    console.log(`[DeleteUser] Permanently deleted user ${userToDelete.email} (${id})`);
+    return res.json({ success: true, deleted: delRes });
+  } catch (err: any) {
+    console.error('[DeleteUser] Unexpected error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
 export default router;
